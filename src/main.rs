@@ -1,8 +1,8 @@
 mod core;
 
-use std::fmt::{format};
+use nix::unistd::Uid;
 use std::fs::{File, OpenOptions};
-use std::{fs, io};
+use std::{env, fs, io};
 use std::io::{Read, Seek, Write, Error};
 use std::ops::RangeInclusive;
 use std::process::{Command, exit, Stdio};
@@ -12,31 +12,26 @@ use crate::core::device::Device;
 use crate::core::strings::*;
 use crate::core::util::*;
 
-static LSUSB: &str = "lsusb";
-static TARGET_DIR: &str = "/etc/udev/rules.d/";
-static TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
-static NEW_LINE: &str = "\n";
+const LSUSB: &str = "lsusb";
+const ENV_LANG: &str = "LANG";
+const RU: &str = "ru";
+const TARGET_DIR: &str = "/etc/udev/rules.d/";
+const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
+const NEW_LINE: &str = "\n";
 // SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
 // SUBSYSTEMS=="usb", ATTRS{idVendor}=="12d1", ATTRS{idProduct} =="1038", MODE="0666", OWNER="<username>"
-static VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
-static PAYLOAD: &str = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
+const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
+const PAYLOAD: &str = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
 
 fn main() {
-    unsafe {
-        let id = geteuid();
-        println!("id {}", id);
+    match env::var(ENV_LANG) {
+        Ok(lang) if lang.starts_with(RU) => Language::set_language(Language::Ru),
+        _ => (),
     }
 
-    Language::set_language(Language::Ru);
-
-    if true {
-        let d = Device {
-            vendor_id: String::from("1234"),
-            product_id: String::from("5678"),
-            description: String::from("qwerty"),
-        };
-        apply(d);
-        return;
+    if !Uid::current().is_root() {
+        USE_ROOT.println();
+        exit(1);
     }
 
     let mut devices = find_devices();
@@ -137,6 +132,5 @@ fn add_to_config(device: Device) -> Result<(),Error> {
     let payload = PAYLOAD.replace(VENDOR_ID_PLACE_HOLDER, device.vendor_id.as_str());
     file.write_all(NEW_LINE.as_bytes())?;
     file.write_all(payload.as_bytes())?;
-    file.write_all(NEW_LINE.as_bytes())?;
     return Ok(());
 }
