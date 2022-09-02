@@ -34,7 +34,7 @@ fn main() {
         exit(1);
     }
 
-    let mut devices = find_devices();
+    let devices = find_devices();
 
     if devices.is_empty() {
         NO_DEVICES_FOUND.println();
@@ -44,7 +44,7 @@ fn main() {
     if devices.len() > 1 {
         index = ask_target_device(&devices);
     }
-    let device = devices.remove(index);
+    let device = devices.get(index).unwrap();
 
     match apply(device) {
         true => SUCCESSFULLY.println(),
@@ -109,20 +109,20 @@ fn ask_target_device(devices: &Vec<Device>) -> usize {
     return read_usize_in(TARGET_INDEX.value(), 1..=devices.len()) - 1;
 }
 
-fn apply(device: Device) -> bool {
+fn apply(device: &Device) -> bool {
     if let Err(why) = add_to_config(device) {
         println!("{}", why);
         return false;
     }
 
     let mut success = Command::new("udevadm").arg("control").arg("--reload-rules").status().unwrap().success();
-    success = success && Command::new("udevadm").arg("trigger").arg("--reload-rules").status().unwrap().success();
+    success = success && Command::new("udevadm").arg("trigger").status().unwrap().success();
     success = success || Command::new("service").arg("udev").arg("restart").status().unwrap().success();
 
     return success;
 }
 
-fn add_to_config(device: Device) -> Result<(),Error> {
+fn add_to_config(device: &Device) -> Result<(),Error> {
     fs::create_dir_all(TARGET_DIR)?;
     let mut file = OpenOptions::new()
         .write(true)

@@ -28,8 +28,8 @@ pub static TARGET_INDEX: Label = Label::new(
     "номер: ",
 );
 pub static SUCCESSFULLY: Label = Label::new(
-    "Enjoy!",
-    "Готово!",
+    "Reconnect device and enjoy!",
+    "Готово, переподключите устройство!",
 );
 pub static ERROR: Label = Label::new(
     "Error",
