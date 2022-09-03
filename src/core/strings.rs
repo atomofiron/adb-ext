@@ -31,6 +31,10 @@ pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",
     "Готово, переподключите устройство!",
 );
+pub static UNKNOWN_ERROR: Label = Label::new(
+    "Unknown error",
+    "Неизвестная ошибка",
+);
 pub static ERROR: Label = Label::new(
     "Error",
     "Ошибка",

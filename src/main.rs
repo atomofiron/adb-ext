@@ -3,7 +3,7 @@ mod core;
 use nix::unistd::Uid;
 use std::fs::{File, OpenOptions};
 use std::{env, fs, io};
-use std::io::{Read, Seek, Write, Error};
+use std::io::{Read, Seek, Write, Error, ErrorKind};
 use std::ops::RangeInclusive;
 use std::process::{Command, exit, Stdio};
 use std::thread::sleep;
@@ -110,16 +110,36 @@ fn ask_target_device(devices: &Vec<Device>) -> usize {
 }
 
 fn apply(device: &Device) -> bool {
-    if let Err(why) = add_to_config(device) {
-        println!("{}", why);
+    if let Err(cause) = add_to_config(device) {
+        println!("{}", cause);
         return false;
     }
+    if let Err(cause) = restart_service() {
+        println!("{}", cause);
+        return false;
+    }
+    return true;
+}
 
-    let mut success = Command::new("udevadm").arg("control").arg("--reload-rules").status().unwrap().success();
-    success = success && Command::new("udevadm").arg("trigger").status().unwrap().success();
-    success = success || Command::new("service").arg("udev").arg("restart").status().unwrap().success();
-
-    return success;
+fn restart_service() -> Result<(),Error> {
+    let mut success = Command::new("udevadm")
+        .arg("control")
+        .arg("--reload-rules")
+        .status()
+        ?.success();
+    success = success && Command::new("udevadm")
+        .arg("trigger")
+        .status()
+        ?.success();
+    success = success || Command::new("service")
+        .arg("udev")
+        .arg("restart")
+        .status()
+        ?.success();
+    match success {
+        true => Ok(()),
+        false => Err(Error::new(ErrorKind::Other, UNKNOWN_ERROR.value()))
+    }
 }
 
 fn add_to_config(device: &Device) -> Result<(),Error> {
