@@ -24,9 +24,10 @@ const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
 const PAYLOAD: &str = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
 
 fn main() {
-    match env::var(ENV_LANG) {
-        Ok(lang) if lang.starts_with(RU) => Language::set_language(Language::Ru),
-        _ => (),
+    if env::var(ENV_LANG)
+        .map(|lang| lang.starts_with(RU))
+        .unwrap_or(false) {
+        Language::set_language(Language::Ru)
     }
 
     if !Uid::current().is_root() {
