@@ -1,6 +1,6 @@
 use std::io;
-use std::io::{Read, Write};
-use std::ops::{Range, RangeInclusive, RangeToInclusive};
+use std::io::Write;
+use std::ops::RangeInclusive;
 use crate::core::strings::Label;
 
 pub fn print_the_fuck_out() {

@@ -1,11 +1,10 @@
 mod core;
 
 use nix::unistd::Uid;
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::{env, fs, io};
-use std::io::{Read, Seek, Write, Error, ErrorKind};
-use std::ops::RangeInclusive;
-use std::process::{Command, exit, Stdio};
+use std::io::{Write, Error, ErrorKind};
+use std::process::{Command, exit};
 use std::thread::sleep;
 use std::time::Duration;
 use crate::core::device::Device;
