@@ -146,6 +146,7 @@ fn restart_service() -> Result<(),Error> {
 fn add_to_config(device: &Device) -> Result<(),Error> {
     fs::create_dir_all(TARGET_DIR)?;
     let mut file = OpenOptions::new()
+        .create(true)
         .write(true)
         .append(true)
         .open(TARGET_FILE)?;
