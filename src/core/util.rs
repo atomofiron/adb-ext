@@ -1,7 +1,6 @@
 use std::io;
 use std::io::Write;
 use std::ops::RangeInclusive;
-use crate::core::strings::Label;
 
 pub fn print_the_fuck_out() {
     io::stdout()
@@ -56,12 +55,4 @@ impl Split for str {
             .map(String::from)
             .collect::<Vec<String>>()
     }
-}
-
-pub fn print_label(label: &Label) {
-    print!("{}", label);
-}
-
-pub fn println_label(label: &Label) {
-    println!("{}", label);
 }
