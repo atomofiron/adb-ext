@@ -47,7 +47,7 @@ fi
 mkdir -p $home_local_bin
 ensure cd $home_local_bin
 println "downloading..."
-ensure curl -X GET -sSfL https://github.com/Atomofiron/green-pain/releases/download/release-0.1.0/green-pain -o green-pain
+ensure curl -X GET -sSfL https://github.com/Atomofiron/green-pain/releases/latest/download/green-pain -o green-pain
 ensure chmod u+x green-pain
 
 notice_user=false
