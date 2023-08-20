@@ -16,7 +16,8 @@ const ENV_LANG: &str = "LANG";
 const RU: &str = "ru";
 const TARGET_DIR: &str = "/etc/udev/rules.d/";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
-const NEW_LINE: &str = "\n";
+const NEW_LINE_STR: &str = "\n";
+const NEW_LINE: char = '\n';
 // SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
 // SUBSYSTEMS=="usb", ATTRS{idVendor}=="12d1", ATTRS{idProduct} =="1038", MODE="0666", OWNER="<username>"
 const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
@@ -82,7 +83,7 @@ fn fetch_lsusb() -> Result<Vec<String>, String> {
     let result = String::from_utf8(output.stdout)
         .unwrap()
         .trim()
-        .split_to_vec('\n');
+        .split_to_vec(NEW_LINE);
     return Ok(result);
 }
 
@@ -151,7 +152,7 @@ fn add_to_config(device: &Device) -> Result<(),Error> {
         .open(TARGET_FILE)?;
 
     let payload = PAYLOAD.replace(VENDOR_ID_PLACE_HOLDER, device.vendor_id.as_str());
-    file.write_all(NEW_LINE.as_bytes())?;
+    file.write_all(NEW_LINE_STR.as_bytes())?;
     file.write_all(payload.as_bytes())?;
     return Ok(());
 }
