@@ -1,5 +1,3 @@
-mod core;
-
 use nix::unistd::Uid;
 use std::fs::OpenOptions;
 use std::{env, fs, io};
@@ -23,7 +21,7 @@ const NEW_LINE: char = '\n';
 const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
 const PAYLOAD: &str = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
 
-fn main() {
+pub fn pain() {
     if env::var(ENV_LANG)
         .map(|lang| lang.starts_with(RU))
         .unwrap_or(false) {
