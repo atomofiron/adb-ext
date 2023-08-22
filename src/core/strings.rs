@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::print_the_fuck_out;
+use crate::core::util::print_the_fuck_out;
 
 static mut LANGUAGE: Language = Language::En;
 
