@@ -1,6 +1,7 @@
 use nix::unistd::Uid;
 use std::fs::OpenOptions;
 use std::{env, fs, io};
+use std::env::args;
 use std::io::{Write, Error, ErrorKind};
 use std::process::{Command, exit};
 use std::thread::sleep;
@@ -14,7 +15,6 @@ const ENV_LANG: &str = "LANG";
 const RU: &str = "ru";
 const TARGET_DIR: &str = "/etc/udev/rules.d/";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
-const NEW_LINE_STR: &str = "\n";
 const NEW_LINE: char = '\n';
 // SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
 // SUBSYSTEMS=="usb", ATTRS{idVendor}=="12d1", ATTRS{idProduct} =="1038", MODE="0666", OWNER="<username>"
@@ -29,8 +29,7 @@ pub fn pain() {
     }
 
     if !Uid::current().is_root() {
-        USE_ROOT.println();
-        exit(1);
+        exit(rerun_with_sudo());
     }
 
     let devices = find_devices();
@@ -150,7 +149,21 @@ fn add_to_config(device: &Device) -> Result<(),Error> {
         .open(TARGET_FILE)?;
 
     let payload = PAYLOAD.replace(VENDOR_ID_PLACE_HOLDER, device.vendor_id.as_str());
-    file.write_all(NEW_LINE_STR.as_bytes())?;
+    file.write_all(NEW_LINE.to_string().as_bytes())?;
     file.write_all(payload.as_bytes())?;
     return Ok(());
+}
+
+fn rerun_with_sudo() -> i32 {
+    let command = args()
+        .collect::<Vec<String>>()
+        .first()
+        .unwrap()
+        .clone();
+    return Command::new(SUDO)
+        .arg(command)
+        .status()
+        .unwrap()
+        .code()
+        .unwrap_or(1);
 }
