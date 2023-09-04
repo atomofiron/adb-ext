@@ -8,11 +8,10 @@ use std::thread::sleep;
 use std::time::Duration;
 use crate::core::device::Device;
 use crate::core::strings::*;
-use crate::core::util::*;
+use crate::core::util::{Split, read_usize_in};
 
+const SUDO: &str = "sudo";
 const LSUSB: &str = "lsusb";
-const ENV_LANG: &str = "LANG";
-const RU: &str = "ru";
 const TARGET_DIR: &str = "/etc/udev/rules.d/";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
 const NEW_LINE: char = '\n';
@@ -21,13 +20,7 @@ const NEW_LINE: char = '\n';
 const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
 const PAYLOAD: &str = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
 
-pub fn pain() {
-    if env::var(ENV_LANG)
-        .map(|lang| lang.starts_with(RU))
-        .unwrap_or(false) {
-        Language::set_language(Language::Ru)
-    }
-
+pub fn resolve_permission() {
     if !Uid::current().is_root() {
         exit(rerun_with_sudo());
     }

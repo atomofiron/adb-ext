@@ -3,9 +3,9 @@ use crate::core::util::print_the_fuck_out;
 
 static mut LANGUAGE: Language = Language::En;
 
-pub static USE_ROOT: Label = Label::new(
-    "This tool has to be run with superuser privileges",
-    "Запускать необходимо с правами суперпользователя",
+pub static UNKNOWN_COMMAND: Label = Label::new(
+    "Unknown command",
+    "Неизвестная команда",
 );
 pub static CONNECT_OR_DISCONNECT: Label = Label::new(
     "Connect or disconnect the Android device and press Enter",

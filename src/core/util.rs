@@ -1,6 +1,23 @@
 use std::io;
 use std::io::Write;
 use std::ops::RangeInclusive;
+use std::process::exit;
+
+pub trait ShortUnwrap<T> {
+    fn short_unwrap(self) -> T;
+}
+
+impl <T> ShortUnwrap<T> for Result<T, String> {
+    fn short_unwrap(self) -> T {
+        match self {
+            Ok(value) => value,
+            Err(message) => {
+                println!("{message}");
+                exit(1);
+            },
+        }
+    }
+}
 
 pub fn print_the_fuck_out() {
     io::stdout()
