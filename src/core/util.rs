@@ -19,6 +19,21 @@ impl <T> ShortUnwrap<T> for Result<T, String> {
     }
 }
 
+pub trait Trim {
+    //fn trim(&self) -> String;
+}
+
+impl Trim for String {
+    // fn trim(&self) -> String {
+    //     self.tri
+    // }
+}
+
+pub fn exit_err(message: &str) {
+    println!("{message}");
+    exit(1);
+}
+
 pub fn print_the_fuck_out() {
     io::stdout()
         .flush()

@@ -95,7 +95,7 @@ fn find_diffs(first: &Vec<String>, second: &Vec<String>) -> Vec<String> {
 fn ask_target_device(devices: &Vec<Device>) -> usize {
     TYPE_TARGET_INDEX.println();
     for i in 0..devices.len() {
-        println!("{}: {}", i + 1, devices[i].description);
+        println!("{}) {}", i + 1, devices[i].description);
     }
     return read_usize_in(TARGET_INDEX.value(), 1..=devices.len()) - 1;
 }

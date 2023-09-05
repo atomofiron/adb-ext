@@ -3,7 +3,7 @@ use std::env;
 use crate::core::lss::pull_screenshots;
 use crate::core::pain::resolve_permission;
 use crate::core::selector::run_with_device;
-use crate::core::strings::{Language, UNKNOWN_COMMAND};
+use crate::core::strings::{Language, LINUX_ONLY, UNKNOWN_COMMAND};
 use crate::core::util::ShortUnwrap;
 
 mod core;
@@ -33,7 +33,8 @@ fn main() {
 fn resolve_feature() -> Result<Feature, String> {
     let args = args().collect::<Vec<String>>();
     let feature = match () {
-        _ if args.len() == 1 => Feature::FixPermission,
+        _ if args.len() <= 1 && cfg!(target_os = "linux") => Feature::FixPermission,
+        _ if args.len() <= 1 => return Err(String::from(LINUX_ONLY.value())),
         _ if args[1] == ADB => Feature::SelectDevice,
         _ if args[1] == LSS => Feature::LastScreenShots(get_count(args.get(2))),
         _ => return Err(String::from(UNKNOWN_COMMAND.value())),

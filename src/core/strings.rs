@@ -31,6 +31,14 @@ pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",
     "Готово, переподключите устройство!",
 );
+pub static LINUX_ONLY: Label = Label::new(
+    "Permission resolving is only applicable for Linux",
+    "Исправление разрешений ADB применимо только для Linux",
+);
+pub static NO_ADB: Label = Label::new(
+    "ADB wasn't recognized",
+    "ADB не обнаружен",
+);
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",
     "Неизвестная ошибка",

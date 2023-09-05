@@ -22,19 +22,10 @@ impl Device {
         let ids = parts.get(5)
             .unwrap()
             .split_to_vec(':');
-        let vendor_id = ids.get(0)
-            .unwrap()
-            .clone();
-        let product_id = ids.get(1)
-            .unwrap()
-            .clone();
-        let description = parts.get(6)
-            .unwrap()
-            .clone();
         Device {
-            vendor_id,
-            product_id,
-            description,
+            vendor_id: ids.get(0).unwrap().clone(),
+            product_id: ids.get(1).unwrap().clone(),
+            description: parts.get(6).unwrap().clone(),
         }
     }
 }
