@@ -3,31 +3,8 @@ use std::io::Write;
 use std::ops::RangeInclusive;
 use std::process::exit;
 
-pub trait ShortUnwrap<T> {
-    fn short_unwrap(self) -> T;
-}
 
-impl <T> ShortUnwrap<T> for Result<T, String> {
-    fn short_unwrap(self) -> T {
-        match self {
-            Ok(value) => value,
-            Err(message) => {
-                println!("{message}");
-                exit(1);
-            },
-        }
-    }
-}
-
-pub trait Trim {
-    //fn trim(&self) -> String;
-}
-
-impl Trim for String {
-    // fn trim(&self) -> String {
-    //     self.tri
-    // }
-}
+pub const NEW_LINE: char = '\n';
 
 pub fn exit_err(message: &str) {
     println!("{message}");
@@ -40,10 +17,9 @@ pub fn print_the_fuck_out() {
         .unwrap();
 }
 
-pub fn read_uint(label: &str) -> u32 {
-    let mut input = String::new();
+pub fn read_uint(label: &str, default: Option<usize>) -> usize {
     loop {
-        input.clear();
+        let mut input = String::new();
 
         io::stdout()
             .write(label.as_bytes())
@@ -53,9 +29,13 @@ pub fn read_uint(label: &str) -> u32 {
 
         io::stdin()
             .read_line(&mut input)
-            .expect("Failed to read line");
+            .unwrap();
 
-        match input.trim().parse::<u32>() {
+        if default.is_some() && input.len() == 1 && input.starts_with(NEW_LINE) {
+            return default.unwrap()
+        }
+
+        match input.trim().parse::<usize>() {
             Ok(value) => return value,
             _ => {},
         }
@@ -63,28 +43,18 @@ pub fn read_uint(label: &str) -> u32 {
 }
 
 pub fn read_usize_in(label: &str, range: RangeInclusive<usize>) -> usize {
+    read_usize(label, None, range)
+}
+
+pub fn read_usize_or_in(label: &str, default: usize, range: RangeInclusive<usize>) -> usize {
+    read_usize(label, Some(default), range)
+}
+
+fn read_usize(label: &str, default: Option<usize>, range: RangeInclusive<usize>) -> usize {
     loop {
-        let ans = read_uint(label) as usize;
+        let ans = read_uint(label, default.clone());
         if range.contains(&ans) {
             return ans;
         }
-    }
-}
-
-pub trait Split {
-    fn split_to_vec(&self, pat: char) -> Vec<String>;
-    fn splitn_to_vec(&self, n: usize, pat: char) -> Vec<String>;
-}
-
-impl Split for str {
-    fn split_to_vec(&self, pat: char) -> Vec<String> {
-        str::split(self, pat)
-            .map(String::from)
-            .collect::<Vec<String>>()
-    }
-    fn splitn_to_vec(&self, n: usize, pat: char) -> Vec<String> {
-        str::splitn(self, n, pat)
-            .map(String::from)
-            .collect::<Vec<String>>()
     }
 }

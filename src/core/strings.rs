@@ -39,6 +39,10 @@ pub static NO_ADB: Label = Label::new(
     "ADB wasn't recognized",
     "ADB не обнаружен",
 );
+pub static SELECT_DEVICE: Label = Label::new(
+    "Выберите устройство (по умолчанию 1): ",
+    "Select a device (default 1): ",
+);
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",
     "Неизвестная ошибка",

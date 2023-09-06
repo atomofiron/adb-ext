@@ -1,35 +1,50 @@
-use std::io;
-use std::io::Write;
+use std::ffi::OsStr;
+use std::env;
 use std::process::{Command, exit, Output};
-use crate::core::strings::NO_ADB;
-use crate::core::util::exit_err;
+use crate::core::ext::OutputString;
+use crate::core::strings::{NO_ADB, SELECT_DEVICE};
+use crate::core::util::{exit_err, read_usize_or_in};
 
 const WHICH: &str = "/usr/bin/which";
 const ADB: &str = "adb";
 const DEVICES: &str = "devices";
 const DEVICE: &str = "device";
+const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
 
 struct Device {
     pub name: String,
     pub authorized: bool,
 }
 
+// todo add support stdin or idk
 pub fn run_with_device() {
-    let output = Command::new(WHICH)
-        .arg(ADB)
-        .output()
-        .unwrap();
-    let output = trimmed(output);
-    if output.is_empty() {
-        exit_err(NO_ADB.value());
-        exit(1);
+    let output = run_with(None);
+    if is_more_than_one(&output) {
+        ask_for_device_and_run();
+    } else {
+        print_and_exit(output);
     }
-    let output = Command::new(output)
-        .arg(DEVICES)
-        .output()
-        .unwrap();
-    let output = trimmed(output);
-    let devices = output.split('\n')
+}
+
+fn is_more_than_one(output: &Output) -> bool {
+    !output.status.success() && output.stderr() == MORE_THAN_ONE
+}
+
+fn print_and_exit(output: Output) {
+    let stdout = output.stdout();
+    if !stdout.is_empty() {
+        println!("{stdout}");
+    }
+    let stderr = output.stderr();
+    if !stderr.is_empty() {
+        println!("{stderr}");
+    }
+    exit(output.status.code().unwrap_or(1));
+}
+
+pub fn ask_for_device_and_run() {
+    let output = run_adb(&[DEVICES]);
+    let devices = output.stdout().split('\n')
         .enumerate()
         .filter_map(|(i,it)|
             // the first is "List of devices attached"
@@ -42,15 +57,9 @@ pub fn run_with_device() {
                 Some(device)
             }
         ).collect::<Vec<Device>>();
-    if devices.len() < 2 {
-        run_with(None);
-    } else {
-        run_with(Some(ask_for_device(devices)));
-    }
-}
-
-fn run_with(device: Option<Device>) {
-
+    let device = ask_for_device(devices);
+    let output = run_with(Some(device));
+    print_and_exit(output);
 }
 
 fn ask_for_device(mut devices: Vec<Device>) -> Device {
@@ -58,27 +67,37 @@ fn ask_for_device(mut devices: Vec<Device>) -> Device {
         let status = if device.authorized { "" } else { " (unauthorized)" };
         println!("{}) {}{status}", i + 1, device.name)
     }
-    let mut value: Option<usize> = None;
-    while value.is_none() || !(1..=devices.len()).contains(&value.unwrap()) {
-        print!("pick the device (default 1): ");
-        io::stdout().flush().unwrap();
-        value = read_int(Some(1));
-    }
-    return devices.remove(value.unwrap() - 1);
+    let index= read_usize_or_in(SELECT_DEVICE.value(), 1, 1..=devices.len()) - 1;
+    return devices.remove(index);
 }
 
-fn read_int(default: Option<usize>) -> Option<usize> {
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-    let input = input.trim();
-    if input.is_empty() && default.is_some() {
-        return default;
-    }
-    return input
-        .parse::<usize>()
-        .map_or(None, |it| Some(it));
+fn run_with(device: Option<Device>) -> Output {
+    let mut args = match device {
+        None => vec![],
+        Some(device) => vec!["-s".to_string(), device.name],
+    };
+    let input_args = &mut env::args()
+        .enumerate()
+        // ignore "*/green-pain" and "adb"
+        .filter_map(|(i,it)| if i <= 1 { None } else { Some(it) })
+        .collect::<Vec<String>>();
+    args.append(input_args);
+    return run_adb(&args);
 }
 
-fn trimmed(output: Output) -> String {
-    String::from(String::from_utf8(output.stdout).unwrap().trim())
+fn run_adb<S: AsRef<OsStr>>(args: &[S]) -> Output {
+    let output = Command::new(WHICH)
+        .arg(ADB)
+        .output()
+        .unwrap();
+    let adb = output.stdout();
+    if adb.is_empty() {
+        exit_err(NO_ADB.value());
+        exit(1);
+    }
+    let mut adb = &mut Command::new(adb);
+    for arg in args {
+        adb = adb.arg(arg);
+    }
+    return adb.output().unwrap();
 }

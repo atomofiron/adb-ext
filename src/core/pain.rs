@@ -1,20 +1,20 @@
 use nix::unistd::Uid;
 use std::fs::OpenOptions;
-use std::{env, fs, io};
+use std::{fs, io};
 use std::env::args;
 use std::io::{Write, Error, ErrorKind};
 use std::process::{Command, exit};
 use std::thread::sleep;
 use std::time::Duration;
 use crate::core::device::Device;
+use crate::core::ext::Split;
 use crate::core::strings::*;
-use crate::core::util::{Split, read_usize_in};
+use crate::core::util::{read_usize_in, NEW_LINE};
 
 const SUDO: &str = "sudo";
 const LSUSB: &str = "lsusb";
 const TARGET_DIR: &str = "/etc/udev/rules.d/";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
-const NEW_LINE: char = '\n';
 // SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
 // SUBSYSTEMS=="usb", ATTRS{idVendor}=="12d1", ATTRS{idProduct} =="1038", MODE="0666", OWNER="<username>"
 const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
@@ -60,7 +60,7 @@ fn find_devices() -> Vec<Device> {
         diffs = find_diffs(&lines_before, &lines_after);
     }
     return diffs.iter()
-        .map(|it| Device::from(it))
+        .map(Device::from)
         .collect::<Vec<Device>>();
 }
 

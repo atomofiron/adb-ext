@@ -1,4 +1,4 @@
-use crate::core::util::Split;
+use crate::core::ext::Split;
 
 pub struct Device {
     pub vendor_id: String,
