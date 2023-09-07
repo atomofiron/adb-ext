@@ -11,7 +11,7 @@ const DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
 
-struct Device {
+struct AdbDevice {
     pub name: String,
     pub authorized: bool,
 }
@@ -50,19 +50,19 @@ pub fn ask_for_device_and_run() {
             // the first is "List of devices attached"
             if i == 0 { None } else {
                 let parts = it.split("\t").collect::<Vec<&str>>();
-                let device = Device {
+                let device = AdbDevice {
                     name: String::from(parts[0]),
                     authorized: parts[1] == DEVICE,
                 };
                 Some(device)
             }
-        ).collect::<Vec<Device>>();
+        ).collect::<Vec<AdbDevice>>();
     let device = ask_for_device(devices);
     let output = run_with(Some(device));
     print_and_exit(output);
 }
 
-fn ask_for_device(mut devices: Vec<Device>) -> Device {
+fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
     for (i, device) in devices.iter().enumerate() {
         let status = if device.authorized { "" } else { " (unauthorized)" };
         println!("{}) {}{status}", i + 1, device.name)
@@ -71,7 +71,7 @@ fn ask_for_device(mut devices: Vec<Device>) -> Device {
     return devices.remove(index);
 }
 
-fn run_with(device: Option<Device>) -> Output {
+fn run_with(device: Option<AdbDevice>) -> Output {
     let mut args = match device {
         None => vec![],
         Some(device) => vec!["-s".to_string(), device.name],
