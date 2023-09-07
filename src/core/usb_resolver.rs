@@ -1,15 +1,15 @@
-use nix::unistd::Uid;
-use std::fs::OpenOptions;
-use std::{fs, io};
-use std::env::args;
-use std::io::{Write, Error, ErrorKind};
-use std::process::{Command, exit};
-use std::thread::sleep;
-use std::time::Duration;
-use crate::core::usb_device::UsbDevice;
 use crate::core::ext::Split;
 use crate::core::strings::*;
+use crate::core::usb_device::UsbDevice;
 use crate::core::util::{read_usize_in, NEW_LINE};
+use nix::unistd::Uid;
+use std::env::args;
+use std::fs::OpenOptions;
+use std::io::{Error, ErrorKind, Write};
+use std::process::{exit, Command};
+use std::thread::sleep;
+use std::time::Duration;
+use std::{fs, io};
 
 const SUDO: &str = "sudo";
 const LSUSB: &str = "lsusb";
@@ -59,7 +59,8 @@ fn find_devices() -> Vec<UsbDevice> {
         let lines_after = fetch_lsusb().unwrap();
         diffs = find_diffs(&lines_before, &lines_after);
     }
-    return diffs.iter()
+    return diffs
+        .iter()
         .map(UsbDevice::from)
         .collect::<Vec<UsbDevice>>();
 }
@@ -68,7 +69,7 @@ fn fetch_lsusb() -> Result<Vec<String>, String> {
     let output = Command::new(LSUSB).output().unwrap();
     if !output.status.success() {
         let error = String::from_utf8(output.stderr).unwrap();
-        return Err(error)
+        return Err(error);
     }
     let result = String::from_utf8(output.stdout)
         .unwrap()
@@ -112,28 +113,26 @@ fn apply(device: &UsbDevice) -> bool {
     return true;
 }
 
-fn restart_service() -> Result<(),Error> {
+fn restart_service() -> Result<(), Error> {
     let mut success = Command::new("udevadm")
         .arg("control")
         .arg("--reload-rules")
-        .status()
-        ?.success();
-    success = success && Command::new("udevadm")
-        .arg("trigger")
-        .status()
-        ?.success();
-    success = success || Command::new("service")
-        .arg("udev")
-        .arg("restart")
-        .status()
-        ?.success();
+        .status()?
+        .success();
+    success = success && Command::new("udevadm").arg("trigger").status()?.success();
+    success = success
+        || Command::new("service")
+            .arg("udev")
+            .arg("restart")
+            .status()?
+            .success();
     match success {
         true => Ok(()),
-        false => Err(Error::new(ErrorKind::Other, UNKNOWN_ERROR.value()))
+        false => Err(Error::new(ErrorKind::Other, UNKNOWN_ERROR.value())),
     }
 }
 
-fn add_to_config(device: &UsbDevice) -> Result<(),Error> {
+fn add_to_config(device: &UsbDevice) -> Result<(), Error> {
     fs::create_dir_all(TARGET_DIR)?;
     let mut file = OpenOptions::new()
         .create(true)
@@ -148,11 +147,7 @@ fn add_to_config(device: &UsbDevice) -> Result<(),Error> {
 }
 
 fn rerun_with_sudo() -> i32 {
-    let command = args()
-        .collect::<Vec<String>>()
-        .first()
-        .unwrap()
-        .clone();
+    let command = args().collect::<Vec<String>>().first().unwrap().clone();
     return Command::new(SUDO)
         .arg(command)
         .status()

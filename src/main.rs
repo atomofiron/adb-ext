@@ -1,10 +1,10 @@
-use std::env::args;
-use std::env;
 use crate::core::ext::ShortUnwrap;
 use crate::core::lss::pull_screenshots;
-use crate::core::usb_resolver::resolve_permission;
-use crate::core::selector::run_with_device;
+use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, LINUX_ONLY, UNKNOWN_COMMAND};
+use crate::core::usb_resolver::resolve_permission;
+use std::env;
+use std::env::args;
 
 mod core;
 
@@ -14,18 +14,21 @@ const ADB: &str = "adb";
 const LSS: &str = "lss";
 
 enum Feature {
-    FixPermission, SelectDevice, LastScreenShots(u32)
+    FixPermission,
+    SelectDevice,
+    LastScreenShots(usize),
 }
 
 fn main() {
     if env::var(ENV_LANG)
         .map(|lang| lang.starts_with(RU))
-        .unwrap_or(false) {
+        .unwrap_or(false)
+    {
         Language::set_language(Language::Ru)
     }
     match resolve_feature().short_unwrap() {
         Feature::FixPermission => resolve_permission(),
-        Feature::SelectDevice => run_with_device(),
+        Feature::SelectDevice => resolve_device_and_run_args(),
         Feature::LastScreenShots(count) => pull_screenshots(count),
     }
 }
@@ -39,11 +42,11 @@ fn resolve_feature() -> Result<Feature, String> {
         _ if args[1] == LSS => Feature::LastScreenShots(get_count(args.get(2))),
         _ => return Err(String::from(UNKNOWN_COMMAND.value())),
     };
-    return Ok(feature)
+    return Ok(feature);
 }
 
-fn get_count(arg: Option<&String>) -> u32 {
-    arg.map(|it| it.parse::<u32>())
+fn get_count(arg: Option<&String>) -> usize {
+    arg.map(|it| it.parse::<usize>())
         .unwrap_or(Ok(1))
         .unwrap_or(1)
 }

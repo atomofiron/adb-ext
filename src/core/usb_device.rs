@@ -19,9 +19,7 @@ impl Clone for UsbDevice {
 impl UsbDevice {
     pub fn from(usb_device: &String) -> UsbDevice {
         let parts = usb_device.splitn_to_vec(7, ' ');
-        let ids = parts.get(5)
-            .unwrap()
-            .split_to_vec(':');
+        let ids = parts.get(5).unwrap().split_to_vec(':');
         UsbDevice {
             vendor_id: ids.get(0).unwrap().clone(),
             product_id: ids.get(1).unwrap().clone(),

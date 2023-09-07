@@ -3,8 +3,8 @@ use std::io::Write;
 use std::ops::RangeInclusive;
 use std::process::exit;
 
-
 pub const NEW_LINE: char = '\n';
+pub const SHELL: &str = "shell";
 
 pub fn exit_err(message: &str) {
     println!("{message}");
@@ -12,32 +12,26 @@ pub fn exit_err(message: &str) {
 }
 
 pub fn print_the_fuck_out() {
-    io::stdout()
-        .flush()
-        .unwrap();
+    io::stdout().flush().unwrap();
 }
 
 pub fn read_uint(label: &str, default: Option<usize>) -> usize {
     loop {
         let mut input = String::new();
 
-        io::stdout()
-            .write(label.as_bytes())
-            .unwrap();
+        io::stdout().write(label.as_bytes()).unwrap();
 
         print_the_fuck_out();
 
-        io::stdin()
-            .read_line(&mut input)
-            .unwrap();
+        io::stdin().read_line(&mut input).unwrap();
 
         if default.is_some() && input.len() == 1 && input.starts_with(NEW_LINE) {
-            return default.unwrap()
+            return default.unwrap();
         }
 
         match input.trim().parse::<usize>() {
             Ok(value) => return value,
-            _ => {},
+            _ => {}
         }
     }
 }
