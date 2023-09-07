@@ -42,7 +42,6 @@ pub fn pull_screenshots(count: usize) {
         }
         #[allow(deprecated)] // todo replace with a crate
         let mut dst = std::env::home_dir().unwrap().to_str().unwrap().to_string();
-        println!("dst {dst}");
         dst = format!("{dst}/Pictures/Screenshots/");
         std::fs::create_dir_all(dst.clone()).unwrap();
         pull_args.push(dst);

@@ -49,11 +49,7 @@ pub fn resolve_device() -> AdbDevice {
 
 fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
     for (i, device) in devices.iter().enumerate() {
-        let status = if device.authorized {
-            ""
-        } else {
-            " (unauthorized)"
-        };
+        let status = if device.authorized { "" } else { " (unauthorized)" };
         println!("{}) {}{status}", i + 1, device.name)
     }
     let index = read_usize_or_in(SELECT_DEVICE.value(), 1, 1..=devices.len()) - 1;
