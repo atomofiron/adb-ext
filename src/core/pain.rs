@@ -6,7 +6,7 @@ use std::io::{Write, Error, ErrorKind};
 use std::process::{Command, exit};
 use std::thread::sleep;
 use std::time::Duration;
-use crate::core::device::Device;
+use crate::core::usb_device::UsbDevice;
 use crate::core::ext::Split;
 use crate::core::strings::*;
 use crate::core::util::{read_usize_in, NEW_LINE};
@@ -43,7 +43,7 @@ pub fn resolve_permission() {
     }
 }
 
-fn find_devices() -> Vec<Device> {
+fn find_devices() -> Vec<UsbDevice> {
     let lines_before = fetch_lsusb().unwrap();
 
     CONNECT_OR_DISCONNECT.print();
@@ -60,8 +60,8 @@ fn find_devices() -> Vec<Device> {
         diffs = find_diffs(&lines_before, &lines_after);
     }
     return diffs.iter()
-        .map(Device::from)
-        .collect::<Vec<Device>>();
+        .map(UsbDevice::from)
+        .collect::<Vec<UsbDevice>>();
 }
 
 fn fetch_lsusb() -> Result<Vec<String>, String> {
@@ -92,7 +92,7 @@ fn find_diffs(first: &Vec<String>, second: &Vec<String>) -> Vec<String> {
     diffs
 }
 
-fn ask_target_device(devices: &Vec<Device>) -> usize {
+fn ask_target_device(devices: &Vec<UsbDevice>) -> usize {
     TYPE_TARGET_INDEX.println();
     for i in 0..devices.len() {
         println!("{}) {}", i + 1, devices[i].description);
@@ -100,7 +100,7 @@ fn ask_target_device(devices: &Vec<Device>) -> usize {
     return read_usize_in(TARGET_INDEX.value(), 1..=devices.len()) - 1;
 }
 
-fn apply(device: &Device) -> bool {
+fn apply(device: &UsbDevice) -> bool {
     if let Err(cause) = add_to_config(device) {
         println!("{}", cause);
         return false;
@@ -133,7 +133,7 @@ fn restart_service() -> Result<(),Error> {
     }
 }
 
-fn add_to_config(device: &Device) -> Result<(),Error> {
+fn add_to_config(device: &UsbDevice) -> Result<(),Error> {
     fs::create_dir_all(TARGET_DIR)?;
     let mut file = OpenOptions::new()
         .create(true)
