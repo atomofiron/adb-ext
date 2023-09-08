@@ -1,5 +1,8 @@
 use std::process::{exit, Output};
 
+
+const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
+
 pub trait ShortUnwrap<T> {
     fn short_unwrap(self) -> T;
 }
@@ -20,7 +23,8 @@ pub trait OutputExt {
     fn code(&self) -> i32;
     fn stdout(&self) -> String;
     fn stderr(&self) -> String;
-    fn print_and_get_code(self) -> i32;
+    fn is_more_than_one(&self) -> bool;
+    fn print(&self);
 }
 
 impl OutputExt for Output {
@@ -33,7 +37,10 @@ impl OutputExt for Output {
     fn stderr(&self) -> String {
         self.stderr.clone().trim()
     }
-    fn print_and_get_code(self) -> i32 {
+    fn is_more_than_one(&self) -> bool {
+        !self.status.success() && self.stderr() == MORE_THAN_ONE
+    }
+    fn print(&self) {
         let stdout = self.stdout();
         if !stdout.is_empty() {
             println!("{stdout}");
@@ -42,7 +49,6 @@ impl OutputExt for Output {
         if !stderr.is_empty() {
             println!("{stderr}");
         }
-        return self.status.code().unwrap_or(1);
     }
 }
 
@@ -90,7 +96,7 @@ pub trait StringVec {
 
 impl StringVec for Vec<&str> {
     fn to_string_vec(&self) -> Vec<String> {
-        self.iter().map(|&it| String::from(it)).collect()
+        self.iter().map(ToString::to_string).collect()
     }
 }
 

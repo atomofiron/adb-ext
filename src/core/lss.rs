@@ -8,10 +8,6 @@ const PICTURES_SCREENSHOTS: &str = "/sdcard/Pictures/Screenshots/";
 const DCIM_SCREENSHOTS: &str = "/sdcard/DCIM/Screenshots/";
 
 pub fn pull_screenshots(count: usize) {
-    // adb shell ls -1td /sdcard/Pictures/Screenshots/*
-    // adb shell ls -1td /sdcard/DCIM/Screenshots/*
-    // adb pull $files ~/Pictures/Screenshots/
-
     let device = resolve_device();
 
     let mut path = PICTURES_SCREENSHOTS;
@@ -22,7 +18,7 @@ pub fn pull_screenshots(count: usize) {
     if !exists {
         path = DCIM_SCREENSHOTS;
         let last_index = check_args.last_index();
-        check_args[last_index] = String::from(path);
+        check_args[last_index] = path.to_string();
         exists = run_adb_with_device(&device, check_args.clone())
             .status
             .success();
@@ -41,12 +37,13 @@ pub fn pull_screenshots(count: usize) {
             pull_args.push(format!("{path}{line}"));
         }
         #[allow(deprecated)] // todo replace with a crate
-        let mut dst = std::env::home_dir().unwrap().to_str().unwrap().to_string();
+            let mut dst = std::env::home_dir().unwrap().to_str().unwrap().to_string();
         dst = format!("{dst}/Pictures/Screenshots/");
         std::fs::create_dir_all(dst.clone()).unwrap();
         pull_args.push(dst);
         let output = run_adb_with_device(&device, pull_args);
-        exit(output.print_and_get_code());
+        output.print();
+        exit(output.code());
     } else {
         println!("{}", output.stderr());
         exit(output.code());

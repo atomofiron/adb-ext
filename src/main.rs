@@ -37,10 +37,10 @@ fn resolve_feature() -> Result<Feature, String> {
     let args = args().collect::<Vec<String>>();
     let feature = match () {
         _ if args.len() <= 1 && cfg!(target_os = "linux") => Feature::FixPermission,
-        _ if args.len() <= 1 => return Err(String::from(LINUX_ONLY.value())),
+        _ if args.len() <= 1 => return Err(LINUX_ONLY.value().to_string()),
         _ if args[1] == ADB => Feature::SelectDevice,
         _ if args[1] == LSS => Feature::LastScreenShots(get_count(args.get(2))),
-        _ => return Err(String::from(UNKNOWN_COMMAND.value())),
+        _ => return Err(UNKNOWN_COMMAND.value().to_string()),
     };
     return Ok(feature);
 }

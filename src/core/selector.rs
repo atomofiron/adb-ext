@@ -8,15 +8,19 @@ use std::process::{exit, Command, Output};
 
 const WHICH: &str = "/usr/bin/which";
 const ADB: &str = "adb";
-const DEVICES: &str = "devices";
+const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const ARG_S: &str = "-s";
 
 pub fn resolve_device_and_run_args() {
-    let device = resolve_device();
     let args = get_args();
-    let output = run_adb_with_device(&device, args);
-    exit(output.print_and_get_code());
+    let mut output = run_adb(args.as_slice());
+    if output.is_more_than_one() {
+        let device = resolve_device();
+        output = run_adb_with_device(&device, args);
+    }
+    output.print();
+    exit(output.code());
 }
 
 pub fn run_adb_with_device(device: &AdbDevice, mut args: Vec<String>) -> Output {
@@ -26,22 +30,26 @@ pub fn run_adb_with_device(device: &AdbDevice, mut args: Vec<String>) -> Output 
 }
 
 pub fn resolve_device() -> AdbDevice {
-    let output = run_adb(&[DEVICES]);
+    let output = run_adb(&[ARG_DEVICES]);
     let mut devices = output.stdout().split('\n')
         .enumerate()
         .filter_map(|(i,it)|
-            // the first is "List of devices attached"
+            // the first line is "List of devices attached"
             if i == 0 { None } else {
                 let parts = it.split("\t").collect::<Vec<&str>>();
                 let device = AdbDevice {
-                    name: String::from(parts[0]),
+                    name: parts[0].to_string(),
                     authorized: parts[1] == DEVICE,
                 };
                 Some(device)
             }
         ).collect::<Vec<AdbDevice>>();
     return match () {
-        _ if devices.is_empty() => exit(run_adb(&[SHELL]).print_and_get_code()),
+        _ if devices.is_empty() => {
+            let output = run_adb(&[SHELL]);
+            output.print();
+            exit(output.code());
+        },
         _ if devices.len() == 1 => devices.remove(0),
         _ => ask_for_device(devices),
     };
