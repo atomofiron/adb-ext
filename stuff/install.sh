@@ -64,6 +64,8 @@ case \":\${PATH}:\" in
 		export PATH=\$PATH:\$HOME/$local_bin
         ;;
 esac
+alias adb='\$HOME/$local_bin adb'
+alias lss='\$HOME/$local_bin lss'
 "
 		printf "$env_case" > $env_file_path
 		if check_cmd bash; then
