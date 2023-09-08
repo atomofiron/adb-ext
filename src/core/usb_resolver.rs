@@ -3,7 +3,6 @@ use crate::core::strings::*;
 use crate::core::usb_device::UsbDevice;
 use crate::core::util::{read_usize_in, NEW_LINE};
 use nix::unistd::Uid;
-use std::env::args;
 use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Write};
 use std::process::{exit, Command};
@@ -147,9 +146,9 @@ fn add_to_config(device: &UsbDevice) -> Result<(), Error> {
 }
 
 fn rerun_with_sudo() -> i32 {
-    let command = args().collect::<Vec<String>>().first().unwrap().clone();
+    let path = std::env::current_exe().unwrap();
     return Command::new(SUDO)
-        .arg(command)
+        .arg(path)
         .status()
         .unwrap()
         .code()
