@@ -5,7 +5,7 @@ println() {
 }
 
 err() {
-    print "$1"
+    printf "$1"
     exit 1
 }
 
@@ -37,6 +37,7 @@ local_bin='.local/bin'
 home_local_bin=$HOME'/'$local_bin
 env_file='$HOME/.local/env'
 env_file_path=$HOME'/.local/env'
+version_code=1
 
 if [ -f $home_local_bin'/green-pain' ]; then
 	action='updating'
@@ -50,13 +51,7 @@ println "downloading..."
 ensure curl -X GET -sSfL https://github.com/Atomofiron/green-pain/releases/latest/download/green-pain -o green-pain
 ensure chmod u+x green-pain
 
-notice_user=false
-
-case ":${PATH}:" in
-    *:"$home_local_bin":*)
-        ;;
-    *)
-		env_case="
+env_script="
 case \":\${PATH}:\" in
     *:\"\$HOME/$local_bin\":*)
         ;;
@@ -64,24 +59,22 @@ case \":\${PATH}:\" in
 		export PATH=\$PATH:\$HOME/$local_bin
         ;;
 esac
-alias adb='\$HOME/$local_bin adb'
-alias lss='\$HOME/$local_bin lss'
+alias adb='\$HOME/$local_bin/green-pain adb'
+alias lss='\$HOME/$local_bin/green-pain lss'
+export ADB_EXT_VERSION_CODE=$version_code
 "
-		printf "$env_case" > $env_file_path
-		if check_cmd bash; then
-			printf ". $env_file\n" >> ~/.bashrc
-			println '.bashrc done'
-		fi
-		if check_cmd zsh; then
-			printf ". $env_file\n" >> ~/.zshrc
-			println '.zshrc done'
-		fi
-		notice_user=true
-        ;;
-esac
+printf "$env_script" > $env_file_path
+if check_cmd bash; then
+	printf ". $env_file\n" >> ~/.bashrc
+	println '.bashrc done'
+fi
+if check_cmd zsh; then
+	printf ". $env_file\n" >> ~/.zshrc
+	println '.zshrc done'
+fi
 
-printf "%s succeed, run \33[1msudo green-pain\33[0m\n" $action
-if $notice_user; then
+printf "%s succeed, run \33[1mgreen-pain\33[0m or \33[1mlss 1\33[0m\n" $action
+if [[ $ADB_EXT_VERSION_CODE != $version_code ]]; then
 	println '... however, first of all to configure your current shell, run:'
 	println "\33[1msource "$env_file"\33[0m"
 fi
