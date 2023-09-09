@@ -67,7 +67,7 @@ fn get_args() -> Vec<String> {
     return env::args()
         .enumerate()
         // ignore "*/green-pain" and "adb"
-        .filter(|(i, _)| *i <= 1)
+        .filter(|(i, _)| *i >= 2)
         .map(|(_, it)| it)
         .collect::<Vec<String>>();
 }
