@@ -1,10 +1,10 @@
 use crate::core::adb_device::AdbDevice;
-use crate::core::ext::OutputExt;
+use crate::core::ext::{OutputExt, print_no_one};
 use crate::core::strings::{NO_ADB, SELECT_DEVICE};
-use crate::core::util::{exit_err, read_usize_or_in, SHELL};
+use crate::core::util::read_usize_or_in;
 use std::env;
-use std::ffi::OsStr;
 use std::process::{exit, Command, Output};
+use crate::core::adb_command::AdbArgs;
 
 const WHICH: &str = "/usr/bin/which";
 const ADB: &str = "adb";
@@ -13,8 +13,8 @@ const DEVICE: &str = "device";
 const ARG_S: &str = "-s";
 
 pub fn resolve_device_and_run_args() {
-    let args = get_args();
-    let mut output = run_adb(args.as_slice());
+    let args = AdbArgs::spawn(get_args().as_slice());
+    let mut output = run_adb(args.clone());
     if output.is_more_than_one() {
         let device = resolve_device();
         output = run_adb_with_device(&device, args);
@@ -23,14 +23,14 @@ pub fn resolve_device_and_run_args() {
     exit(output.code());
 }
 
-pub fn run_adb_with_device(device: &AdbDevice, mut args: Vec<String>) -> Output {
-    args.insert(0, device.name.clone());
-    args.insert(0, ARG_S.to_string());
-    return run_adb(args.as_slice());
+pub fn run_adb_with_device(device: &AdbDevice, mut args: AdbArgs) -> Output {
+    args.args.insert(0, device.name.clone());
+    args.args.insert(0, ARG_S.to_string());
+    return run_adb(args);
 }
 
 pub fn resolve_device() -> AdbDevice {
-    let output = run_adb(&[ARG_DEVICES]);
+    let output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
     let mut devices = output.stdout().split('\n')
         .enumerate()
         .filter_map(|(i,it)|
@@ -46,9 +46,8 @@ pub fn resolve_device() -> AdbDevice {
         ).collect::<Vec<AdbDevice>>();
     return match () {
         _ if devices.is_empty() => {
-            let output = run_adb(&[SHELL]);
-            output.print();
-            exit(output.code());
+            print_no_one();
+            exit(1);
         },
         _ if devices.len() == 1 => devices.remove(0),
         _ => ask_for_device(devices),
@@ -68,21 +67,33 @@ fn get_args() -> Vec<String> {
     return env::args()
         .enumerate()
         // ignore "*/green-pain" and "adb"
-        .filter_map(|(i, it)| if i <= 1 { None } else { Some(it) })
+        .filter(|(i, _)| *i <= 1)
+        .map(|(_, it)| it)
         .collect::<Vec<String>>();
 }
 
-// todo add support stdin or idk
-fn run_adb<S: AsRef<OsStr>>(args: &[S]) -> Output {
-    let output = Command::new(WHICH).arg(ADB).output().unwrap();
-    let adb = output.stdout();
-    if adb.is_empty() {
-        exit_err(NO_ADB.value());
+// fn spawn_adb<S: AsRef<OsStr>>(args: &[S]) -> Output {
+//
+// }
+
+fn run_adb(args: AdbArgs) -> Output {
+    let output = Command::new(WHICH)
+        .arg(ADB)
+        .output()
+        .unwrap();
+    let adb_path = output.stdout();
+    if adb_path.is_empty() {
+        NO_ADB.print();
         exit(1);
     }
-    let mut adb = &mut Command::new(adb);
-    for arg in args {
+    let mut adb = &mut Command::new(adb_path);
+    for arg in args.args {
         adb = adb.arg(arg);
     }
-    return adb.output().unwrap();
+    return if args.interactive {
+        adb.spawn().unwrap()
+            .wait_with_output().unwrap()
+    } else {
+        adb.output().unwrap()
+    }
 }

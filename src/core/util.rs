@@ -1,15 +1,9 @@
 use std::io;
 use std::io::Write;
 use std::ops::RangeInclusive;
-use std::process::exit;
 
 pub const NEW_LINE: char = '\n';
 pub const SHELL: &str = "shell";
-
-pub fn exit_err(message: &str) {
-    println!("{message}");
-    exit(1);
-}
 
 pub fn print_the_fuck_out() {
     io::stdout().flush().unwrap();

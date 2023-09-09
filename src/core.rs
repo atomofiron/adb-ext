@@ -6,3 +6,4 @@ pub mod strings;
 pub mod usb_device;
 pub mod usb_resolver;
 pub mod util;
+pub mod adb_command;

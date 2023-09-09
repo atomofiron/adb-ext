@@ -2,6 +2,7 @@ use std::process::{exit, Output};
 
 
 const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
+const NO_TARGETS: &str = "adb: no devices/emulators found";
 
 pub trait ShortUnwrap<T> {
     fn short_unwrap(self) -> T;
@@ -50,6 +51,10 @@ impl OutputExt for Output {
             println!("{stderr}");
         }
     }
+}
+
+pub fn print_no_one() {
+    println!("{NO_TARGETS}");
 }
 
 trait Trim {
