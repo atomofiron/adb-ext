@@ -11,6 +11,9 @@ const DESKTOP_SCREENSHOTS: &str = "/Pictures/Screenshots/";
 const EXISTS: &str = "exists";
 
 pub fn pull_screenshots(count: usize) {
+    if count <= 0 {
+        return
+    }
     let device = resolve_device();
     let mut path = DCIM_SCREENSHOTS;
     let mut check_args = AdbArgs::run(&[SHELL, "test", "-d", path, "&&", "echo", EXISTS]);
