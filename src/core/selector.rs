@@ -14,12 +14,8 @@ const ARG_S: &str = "-s";
 
 pub fn resolve_device_and_run_args() {
     let args = AdbArgs::spawn(get_args().as_slice());
-    let mut output = run_adb(args.clone());
-    if output.is_more_than_one() {
-        let device = resolve_device();
-        output = run_adb_with_device(&device, args);
-    }
-    output.print();
+    let device = resolve_device();
+    let output = run_adb_with_device(&device, args);
     exit(output.code());
 }
 
