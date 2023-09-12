@@ -39,12 +39,12 @@ pub static NO_ADB: Label = Label::new(
     "ADB не обнаружен",
 );
 pub static SELECT_DEVICE: Label = Label::new(
-    "Выберите устройство (по умолчанию 1): ",
     "Select a device (default 1): ",
+    "Выберите устройство (по умолчанию 1): ",
 );
 pub static SCREENSHOTS_NOT_FOUND: Label = Label::new(
-    "Директория со скриншотами не найдена",
     "The directory with screenshots was not found",
+    "Директория со скриншотами не найдена",
 );
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",

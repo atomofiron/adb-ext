@@ -3,6 +3,7 @@ use std::io::Write;
 use std::ops::RangeInclusive;
 
 pub const NEW_LINE: char = '\n';
+pub const TAB: char = '\t';
 pub const SHELL: &str = "shell";
 
 pub fn print_the_fuck_out() {

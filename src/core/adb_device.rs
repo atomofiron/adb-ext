@@ -1,4 +1,26 @@
 pub struct AdbDevice {
     pub name: String,
-    pub authorized: bool,
+    pub model: String,
+    pub ok: bool,
+    pub unauthorized: bool,
+}
+
+pub trait AdbDeviceVec {
+    fn get_unique_model_name(&self, device: &AdbDevice) -> String;
+}
+
+impl AdbDeviceVec for Vec<AdbDevice> {
+    fn get_unique_model_name(&self, device: &AdbDevice) -> String {
+        let mut count = 0;
+        for d in self {
+            if d.model == device.model {
+                count += 1;
+            }
+        }
+        return if count > 1 {
+            format!("{} ({})", device.model, device.name)
+        } else {
+            device.model.clone()
+        }
+    }
 }
