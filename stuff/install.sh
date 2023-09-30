@@ -33,6 +33,17 @@ if ! [ -d $HOME ]; then
 	err 'Home directory not found'
 fi
 
+system=$(ensure uname -sm)
+if [[ $system == "Darwin arm64" ]]; then
+  variant="green-pain-apple-arm"
+elif [[ $system == "Darwin x86_64" ]]; then
+  variant="green-pain-apple-x86_64"
+elif [[ $system == "Linux x86_64" ]]; then
+  variant="green-pain-linux-x86_64"
+else
+  err "Unsupported system or arch: $system"
+fi
+
 local_bin='.local/bin'
 home_local_bin=$HOME'/'$local_bin
 env_file='$HOME/.local/env'
@@ -48,7 +59,7 @@ fi
 mkdir -p $home_local_bin
 ensure cd $home_local_bin
 println "downloading..."
-ensure curl -X GET -sSfL https://github.com/Atomofiron/green-pain/releases/latest/download/green-pain -o green-pain
+ensure curl -X GET -sSfL https://github.com/Atomofiron/green-pain/releases/latest/download/$variant -o green-pain
 ensure chmod u+x green-pain
 
 env_script="
