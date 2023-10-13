@@ -34,11 +34,11 @@ if ! [ -d $HOME ]; then
 fi
 
 system=$(ensure uname -sm)
-if [[ $system == "Darwin arm64" ]]; then
+if [ "$system" = "Darwin arm64" ]; then
   variant="green-pain-apple-arm"
-elif [[ $system == "Darwin x86_64" ]]; then
+elif [ "$system" = "Darwin x86_64" ]; then
   variant="green-pain-apple-x86_64"
-elif [[ $system == "Linux x86_64" ]]; then
+elif [ "$system" = "Linux x86_64" ]; then
   variant="green-pain-linux-x86_64"
 else
   err "Unsupported system or arch: $system"
@@ -85,7 +85,7 @@ if check_cmd zsh; then
 fi
 
 printf "%s succeed, run \33[1mgreen-pain\33[0m or \33[1mlss 1\33[0m\n" $action
-if [[ $ADB_EXT_VERSION_CODE != $version_code ]]; then
+if [ "$ADB_EXT_VERSION_CODE" != "$version_code" ]; then
 	println '... however, first of all to configure your current shell, run:'
 	println "\33[1msource "$env_file"\33[0m"
 fi
