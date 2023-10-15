@@ -5,7 +5,7 @@ println() {
 }
 
 err() {
-    printf "$1"
+    printf "ERROR: $1"
     exit 1
 }
 
@@ -75,13 +75,18 @@ alias lss='\$HOME/$local_bin/green-pain lss'
 export ADB_EXT_VERSION_CODE=$version_code
 "
 printf "$env_script" > $env_file_path
-if check_cmd bash; then
-	printf ". $env_file\n" >> ~/.bashrc
-	println '.bashrc done'
-fi
-if check_cmd zsh; then
-	printf ". $env_file\n" >> ~/.zshrc
-	println '.zshrc done'
+if [ "$ADB_EXT_VERSION_CODE" = "" ]; then # the first installation
+    added=false
+    for file in ~/.bashrc ~/.zshrc; do
+        if [ -f $file ]; then
+          printf ". $env_file\n" >> $file
+          println "$file done"
+          added=true
+        fi
+    done
+    if ! $added; then
+        err 'no any ~/.*rc file found'
+    fi
 fi
 
 printf "%s succeed, run \33[1mgreen-pain\33[0m or \33[1mlss 1\33[0m\n" $action
