@@ -62,8 +62,11 @@ trait Trim {
 }
 
 impl Trim for Vec<u8> {
-    fn trim(self) -> String {
-        String::from_utf8(self).unwrap().trim().to_string()
+    fn trim(mut self) -> String {
+        let fixed = self.iter()
+            .map(|&it| it as u16)
+            .collect::<Vec<u16>>();
+        String::from_utf16_lossy(&fixed).trim().to_string()
     }
 }
 
