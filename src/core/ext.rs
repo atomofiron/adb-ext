@@ -117,3 +117,14 @@ impl<T> VecExt for Vec<T> {
         self.len() - 1
     }
 }
+
+pub trait StrExt {
+    fn contains_upper(&self) -> bool;
+}
+
+impl StrExt for str {
+    fn contains_upper(&self) -> bool {
+        // A-Z
+        self.chars().any(|it| (65..=90u8).contains(&(it as u8)))
+    }
+}

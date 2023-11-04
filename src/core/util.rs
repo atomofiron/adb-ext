@@ -2,6 +2,7 @@ use std::io;
 use std::io::Write;
 use std::ops::RangeInclusive;
 
+pub const SPACE: char = ' ';
 pub const NEW_LINE: char = '\n';
 pub const TAB: char = '\t';
 pub const SHELL: &str = "shell";

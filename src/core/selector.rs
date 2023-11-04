@@ -1,7 +1,7 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
-use crate::core::ext::{OutputExt, print_no_one};
+use crate::core::ext::{OutputExt, print_no_one, StrExt};
 use crate::core::strings::{NO_ADB, SELECT_DEVICE};
-use crate::core::util::{NEW_LINE, read_usize_or_in, SHELL, TAB};
+use crate::core::util::{NEW_LINE, read_usize_or_in, SHELL, SPACE, TAB};
 use std::env;
 use std::process::{exit, Command, Output};
 use crate::core::adb_command::AdbArgs;
@@ -136,13 +136,16 @@ fn get_args() -> Vec<String> {
 fn get_model(name: &String) -> String {
     let output = run_adb(AdbArgs::run(&[ARG_S, name.as_str(), SHELL, GETPROPS])).stdout();
     let props = output.split(NEW_LINE).collect::<Vec<&str>>();
-    let mut longest = "";
+    let mut suitable = "";
     for prop in props {
-        if prop.len() > longest.len() {
-            longest = prop
-        }
+        suitable = match () {
+            _ if prop.len() > suitable.len() => prop,
+            _ if prop.contains(SPACE) && !suitable.contains(SPACE) => prop,
+            _ if prop.contains_upper() && !suitable.contains_upper() => prop,
+            _ => suitable,
+        };
     }
-    return if longest.is_empty() { name.clone() } else { longest.to_string() }
+    return if suitable.is_empty() { name.clone() } else { suitable.to_string() }
 }
 
 fn run_adb(args: AdbArgs) -> Output {
