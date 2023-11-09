@@ -5,6 +5,8 @@ use std::ops::RangeInclusive;
 pub const SPACE: char = ' ';
 pub const NEW_LINE: char = '\n';
 pub const TAB: char = '\t';
+pub const SLASH: char = '/';
+pub const DASH: char = '-';
 pub const SHELL: &str = "shell";
 
 pub fn print_the_fuck_out() {

@@ -1,6 +1,6 @@
 pub mod adb_device;
 pub mod ext;
-pub mod lss;
+pub mod pull_media;
 pub mod selector;
 pub mod strings;
 pub mod usb_device;

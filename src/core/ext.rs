@@ -62,7 +62,7 @@ trait Trim {
 }
 
 impl Trim for Vec<u8> {
-    fn trim(mut self) -> String {
+    fn trim(self) -> String {
         let fixed = self.iter()
             .map(|&it| it as u16)
             .collect::<Vec<u16>>();

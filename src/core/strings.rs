@@ -42,9 +42,13 @@ pub static SELECT_DEVICE: Label = Label::new(
     "Select a device (default 1): ",
     "Выберите устройство (по умолчанию 1): ",
 );
-pub static SCREENSHOTS_NOT_FOUND: Label = Label::new(
-    "The directory with screenshots was not found",
-    "Директория со скриншотами не найдена",
+pub static MEDIAS_NOT_FOUND: Label = Label::new(
+    "Screenshots/casts were not found",
+    "Скриншоты/записи не найдены",
+);
+pub static DESTINATION: Label = Label::new(
+    "Destination: ",
+    "Место назначения: ",
 );
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",

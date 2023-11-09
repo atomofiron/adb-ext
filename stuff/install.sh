@@ -48,7 +48,7 @@ local_bin='.local/bin'
 home_local_bin=$HOME'/'$local_bin
 env_file='$HOME/.local/env'
 env_file_path=$HOME'/.local/env'
-version_code=1
+version_code=2
 
 if [ -f $home_local_bin'/green-pain' ]; then
 	action='updating'
@@ -72,6 +72,7 @@ case \":\${PATH}:\" in
 esac
 alias adb='\$HOME/$local_bin/green-pain adb'
 alias lss='\$HOME/$local_bin/green-pain lss'
+alias lsc='\$HOME/$local_bin/green-pain lsc'
 export ADB_EXT_VERSION_CODE=$version_code
 "
 printf "$env_script" > $env_file_path
