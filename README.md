@@ -13,11 +13,26 @@ curl -sSfL https://github.com/Atomofiron/green-pain/raw/main/stuff/install.sh | 
 ```
 
 # Run
-resolve usb adb permission
+resolve usb adb permission (Linux only)
 ```
 green-pain
 ```
-pull the 3 last screenshots from device
+common use of ADB
+```
+$ adb shell
+1) Oneplus 7T
+2) Nothing Phone (1)
+Select a device (default 1):
+```
+pull the 3 last screenshots from device\
+sources: `/sdcard/Pictures/Screenshots/`, `/sdcard/DCIM/Screenshots/`\
+destination: `~/Android/Screenshots`
 ```
 lss 3
+```
+pull the 3 last screencasts from device\
+sources: `/sdcard/Pictures/Screenshots/`, `/sdcard/DCIM/Screen recordings/`, `/sdcard/Movies/`\
+destination: `~/Android/Screencasts`
+```
+lsc 3
 ```
