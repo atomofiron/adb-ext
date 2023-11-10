@@ -22,7 +22,8 @@ common use of ADB
 $ adb shell
 1) Oneplus 7T
 2) Nothing Phone (1)
-Select a device (default 1):
+Select a device (default 1): 2
+Spacewar:/ $
 ```
 pull the 3 last screenshots from device\
 sources: `/sdcard/Pictures/Screenshots/`, `/sdcard/DCIM/Screenshots/`\
