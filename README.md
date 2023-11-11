@@ -18,7 +18,7 @@ resolve usb adb permission (Linux only)
 green-pain
 ```
 <details>
-  <summary>MacOS feature</summary>
+  <summary>MacOS feature (after each installation or update)</summary>
   <br>
   0. execute the green-pain<br>
   1. click Cancel<br>
