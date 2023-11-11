@@ -17,6 +17,18 @@ resolve usb adb permission (Linux only)
 ```
 green-pain
 ```
+<details>
+  <summary>MacOS feature</summary>
+  <br>
+  0. execute the green-pain<br>
+  1. click Cancel<br>
+  2. System Settings > Privacy & Security > Allow Anyway<br>
+  3. execute the green-pain again<br>
+  4. click Open<br>
+  <br>
+<img width="978" alt="green-pain-macos-feature" src="https://github.com/atomofiron/green-pain/assets/14147217/d765de66-a273-4b93-a8a4-8441e40c06ba">
+</details>
+
 common use of ADB
 ```
 $ adb shell
