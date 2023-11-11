@@ -39,8 +39,8 @@ pub static NO_ADB: Label = Label::new(
     "ADB не обнаружен",
 );
 pub static SELECT_DEVICE: Label = Label::new(
-    "Select a device (default 1): ",
-    "Выберите устройство (по умолчанию 1): ",
+    "Select a device",
+    "Выберите устройство",
 );
 pub static MEDIAS_NOT_FOUND: Label = Label::new(
     "Screenshots/casts were not found",
@@ -53,6 +53,10 @@ pub static DESTINATION: Label = Label::new(
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",
     "Неизвестная ошибка",
+);
+pub static CANCEL: Label = Label::new(
+    "Cancel",
+    "Отмена",
 );
 pub static ERROR: Label = Label::new(
     "Error",

@@ -1,9 +1,10 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
-use crate::core::strings::{NO_ADB, SELECT_DEVICE};
+use crate::core::strings::{CANCEL, NO_ADB, SELECT_DEVICE};
 use crate::core::util::{NEW_LINE, read_usize_or_in, SHELL, SPACE, TAB};
 use std::env;
 use std::process::{exit, Command, Output};
+use dialoguer::FuzzySelect;
 use crate::core::adb_command::AdbArgs;
 
 const WHICH: &str = "/usr/bin/which";
@@ -111,17 +112,26 @@ pub fn resolve_device() -> AdbDevice {
 }
 
 fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
-    for (i, device) in devices.iter().enumerate() {
+    let mut items = devices.iter().map(|device| {
         let status = match () {
             _ if device.ok => "",
             _ if device.unauthorized => " (unauthorized)",
             // todo => " (no permission)"
             _ => " (unknown)",
         };
-        println!("{}) {}{status}", i + 1, devices.get_unique_model_name(device))
+        format!("{}{status}", devices.get_unique_model_name(device))
+    }).collect::<Vec<String>>();
+    items.push(CANCEL.value().to_string());
+    let selection = FuzzySelect::new()
+        .with_prompt(SELECT_DEVICE.value())
+        .default(0)
+        .items(&items)
+        .interact()
+        .unwrap();
+    if selection >= devices.len() {
+        exit(0);
     }
-    let index = read_usize_or_in(SELECT_DEVICE.value(), 1, 1..=devices.len()) - 1;
-    return devices.remove(index);
+    return devices.remove(selection);
 }
 
 fn get_args() -> Vec<String> {
