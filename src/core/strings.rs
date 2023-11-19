@@ -16,15 +16,8 @@ pub static NO_DEVICES_FOUND: Label = Label::new(
     "Устройств не обнаружено, попробуйте снова",
 );
 pub static PLEASE_WAIT: Label = Label::new(
-    "Please wait...", "Подождите...",
-);
-pub static TYPE_TARGET_INDEX: Label = Label::new(
-    "Type the index of target device and press Enter:",
-    "Введите номер устройства и нажмите Enter:",
-);
-pub static TARGET_INDEX: Label = Label::new(
-    "index: ",
-    "номер: ",
+    "Please wait...",
+    "Подождите...",
 );
 pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",
@@ -49,6 +42,10 @@ pub static MEDIAS_NOT_FOUND: Label = Label::new(
 pub static DESTINATION: Label = Label::new(
     "Destination: ",
     "Место назначения: ",
+);
+pub static SAVED: Label = Label::new(
+    "Saved",
+    "Сохранено",
 );
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",

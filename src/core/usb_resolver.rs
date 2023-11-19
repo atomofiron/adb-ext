@@ -1,7 +1,7 @@
 use crate::core::ext::Split;
+use crate::core::r#const::NEW_LINE;
 use crate::core::strings::*;
 use crate::core::usb_device::UsbDevice;
-use crate::core::util::{read_usize_in, NEW_LINE};
 use nix::unistd::Uid;
 use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Write};
@@ -9,6 +9,7 @@ use std::process::{exit, Command};
 use std::thread::sleep;
 use std::time::Duration;
 use std::{fs, io};
+use dialoguer::FuzzySelect;
 
 const SUDO: &str = "sudo";
 const LSUSB: &str = "lsusb";
@@ -32,7 +33,7 @@ pub fn resolve_permission() {
     }
     let mut index = 0;
     if devices.len() > 1 {
-        index = ask_target_device(&devices);
+        index = ask_target_device_or_exit(&devices);
     }
     let device = devices.get(index).unwrap();
 
@@ -60,6 +61,7 @@ fn find_devices() -> Vec<UsbDevice> {
     }
     return diffs
         .iter()
+        .filter(|it| it.starts_with("Bus "))
         .map(UsbDevice::from)
         .collect::<Vec<UsbDevice>>();
 }
@@ -92,12 +94,18 @@ fn find_diffs(first: &Vec<String>, second: &Vec<String>) -> Vec<String> {
     diffs
 }
 
-fn ask_target_device(devices: &Vec<UsbDevice>) -> usize {
-    TYPE_TARGET_INDEX.println();
-    for i in 0..devices.len() {
-        println!("{}) {}", i + 1, devices[i].description);
+fn ask_target_device_or_exit(devices: &Vec<UsbDevice>) -> usize {
+    let items = devices.iter().map(|it| it.description.clone()).collect::<Vec<String>>();
+    let selection = FuzzySelect::new()
+        .with_prompt(SELECT_DEVICE.value())
+        .default(0)
+        .items(&items)
+        .interact()
+        .unwrap();
+    if selection >= devices.len() {
+        exit(0);
     }
-    return read_usize_in(TARGET_INDEX.value(), 1..=devices.len()) - 1;
+    return selection;
 }
 
 fn apply(device: &UsbDevice) -> bool {

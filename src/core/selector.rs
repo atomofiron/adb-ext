@@ -1,7 +1,7 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
 use crate::core::strings::{CANCEL, NO_ADB, SELECT_DEVICE};
-use crate::core::util::{NEW_LINE, read_usize_or_in, SHELL, SPACE, TAB};
+use crate::core::r#const::{NEW_LINE, SHELL, SPACE, TAB};
 use std::env;
 use std::process::{exit, Command, Output};
 use dialoguer::FuzzySelect;

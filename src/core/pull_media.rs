@@ -1,15 +1,12 @@
 use std::cmp::Ordering;
-use std::fs::create_dir_all;
-use std::path::Path;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::util::{DASH, NEW_LINE, SHELL, SLASH, SPACE};
+use crate::core::r#const::{DASH, DESKTOP_SCREENCASTS, DESKTOP_SCREENSHOTS, NEW_LINE, SHELL, SLASH, SPACE};
 use std::process::exit;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
+use crate::core::util::{ensure_dir_exists, gen_home_path};
 
-const DESKTOP_SCREENSHOTS: &str = "/Android/Screenshots/";
-const DESKTOP_SCREENCASTS: &str = "/Android/Screencasts/";
 const PULL: &str = "pull";
 const LS_SCREENSHOTS: &str = "toybox ls -llcd /sdcard/Pictures/Screenshots/* /sdcard/DCIM/Screenshots/*";
 const LS_SCREENCASTS: &str = "toybox ls -llcd /sdcard/Pictures/Screenshots/* /sdcard/DCIM/Screen\\ recordings/* /sdcard/Movies/*";
@@ -55,12 +52,11 @@ fn pull(count: usize, exts: &[&str], args: &[&str], target: &str) {
             .collect::<Vec<String>>();
         let mut pull_args = AdbArgs::run(&[PULL]);
         pull_args.args.append(&mut items);
-        #[allow(deprecated)] // todo replace with a crate
-        let dst = format!("{}{target}", std::env::home_dir().unwrap().to_str().unwrap().to_string());
+        let dst = gen_home_path(Some(target));
         ensure_dir_exists(&dst);
         pull_args.args.push(dst.clone());
         let output = run_adb_with(&device, pull_args);
-        output.print();
+        output.print_out_and_err();
         if output.status.success() {
             DESTINATION.print();
             println!("{dst}");
@@ -87,12 +83,6 @@ fn as_item_or_none(exts: &[&str], line: Vec<String>) -> Option<Item> {
     // ignore the part contains '+0200' if exists
     let path = last[root..].to_string();
     Some(Item { date, time, path })
-}
-
-fn ensure_dir_exists(path: &String) {
-    if !Path::new(path.as_str()).exists() {
-        create_dir_all(path).unwrap();
-    }
 }
 
 fn splitn_by(str: &str, limit: usize, sep: char) -> Vec<String> {

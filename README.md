@@ -39,13 +39,22 @@ Spacewar:/ $
 ```
 pull the 3 last screenshots from device\
 sources: `/sdcard/Pictures/Screenshots/`, `/sdcard/DCIM/Screenshots/`\
-destination: `~/Android/Screenshots`
+destination: `~/Android/Screenshots/`
 ```
 lss 3
 ```
 pull the 3 last screencasts from device\
 sources: `/sdcard/Pictures/Screenshots/`, `/sdcard/DCIM/Screen recordings/`, `/sdcard/Movies/`\
-destination: `~/Android/Screencasts`
+destination: `~/Android/Screencasts/`
 ```
 lsc 3
+```
+make a new screenshot and pull it\
+default destination: `~/Android/Screencasts/`
+```
+mss
+# or
+mss ~/destination/
+# or
+mss ~/destination/screenshot.png
 ```

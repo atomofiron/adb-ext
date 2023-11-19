@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 nix = { version = "0.27.1", features = ["user"] }
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
+chrono = "0.4.31"

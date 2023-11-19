@@ -5,6 +5,7 @@ use crate::core::strings::{Language, LINUX_ONLY, UNKNOWN_COMMAND};
 use crate::core::usb_resolver::resolve_permission;
 use std::env;
 use std::env::args;
+use crate::core::make_screenshot::make_screenshot;
 
 mod core;
 
@@ -13,12 +14,15 @@ const RU: &str = "ru";
 const ADB: &str = "adb";
 const LSS: &str = "lss";
 const LSC: &str = "lsc";
+const MSS: &str = "mss";
+const SHOT: &str = "shot";
 
 enum Feature {
     FixPermission,
     SelectDevice,
     LastScreenShots(usize),
     LastScreenCasts(usize),
+    MakeScreenShot(Option<String>),
 }
 
 fn main() {
@@ -33,6 +37,7 @@ fn main() {
         Feature::SelectDevice => resolve_device_and_run_args(),
         Feature::LastScreenShots(count) => pull_screenshots(count),
         Feature::LastScreenCasts(count) => pull_screencasts(count),
+        Feature::MakeScreenShot(dst) => make_screenshot(dst),
     }
 }
 
@@ -44,6 +49,7 @@ fn resolve_feature() -> Result<Feature, String> {
         _ if args[1] == ADB => Feature::SelectDevice,
         _ if args[1] == LSS => Feature::LastScreenShots(get_count(args.get(2))),
         _ if args[1] == LSC => Feature::LastScreenCasts(get_count(args.get(2))),
+        _ if args[1] == MSS || args[1] == SHOT => Feature::MakeScreenShot(args.get(2).cloned()),
         _ => return Err(UNKNOWN_COMMAND.value().to_string()),
     };
     return Ok(feature);

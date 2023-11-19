@@ -1,52 +1,30 @@
+use std::fs::create_dir_all;
 use std::io;
 use std::io::Write;
-use std::ops::RangeInclusive;
+use std::path::Path;
 
-pub const SPACE: char = ' ';
-pub const NEW_LINE: char = '\n';
-pub const TAB: char = '\t';
-pub const SLASH: char = '/';
-pub const DASH: char = '-';
-pub const SHELL: &str = "shell";
 
 pub fn print_the_fuck_out() {
     io::stdout().flush().unwrap();
 }
 
-pub fn read_uint(label: &str, default: Option<usize>) -> usize {
-    loop {
-        let mut input = String::new();
+pub fn gen_home_path(subpath: Option<&str>) -> String {
+    #[allow(deprecated)] // todo replace with a crate
+    let mut path = std::env::home_dir().unwrap().to_str().unwrap().to_string();
+    path.push('/');
+    if let Some(subpath) = subpath {
+        path.push_str(subpath);
+    }
+    return path;
+}
 
-        io::stdout().write(label.as_bytes()).unwrap();
-
-        print_the_fuck_out();
-
-        io::stdin().read_line(&mut input).unwrap();
-
-        if default.is_some() && input.len() == 1 && input.starts_with(NEW_LINE) {
-            return default.unwrap();
-        }
-
-        match input.trim().parse::<usize>() {
-            Ok(value) => return value,
-            _ => {}
-        }
+pub fn ensure_dir_exists(path: &str) {
+    if !Path::new(path).exists() {
+        create_dir_all(path).unwrap();
     }
 }
 
-pub fn read_usize_in(label: &str, range: RangeInclusive<usize>) -> usize {
-    read_usize(label, None, range)
-}
-
-pub fn read_usize_or_in(label: &str, default: usize, range: RangeInclusive<usize>) -> usize {
-    read_usize(label, Some(default), range)
-}
-
-fn read_usize(label: &str, default: Option<usize>, range: RangeInclusive<usize>) -> usize {
-    loop {
-        let ans = read_uint(label, default.clone());
-        if range.contains(&ans) {
-            return ans;
-        }
-    }
+pub fn ensure_parent_exists(path: &String) {
+    let parent = Path::new(&path).parent().unwrap();
+    create_dir_all(parent).unwrap();
 }

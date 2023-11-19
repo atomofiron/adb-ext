@@ -25,7 +25,9 @@ pub trait OutputExt {
     fn stdout(&self) -> String;
     fn stderr(&self) -> String;
     fn is_more_than_one(&self) -> bool;
-    fn print(&self);
+    fn print_out(&self);
+    fn print_err(&self);
+    fn print_out_and_err(&self);
 }
 
 impl OutputExt for Output {
@@ -41,15 +43,21 @@ impl OutputExt for Output {
     fn is_more_than_one(&self) -> bool {
         !self.status.success() && self.stderr() == MORE_THAN_ONE
     }
-    fn print(&self) {
+    fn print_out(&self) {
         let stdout = self.stdout();
         if !stdout.is_empty() {
             println!("{stdout}");
         }
+    }
+    fn print_err(&self) {
         let stderr = self.stderr();
         if !stderr.is_empty() {
             println!("{stderr}");
         }
+    }
+    fn print_out_and_err(&self) {
+        self.print_out();
+        self.print_err();
     }
 }
 
