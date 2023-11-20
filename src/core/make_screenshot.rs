@@ -3,26 +3,26 @@ extern crate chrono;
 use std::fs;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, VecExt};
-use crate::core::preparing::{Destination, DestinationExt};
+use crate::core::destination::Destination;
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{DESKTOP_SCREENSHOTS, SHELL};
 use std::process::exit;
 use crate::core::strings::SAVED;
 use crate::core::util::ensure_parent_exists;
 
-const SCREENCAP: &str = "screencap -p";
+const SCREENCAP_P: &str = "screencap -p";
 const NAME_TEMPLATE: &str = "Screenshot_%Y-%m-%d_%H-%M-%S.png";
 const OD: u8 = 0x0D;
 const OA: u8 = 0x0A;
 
 pub fn make_screenshot(dst: Option<String>) {
     let device = resolve_device();
-    let args = &[SHELL, SCREENCAP];
+    let args = &[SHELL, SCREENCAP_P];
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if output.status.success() {
-        let dst = Destination::from(dst, DESKTOP_SCREENSHOTS)
-            .replace_tilde()
+        let dst = dst.unwrap_or("".to_string())
+            .ensure_dir(DESKTOP_SCREENSHOTS)
             .with_file(NAME_TEMPLATE);
         ensure_parent_exists(&dst);
 

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::r#const::{DASH, DESKTOP_SCREENCASTS, DESKTOP_SCREENSHOTS, NEW_LINE, SHELL, SLASH, SPACE};
+use crate::core::r#const::{DESKTOP_SCREENCASTS, DESKTOP_SCREENSHOTS, SHELL};
 use std::process::exit;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
 use crate::core::util::{ensure_dir_exists, gen_home_path};
@@ -31,9 +31,9 @@ fn pull(count: usize, exts: &[&str], args: &[&str], target: &str) {
     }
     let device = resolve_device();
     let output = run_adb_with(&device, AdbArgs::run(args));
-    let mut items = output.stdout().split(NEW_LINE)
+    let mut items = output.stdout().split('\n')
         .into_iter()
-        .map(|it| splitn_by(it, PART_MIN_COUNT, SPACE))
+        .map(|it| splitn_by(it, PART_MIN_COUNT, ' '))
         .filter_map(|it| as_item_or_none(exts, it))
         .collect::<Vec<Item>>();
     if items.is_empty() {
@@ -68,7 +68,7 @@ fn pull(count: usize, exts: &[&str], args: &[&str], target: &str) {
 fn as_item_or_none(exts: &[&str], line: Vec<String>) -> Option<Item> {
     match () {
         _ if line.len() < PART_MIN_COUNT => return None,
-        _ if line[0].chars().next() != Some(DASH) => return None,
+        _ if line[0].chars().next() != Some('-') => return None,
         _ => (),
     }
     let last = line[line.last_index()].to_string();
@@ -79,7 +79,7 @@ fn as_item_or_none(exts: &[&str], line: Vec<String>) -> Option<Item> {
     }
     let date = line[PART_DATE].to_string();
     let time = line[PART_TIME].to_string();
-    let root = last.chars().position(|c| c == SLASH).unwrap();
+    let root = last.chars().position(|c| c == '/').unwrap();
     // ignore the part contains '+0200' if exists
     let path = last[root..].to_string();
     Some(Item { date, time, path })

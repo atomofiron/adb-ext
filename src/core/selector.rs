@@ -1,7 +1,7 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
 use crate::core::strings::{CANCEL, NO_ADB, SELECT_DEVICE};
-use crate::core::r#const::{NEW_LINE, SHELL, SPACE, TAB};
+use crate::core::r#const::SHELL;
 use std::env;
 use std::process::{exit, Command, Output};
 use dialoguer::FuzzySelect;
@@ -89,12 +89,12 @@ pub fn run_adb_with(device: &AdbDevice, mut args: AdbArgs) -> Output {
 
 pub fn resolve_device() -> AdbDevice {
     let output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
-    let mut devices = output.stdout().split(NEW_LINE)
+    let mut devices = output.stdout().split('\n')
         .enumerate()
         // the first line is "List of devices attached"
         .filter(|(i, _)| *i > 0)
         .map(|(_, it)| {
-            let parts = it.split(TAB).collect::<Vec<&str>>();
+            let parts = it.split('\t').collect::<Vec<&str>>();
             let name = parts[0].to_string();
             let ok = parts[1] == DEVICE;
             let unauthorized = parts[1] == UNAUTHORIZED;
@@ -145,12 +145,12 @@ fn get_args() -> Vec<String> {
 
 fn get_model(name: &String) -> String {
     let output = run_adb(AdbArgs::run(&[ARG_S, name.as_str(), SHELL, GETPROPS])).stdout();
-    let props = output.split(NEW_LINE).collect::<Vec<&str>>();
+    let props = output.split('\n').collect::<Vec<&str>>();
     let mut suitable = "";
     for prop in props {
         suitable = match () {
             _ if prop.len() > suitable.len() => prop,
-            _ if prop.contains(SPACE) && !suitable.contains(SPACE) => prop,
+            _ if prop.contains(' ') && !suitable.contains(' ') => prop,
             _ if prop.contains_upper() && !suitable.contains_upper() => prop,
             _ => suitable,
         };

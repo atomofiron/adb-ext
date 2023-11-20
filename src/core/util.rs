@@ -11,9 +11,13 @@ pub fn print_the_fuck_out() {
 pub fn gen_home_path(subpath: Option<&str>) -> String {
     #[allow(deprecated)] // todo replace with a crate
     let mut path = std::env::home_dir().unwrap().to_str().unwrap().to_string();
-    path.push('/');
     if let Some(subpath) = subpath {
+        if !subpath.starts_with('/') {
+            path.push('/');
+        }
         path.push_str(subpath);
+    } else {
+        path.push('/');
     }
     return path;
 }

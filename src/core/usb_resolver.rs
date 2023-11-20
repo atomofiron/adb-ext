@@ -1,5 +1,4 @@
 use crate::core::ext::Split;
-use crate::core::r#const::NEW_LINE;
 use crate::core::strings::*;
 use crate::core::usb_device::UsbDevice;
 use nix::unistd::Uid;
@@ -75,7 +74,7 @@ fn fetch_lsusb() -> Result<Vec<String>, String> {
     let result = String::from_utf8(output.stdout)
         .unwrap()
         .trim()
-        .split_to_vec(NEW_LINE);
+        .split_to_vec('\n');
     return Ok(result);
 }
 
@@ -148,7 +147,7 @@ fn add_to_config(device: &UsbDevice) -> Result<(), Error> {
         .open(TARGET_FILE)?;
 
     let payload = PAYLOAD.replace(VENDOR_ID_PLACE_HOLDER, device.vendor_id.as_str());
-    file.write_all(NEW_LINE.to_string().as_bytes())?;
+    file.write_all('\n'.to_string().as_bytes())?;
     file.write_all(payload.as_bytes())?;
     return Ok(());
 }
