@@ -1,5 +1,5 @@
 use crate::core::ext::ShortUnwrap;
-use crate::core::pull_media::{pull_screencasts, pull_screenshots};
+use crate::core::pull_media::{Params, pull_screencasts, pull_screenshots};
 use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, LINUX_ONLY, UNKNOWN_COMMAND};
 use crate::core::usb_resolver::resolve_permission;
@@ -20,9 +20,9 @@ const SHOT: &str = "shot";
 enum Feature {
     FixPermission,
     SelectDevice,
-    LastScreenShots(usize),
-    LastScreenCasts(usize),
-    MakeScreenShot(Option<String>),
+    LastScreenShots(Params),
+    LastScreenCasts(Params),
+    MakeScreenShot(String),
 }
 
 fn main() {
@@ -35,8 +35,8 @@ fn main() {
     match resolve_feature().short_unwrap() {
         Feature::FixPermission => resolve_permission(),
         Feature::SelectDevice => resolve_device_and_run_args(),
-        Feature::LastScreenShots(count) => pull_screenshots(count),
-        Feature::LastScreenCasts(count) => pull_screencasts(count),
+        Feature::LastScreenShots(params) => pull_screenshots(params),
+        Feature::LastScreenCasts(params) => pull_screencasts(params),
         Feature::MakeScreenShot(dst) => make_screenshot(dst),
     }
 }
@@ -47,16 +47,20 @@ fn resolve_feature() -> Result<Feature, String> {
         _ if args.len() <= 1 && cfg!(target_os = "linux") => Feature::FixPermission,
         _ if args.len() <= 1 => return Err(LINUX_ONLY.value().to_string()),
         _ if args[1] == ADB => Feature::SelectDevice,
-        _ if args[1] == LSS => Feature::LastScreenShots(get_count(args.get(2))),
-        _ if args[1] == LSC => Feature::LastScreenCasts(get_count(args.get(2))),
-        _ if args[1] == MSS || args[1] == SHOT => Feature::MakeScreenShot(args.get(2).cloned()),
+        _ if args[1] == LSS => Feature::LastScreenShots(get_params(args.get(2))),
+        _ if args[1] == LSC => Feature::LastScreenCasts(get_params(args.get(2))),
+        _ if args[1] == MSS || args[1] == SHOT => Feature::MakeScreenShot(args.get(2).cloned().unwrap_or(String::new())),
         _ => return Err(UNKNOWN_COMMAND.value().to_string()),
     };
     return Ok(feature);
 }
 
-fn get_count(arg: Option<&String>) -> usize {
-    arg.map(|it| it.parse::<usize>())
-        .unwrap_or(Ok(1))
-        .unwrap_or(1)
+fn get_params(arg: Option<&String>) -> Params {
+    arg.map_or_else(
+        || Params::Single(String::new()),
+        |it| it.parse::<usize>().map_or(
+            Params::Single(it.clone()),
+            |it| Params::Count(it),
+        ),
+    )
 }

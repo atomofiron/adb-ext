@@ -23,7 +23,7 @@ impl UsbDevice {
         UsbDevice {
             vendor_id: ids.get(0).unwrap().clone(),
             product_id: ids.get(1).unwrap().clone(),
-            description: parts.get(6).unwrap_or(&"".to_string()).clone(),
+            description: parts.get(6).unwrap_or(&String::new()).clone(),
         }
     }
 }

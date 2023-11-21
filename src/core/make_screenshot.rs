@@ -15,13 +15,13 @@ const NAME_TEMPLATE: &str = "Screenshot_%Y-%m-%d_%H-%M-%S.png";
 const OD: u8 = 0x0D;
 const OA: u8 = 0x0A;
 
-pub fn make_screenshot(dst: Option<String>) {
+pub fn make_screenshot(dst: String) {
     let device = resolve_device();
     let args = &[SHELL, SCREENCAP_P];
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if output.status.success() {
-        let dst = dst.unwrap_or("".to_string())
+        let dst = dst
             .ensure_dir(DESKTOP_SCREENSHOTS)
             .with_file(NAME_TEMPLATE);
         ensure_parent_exists(&dst);

@@ -1,9 +1,11 @@
 use std::cmp::Ordering;
+use std::path::Path;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{DESKTOP_SCREENCASTS, DESKTOP_SCREENSHOTS, SHELL};
 use std::process::exit;
+use crate::core::destination::Destination;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
 use crate::core::util::{ensure_dir_exists, gen_home_path};
 
@@ -17,15 +19,25 @@ const PART_MIN_COUNT: usize = 8;
 const PART_DATE: usize = 5;
 const PART_TIME: usize = 6;
 
-pub fn pull_screenshots(count: usize) {
-    pull(count, PICS, &[SHELL, LS_SCREENSHOTS], DESKTOP_SCREENSHOTS);
+
+pub enum Params {
+    Count(usize),
+    Single(String),
 }
 
-pub fn pull_screencasts(count: usize) {
-    pull(count, MOVS, &[SHELL, LS_SCREENCASTS], DESKTOP_SCREENCASTS);
+pub fn pull_screenshots(params: Params) {
+    pull(params, PICS, &[SHELL, LS_SCREENSHOTS], DESKTOP_SCREENSHOTS);
 }
 
-fn pull(count: usize, exts: &[&str], args: &[&str], target: &str) {
+pub fn pull_screencasts(params: Params) {
+    pull(params, MOVS, &[SHELL, LS_SCREENCASTS], DESKTOP_SCREENCASTS);
+}
+
+fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: &str) {
+    let count = match params {
+        Params::Count(count) => count,
+        Params::Single(_) => 1,
+    };
     if count <= 0 {
         return
     }
@@ -41,7 +53,7 @@ fn pull(count: usize, exts: &[&str], args: &[&str], target: &str) {
         if err.is_empty() {
             MEDIAS_NOT_FOUND.println();
         } else {
-            println!("{}", output.stderr());
+            output.print_err();
             exit(output.code());
         }
     } else {
@@ -52,7 +64,18 @@ fn pull(count: usize, exts: &[&str], args: &[&str], target: &str) {
             .collect::<Vec<String>>();
         let mut pull_args = AdbArgs::run(&[PULL]);
         pull_args.args.append(&mut items);
-        let dst = gen_home_path(Some(target));
+        let dst = match params {
+            Params::Count(_) => gen_home_path(Some(default_dst)),
+            Params::Single(path) => {
+                let name = Path::new(items.first().unwrap())
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap();
+                path.ensure_dir(default_dst)
+                    .with_file(name)
+            },
+        };
         ensure_dir_exists(&dst);
         pull_args.args.push(dst.clone());
         let output = run_adb_with(&device, pull_args);
