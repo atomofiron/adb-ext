@@ -1,13 +1,13 @@
 use std::cmp::Ordering;
 use std::path::Path;
 use crate::core::adb_command::AdbArgs;
-use crate::core::ext::{OutputExt, VecExt};
+use crate::core::ext::{OutputExt, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{DESKTOP_SCREENCASTS, DESKTOP_SCREENSHOTS, SHELL};
 use std::process::exit;
 use crate::core::destination::Destination;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
-use crate::core::util::{ensure_dir_exists, gen_home_path};
+use crate::core::util::{ensure_parent_exists, gen_home_path};
 
 const PULL: &str = "pull";
 const LS_SCREENSHOTS: &str = "toybox ls -llcd /sdcard/Pictures/Screenshots/* /sdcard/DCIM/Screenshots/*";
@@ -62,8 +62,6 @@ fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: &str) {
             .take(count)
             .map(|it| it.path.to_string())
             .collect::<Vec<String>>();
-        let mut pull_args = AdbArgs::run(&[PULL]);
-        pull_args.args.append(&mut items);
         let dst = match params {
             Params::Count(_) => gen_home_path(Some(default_dst)),
             Params::Single(path) => {
@@ -72,11 +70,13 @@ fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: &str) {
                     .unwrap()
                     .to_str()
                     .unwrap();
-                path.ensure_dir(default_dst)
+                path.with_dir(default_dst)
                     .with_file(name)
             },
         };
-        ensure_dir_exists(&dst);
+        ensure_parent_exists(&dst);
+        let mut pull_args = AdbArgs::run(&[PULL]);
+        pull_args.args.append(&mut items);
         pull_args.args.push(dst.clone());
         let output = run_adb_with(&device, pull_args);
         output.print_out_and_err();
@@ -95,9 +95,12 @@ fn as_item_or_none(exts: &[&str], line: Vec<String>) -> Option<Item> {
         _ => (),
     }
     let last = line[line.last_index()].to_string();
-    let count = 5.min(last.len());
-    let ext = last[(last.len() - count)..].to_lowercase();
-    if !exts.iter().any(|it| ext.ends_with(it)) {
+    let dot = last.last_index_of('.');
+    let ext = match dot {
+        Some(index) => last[index..].to_lowercase(),
+        None => return None,
+    };
+    if !exts.contains(&ext.as_str()) {
         return None
     }
     let date = line[PART_DATE].to_string();

@@ -22,7 +22,7 @@ pub fn make_screenshot(dst: String) {
 
     if output.status.success() {
         let dst = dst
-            .ensure_dir(DESKTOP_SCREENSHOTS)
+            .with_dir(DESKTOP_SCREENSHOTS)
             .with_file(NAME_TEMPLATE);
         ensure_parent_exists(&dst);
 
@@ -40,9 +40,9 @@ pub fn make_screenshot(dst: String) {
 
 fn filter_extra_zero_d(src: Vec<u8>) -> Vec<u8> {
     let mut dst = Vec::new();
-    for i in 0..(src.last_index() - 1) {
+    for i in 0..src.len() {
         let byte = src[i];
-        if byte != OD || src[i + 1] != OA {
+        if byte != OD || i == src.last_index() || src[i + 1] != OA {
             dst.push(byte)
         }
     }

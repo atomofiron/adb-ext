@@ -32,9 +32,10 @@ green-pain
 common use of ADB
 ```
 $ adb shell
-1) Oneplus 7T
-2) Nothing Phone (1)
-Select a device (default 1): 2
+Select a device
+  Oneplus 7T
+> Nothing Phone (1)
+  Cancel
 Spacewar:/ $
 ```
 pull the 3 last screenshots from device\
@@ -52,9 +53,7 @@ lsc 3
 make a new screenshot and pull it\
 default destination: `~/Android/Screencasts/`
 ```
-mss
-# or
-mss ~/destination/
-# or
-mss ~/destination/screenshot.png
+mss [destination]
 ```
+where `destination` can be:
+`.`, `./`, `./name`, `./name.png`, `./stuff`, `./stuff/`, `./stuff/name`, `./stuff/name.png`, `~`, `~/`, `~/name`, `~/name.png`, `~/stuff`, `~/stuff/`, `~/stuff/name`, `~/stuff/name.png`, `name`, `name.png`, `stuff/name`, `stuff/name.png`

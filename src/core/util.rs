@@ -22,12 +22,6 @@ pub fn gen_home_path(subpath: Option<&str>) -> String {
     return path;
 }
 
-pub fn ensure_dir_exists(path: &str) {
-    if !Path::new(path).exists() {
-        create_dir_all(path).unwrap();
-    }
-}
-
 pub fn ensure_parent_exists(path: &String) {
     let parent = Path::new(&path).parent().unwrap();
     create_dir_all(parent).unwrap();
