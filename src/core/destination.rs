@@ -13,8 +13,11 @@ impl Destination for String {
 
     fn with_dir(self, default_sub_path: &str) -> String {
         match () {
-            _ if self.starts_with('/') => self,
+            _ if self == "." => self,
+            _ if self == ".." => self,
             _ if self.starts_with("./") => self,
+            _ if self.starts_with("../") => self,
+            _ if self.starts_with('/') => self,
             _ if self.starts_with('~') => gen_home_path(Some(&self[1..])),
             _ => gen_home_path(Some(format!("{default_sub_path}{self}").as_str())),
         }

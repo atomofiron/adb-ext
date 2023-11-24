@@ -56,4 +56,4 @@ default destination: `~/Android/Screencasts/`
 mss [destination]
 ```
 where `destination` can be:
-`.`, `./`, `./name`, `./name.png`, `./stuff`, `./stuff/`, `./stuff/name`, `./stuff/name.png`, `~`, `~/`, `~/name`, `~/name.png`, `~/stuff`, `~/stuff/`, `~/stuff/name`, `~/stuff/name.png`, `name`, `name.png`, `stuff/name`, `stuff/name.png`
+`.`, `./name`, `./name.png`, `./stuff/`, `./stuff/name`, `./stuff/name.png`, `~`, `~/name`, `~/name.png`, `~/stuff/`, `~/stuff/name`, `~/stuff/name.png`, `name`, `name.png`, `stuff/name`, `stuff/name.png`
