@@ -59,7 +59,7 @@ fi
 mkdir -p $home_local_bin
 ensure cd $home_local_bin
 println "downloading..."
-#ensure curl -X GET -sSfL https://github.com/Atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
+ensure curl -X GET -sSfL https://github.com/Atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
 ensure chmod u+x adb-ext
 ensure ln -sf adb-ext adb
 ensure ln -sf adb-ext lss
