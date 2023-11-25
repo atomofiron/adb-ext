@@ -9,9 +9,6 @@ use crate::core::make_screenshot::make_screenshot;
 
 mod core;
 
-const ENV_LANG: &str = "LANG";
-const RU: &str = "ru";
-
 enum Feature {
     FixPermission,
     SelectDevice,
@@ -21,8 +18,8 @@ enum Feature {
 }
 
 fn main() {
-    if env::var(ENV_LANG)
-        .map(|lang| lang.starts_with(RU))
+    if env::var("LANG")
+        .map(|lang| lang.starts_with("ru"))
         .unwrap_or(false)
     {
         Language::set_language(Language::Ru)
