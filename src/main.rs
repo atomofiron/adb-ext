@@ -11,11 +11,6 @@ mod core;
 
 const ENV_LANG: &str = "LANG";
 const RU: &str = "ru";
-const ADB: &str = "adb";
-const LSS: &str = "lss";
-const LSC: &str = "lsc";
-const MSS: &str = "mss";
-const SHOT: &str = "shot";
 
 enum Feature {
     FixPermission,
@@ -44,12 +39,14 @@ fn main() {
 fn resolve_feature() -> Result<Feature, String> {
     let args = args().collect::<Vec<String>>();
     let feature = match () {
-        _ if args.len() <= 1 && cfg!(target_os = "linux") => Feature::FixPermission,
-        _ if args.len() <= 1 => return Err(LINUX_ONLY.value().to_string()),
-        _ if args[1] == ADB => Feature::SelectDevice,
-        _ if args[1] == LSS => Feature::LastScreenShots(get_params(args.get(2))),
-        _ if args[1] == LSC => Feature::LastScreenCasts(get_params(args.get(2))),
-        _ if args[1] == MSS || args[1] == SHOT => Feature::MakeScreenShot(args.get(2).cloned().unwrap_or(String::new())),
+        _ if args[0] == "adb-ext" && args.len() > 1 && args[1] == "fix" => match () {
+            _ if cfg!(target_os = "linux") => Feature::FixPermission,
+            _ => return Err(LINUX_ONLY.value().to_string()),
+        },
+        _ if args[0] == "adb-ext" => Feature::SelectDevice,
+        _ if args[0] == "lss" => Feature::LastScreenShots(get_params(args.get(2))),
+        _ if args[0] == "lsc" => Feature::LastScreenCasts(get_params(args.get(2))),
+        _ if args[0] == "mss" || args[0] == "shot" => Feature::MakeScreenShot(args.get(2).cloned().unwrap_or(String::new())),
         _ => return Err(UNKNOWN_COMMAND.value().to_string()),
     };
     return Ok(feature);

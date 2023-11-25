@@ -1,6 +1,6 @@
-# green-pain
+# adb-ext
 
-![green-pain](https://github.com/Atomofiron/green-pain/assets/14147217/aeef69e9-41d0-47ee-8744-35d170ce707a)
+![adb-ext](https://github.com/Atomofiron/green-pain/assets/14147217/aeef69e9-41d0-47ee-8744-35d170ce707a)
 
 # Install
 <br>:white_check_mark: MacOS x86_64
@@ -9,24 +9,24 @@
 <br>:zzz: Linux ARM
 <br>:no_entry_sign: Windows
 ```
-curl -sSfL https://github.com/Atomofiron/green-pain/raw/main/stuff/install.sh | sh
+curl -sSfL https://github.com/atomofiron/adb-ext/raw/main/stuff/install.sh | sh
 ```
 
 # Run
 resolve usb adb permission (Linux only)
 ```
-green-pain
+adb fix
 ```
 <details>
   <summary>MacOS feature (after each installation or update)</summary>
   <br>
-  0. execute the green-pain<br>
+  0. execute the adb-ext<br>
   1. click Cancel<br>
   2. System Settings > Privacy & Security > Allow Anyway<br>
-  3. execute the green-pain again<br>
+  3. execute the adb-ext again<br>
   4. click Open<br>
   <br>
-<img width="978" alt="green-pain-macos-feature" src="https://github.com/atomofiron/green-pain/assets/14147217/d765de66-a273-4b93-a8a4-8441e40c06ba">
+<img width="978" alt="adb-ext-macos-feature" src="https://github.com/atomofiron/adb-ext/assets/14147217/d765de66-a273-4b93-a8a4-8441e40c06ba">
 </details>
 
 common use of ADB

@@ -71,7 +71,7 @@ const DEVICE_COMMANDS: [&str; 19] = [
 
 
 pub fn resolve_device_and_run_args() {
-    let args = AdbArgs::spawn(get_args().as_slice());
+    let args = AdbArgs::spawn(get_adb_args().as_slice());
     let first = args.args.first();
     let output = match first {
         None => run_adb(args),
@@ -134,13 +134,11 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
     return devices.remove(selection);
 }
 
-fn get_args() -> Vec<String> {
-    return env::args()
-        .enumerate()
-        // ignore "*/green-pain" and "adb"
-        .filter(|(i, _)| *i >= 2)
-        .map(|(_, it)| it)
-        .collect::<Vec<String>>();
+fn get_adb_args() -> Vec<String> {
+    let mut args = env::args().collect::<Vec<String>>();
+    // ignore "adb-ext"
+    args.remove(0);
+    return args;
 }
 
 fn get_model(name: &String) -> String {

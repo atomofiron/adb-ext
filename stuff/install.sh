@@ -35,11 +35,11 @@ fi
 
 system=$(ensure uname -sm)
 if [ "$system" = "Darwin arm64" ]; then
-  variant="green-pain-apple-arm"
+  variant="adb-ext-apple-arm"
 elif [ "$system" = "Darwin x86_64" ]; then
-  variant="green-pain-apple-x86_64"
+  variant="adb-ext-apple-x86_64"
 elif [ "$system" = "Linux x86_64" ]; then
-  variant="green-pain-linux-x86_64"
+  variant="adb-ext-linux-x86_64"
 else
   err "Unsupported system or arch: $system"
 fi
@@ -50,7 +50,7 @@ env_file='$HOME/.local/env'
 env_file_path=$HOME'/.local/env'
 version_code=3
 
-if [ -f $home_local_bin'/green-pain' ]; then
+if [ -f $home_local_bin'/adb-ext' ]; then
 	action='updating'
 else
 	action='installation'
@@ -59,22 +59,27 @@ fi
 mkdir -p $home_local_bin
 ensure cd $home_local_bin
 println "downloading..."
-ensure curl -X GET -sSfL https://github.com/Atomofiron/green-pain/releases/latest/download/$variant -o green-pain
-ensure chmod u+x green-pain
+#ensure curl -X GET -sSfL https://github.com/Atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
+ensure chmod u+x adb-ext
+ensure ln -sf adb-ext adb
+ensure ln -sf adb-ext lss
+ensure ln -sf adb-ext lsc
+ensure ln -sf adb-ext mss
+ensure ln -sf adb-ext shot
 
 env_script="
 case \":\${PATH}:\" in
     *:\"\$HOME/$local_bin\":*)
         ;;
     *)
-		export PATH=\$PATH:\$HOME/$local_bin
+		export PATH=\$HOME/$local_bin:\$PATH
         ;;
 esac
-alias adb='\$HOME/$local_bin/green-pain adb'
-alias lss='\$HOME/$local_bin/green-pain lss'
-alias lsc='\$HOME/$local_bin/green-pain lsc'
-alias mss='\$HOME/$local_bin/green-pain mss'
-alias shot='\$HOME/$local_bin/green-pain shot'
+alias adb='adb-ext'
+unalias lss 2>/dev/null
+unalias lsc 2>/dev/null
+unalias mss 2>/dev/null
+unalias shot 2>/dev/null
 export ADB_EXT_VERSION_CODE=$version_code
 "
 printf "$env_script" > $env_file_path
@@ -92,7 +97,7 @@ if [ "$ADB_EXT_VERSION_CODE" = "" ]; then # the first installation
     fi
 fi
 
-printf "%s succeed, run \33[1mgreen-pain\33[0m or \33[1mlss 1\33[0m\n" $action
+printf "%s succeed, run \33[1madb fix\33[0m or \33[1mlss\33[0m\n" $action
 if [ "$ADB_EXT_VERSION_CODE" != "$version_code" ]; then
 	println '... however, first of all to configure your current shell, run:'
 	println "\33[1msource "$env_file"\33[0m"
