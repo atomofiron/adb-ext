@@ -85,7 +85,7 @@ export ADB_EXT_VERSION_CODE=$version_code
 printf "$env_script" > $env_file_path
 if [ "$ADB_EXT_VERSION_CODE" = "" ]; then # the first installation
     added=false
-    for file in ~/.bashrc ~/.zshrc; do
+    for file in ~/.bashrc ~/.zshrc ~/.profile; do
         if [ -f $file ]; then
           printf ". $env_file\n" >> $file
           println "$file done"
@@ -93,7 +93,7 @@ if [ "$ADB_EXT_VERSION_CODE" = "" ]; then # the first installation
         fi
     done
     if ! $added; then
-        err 'no any ~/.*rc file found'
+        err 'no any ~/.*rc or ~/.profile file found'
     fi
 fi
 
