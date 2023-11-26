@@ -1,6 +1,6 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
-use crate::core::strings::{CANCEL, NO_ADB, SELECT_DEVICE};
+use crate::core::strings::{CANCEL, NO_ADB, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
 use crate::core::r#const::SHELL;
 use std::env;
 use std::process::{exit, Command, Output};
@@ -114,10 +114,10 @@ pub fn resolve_device() -> AdbDevice {
 fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
     let mut items = devices.iter().map(|device| {
         let status = match () {
-            _ if device.ok => "",
-            _ if device.unauthorized => " (unauthorized)",
+            _ if device.ok => String::new(),
+            _ if device.unauthorized => format!(" ({UNAUTHORIZED_BY_DEVICE})").to_lowercase(),
             // todo => " (no permission)"
-            _ => " (unknown)",
+            _ => format!(" ({UNKNOWN})").to_lowercase(),
         };
         format!("{}{status}", devices.get_unique_model_name(device))
     }).collect::<Vec<String>>();

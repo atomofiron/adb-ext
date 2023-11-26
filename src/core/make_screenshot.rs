@@ -31,7 +31,7 @@ pub fn make_screenshot(dst: String) {
             _ => filter_extra_zero_d(output.stdout),
         };
         fs::write(dst.clone(), bytes).unwrap();
-        println!("{}: {dst}", SAVED.value());
+        println!("{}: {dst}", SAVED);
     } else {
         output.print_err();
         exit(output.code());

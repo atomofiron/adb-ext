@@ -43,6 +43,14 @@ pub static DESTINATION: Label = Label::new(
     "Destination: ",
     "Место назначения: ",
 );
+pub static UNAUTHORIZED_BY_DEVICE: Label = Label::new(
+    "Unauthorized by the device",
+    "На устройстве не дано разрешение",
+);
+pub static UNKNOWN: Label = Label::new(
+    "Unknown",
+    "Неизвестно",
+);
 pub static SAVED: Label = Label::new(
     "Saved",
     "Сохранено",
