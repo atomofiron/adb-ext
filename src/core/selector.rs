@@ -89,7 +89,7 @@ pub fn run_adb_with(device: &AdbDevice, mut args: AdbArgs) -> Output {
     return run_adb(args);
 }
 
-pub fn fetch_devices() -> Vec<AdbDevice> {
+fn fetch_devices() -> Vec<AdbDevice> {
     let output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
     return output.stdout().split('\n')
         .enumerate()

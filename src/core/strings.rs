@@ -7,10 +7,6 @@ pub static NO_DEVICES_FOUND: Label = Label::new(
     "No devices found, try again",
     "Устройств не обнаружено, попробуйте снова",
 );
-pub static DEVICE_NOT_FOUND: Label = Label::new(
-    "Devices not found",
-    "Устройство не обнаружено",
-);
 pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",
     "Готово, переподключите устройство!",
