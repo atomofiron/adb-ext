@@ -1,4 +1,5 @@
-use std::process::{exit, Output};
+use std::ffi::OsStr;
+use std::process::{Command, exit, Output};
 
 
 const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
@@ -203,5 +204,18 @@ impl StrExt for str {
 
     fn last_index_of_or(&self, default: usize, c: char) -> usize {
         inner_index_of(self, c, true).unwrap_or(default)
+    }
+}
+
+pub trait OptionArg {
+    fn some_arg<S: AsRef<OsStr>>(&mut self, arg: Option<S>) -> &mut Self;
+}
+
+impl OptionArg for Command {
+    fn some_arg<S: AsRef<OsStr>>(&mut self, arg: Option<S>) -> &mut Command {
+        match arg {
+            None => self,
+            Some(arg) => self.arg(arg),
+        }
     }
 }

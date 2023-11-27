@@ -3,21 +3,13 @@ use std::fmt::{Display, Formatter};
 
 static mut LANGUAGE: Language = Language::En;
 
-pub static UNKNOWN_COMMAND: Label = Label::new(
-    "Unknown command",
-    "Неизвестная команда",
-);
-pub static CONNECT_OR_DISCONNECT: Label = Label::new(
-    "Connect or disconnect the Android device and press Enter",
-    "Подключите или отключите Android устройство и нажмите Enter",
-);
 pub static NO_DEVICES_FOUND: Label = Label::new(
     "No devices found, try again",
     "Устройств не обнаружено, попробуйте снова",
 );
-pub static PLEASE_WAIT: Label = Label::new(
-    "Please wait...",
-    "Подождите...",
+pub static DEVICE_NOT_FOUND: Label = Label::new(
+    "Devices not found",
+    "Устройство не обнаружено",
 );
 pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",

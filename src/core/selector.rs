@@ -1,17 +1,19 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
-use crate::core::strings::{CANCEL, NO_ADB, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
-use crate::core::r#const::SHELL;
+use crate::core::strings::{CANCEL, ERROR, NO_ADB, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::r#const::{SHELL, SUCCESS};
 use std::env;
 use std::process::{exit, Command, Output};
 use dialoguer::FuzzySelect;
 use crate::core::adb_command::AdbArgs;
+use crate::core::usb_resolver::fix_with_sudo;
 
 const WHICH: &str = "/usr/bin/which";
 const ADB: &str = "adb";
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
+const NO_PERMISSIONS: &str = "no permissions";
 const ARG_S: &str = "-s";
 const GETPROPS: &str = "
 getprop persist.sys.nt.device.name;
@@ -83,25 +85,30 @@ pub fn resolve_device_and_run_args() {
 
 pub fn run_adb_with(device: &AdbDevice, mut args: AdbArgs) -> Output {
     args.args.insert(0, ARG_S.to_string());
-    args.args.insert(1, device.name.clone());
+    args.args.insert(1, device.serial.clone());
     return run_adb(args);
 }
 
-pub fn resolve_device() -> AdbDevice {
+pub fn fetch_devices() -> Vec<AdbDevice> {
     let output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
-    let mut devices = output.stdout().split('\n')
+    return output.stdout().split('\n')
         .enumerate()
         // the first line is "List of devices attached"
         .filter(|(i, _)| *i > 0)
         .map(|(_, it)| {
             let parts = it.split('\t').collect::<Vec<&str>>();
-            let name = parts[0].to_string();
+            let serial = parts[0].to_string();
             let ok = parts[1] == DEVICE;
             let unauthorized = parts[1] == UNAUTHORIZED;
-            let model = if ok { get_model(&name) } else { name.clone() };
-            AdbDevice { name, model, ok, unauthorized }
+            let no_permissions = parts[1].starts_with(NO_PERMISSIONS);
+            let model = if ok { get_model(&serial) } else { serial.clone() };
+            AdbDevice { serial, model, ok, unauthorized, no_permissions }
         }).collect::<Vec<AdbDevice>>();
-    return match () {
+}
+
+pub fn resolve_device() -> AdbDevice {
+    let mut devices = fetch_devices();
+    let device = match () {
         _ if devices.is_empty() => {
             print_no_one();
             exit(1);
@@ -109,6 +116,11 @@ pub fn resolve_device() -> AdbDevice {
         _ if devices.len() == 1 => devices.remove(0),
         _ => ask_for_device(devices),
     };
+    if !device.no_permissions && fix_with_sudo(Some(device.serial.clone())) != SUCCESS {
+        ERROR.println();
+        exit(1);
+    }
+    return device;
 }
 
 fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
@@ -116,7 +128,6 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
         let status = match () {
             _ if device.ok => String::new(),
             _ if device.unauthorized => format!(" ({UNAUTHORIZED_BY_DEVICE})").to_lowercase(),
-            // todo => " (no permission)"
             _ => format!(" ({UNKNOWN})").to_lowercase(),
         };
         format!("{}{status}", devices.get_unique_model_name(device))
@@ -136,7 +147,7 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
 
 fn get_adb_args() -> Vec<String> {
     let mut args = env::args().collect::<Vec<String>>();
-    // ignore "adb-ext"
+    // ignore "adb-ext" (or another command name or path)
     args.remove(0);
     return args;
 }

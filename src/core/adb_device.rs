@@ -1,8 +1,9 @@
 pub struct AdbDevice {
-    pub name: String,
+    pub serial: String,
     pub model: String,
     pub ok: bool,
     pub unauthorized: bool,
+    pub no_permissions: bool,
 }
 
 pub trait AdbDeviceVec {
@@ -18,7 +19,7 @@ impl AdbDeviceVec for Vec<AdbDevice> {
             }
         }
         return if count > 1 {
-            format!("{} ({})", device.model, device.name)
+            format!("{} ({})", device.model, device.serial)
         } else {
             device.model.clone()
         }

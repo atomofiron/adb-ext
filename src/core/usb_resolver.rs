@@ -1,17 +1,17 @@
-use crate::core::ext::Split;
+use crate::core::ext::OptionArg;
 use crate::core::strings::*;
 use crate::core::usb_device::UsbDevice;
 use nix::unistd::Uid;
-use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Write};
 use std::process::{exit, Command};
-use std::thread::sleep;
 use std::time::Duration;
-use std::{fs, io};
+use std::fs;
 use dialoguer::FuzzySelect;
+use crate::ARG_FIX;
+use crate::core::adb_device::AdbDevice;
+use crate::core::selector::fetch_devices;
 
 const SUDO: &str = "sudo";
-const LSUSB: &str = "lsusb";
 const TARGET_DIR: &str = "/etc/udev/rules.d/";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
 // SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
@@ -19,104 +19,79 @@ const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
 const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
 const PAYLOAD: &str = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
 
-pub fn resolve_permission() {
+
+fn find_device(serial: String) -> Option<UsbDevice> {
+    let context = libusb::Context::new().unwrap();
+    for device in context.devices().unwrap().iter() {
+        let descriptor = device.device_descriptor().unwrap();
+        let handle = device.open().unwrap();
+        let timeout = Duration::from_secs(1);
+        let languages = handle.read_languages(timeout).unwrap();
+        let language = languages.first().unwrap().clone();
+        let number = handle.read_serial_number_string(language, &descriptor, timeout)
+            .unwrap_or(String::new());
+        let manufacturer = handle.read_manufacturer_string(language, &descriptor, timeout)
+            .unwrap_or(String::new());
+        let product = handle.read_product_string(language, &descriptor, timeout)
+            .unwrap_or(String::new());
+        /* adb
+        let config = device.active_config_descriptor().unwrap();
+        let config = handle.read_configuration_string(language, &config, timeout)
+            .unwrap_or(String::new());*/
+        if number == serial {
+            let vendor_id = format!("{:04x}", descriptor.vendor_id());
+            let product_id = format!("{:04x}", descriptor.product_id());
+            let device = UsbDevice { vendor_id, product_id, description: format!("{manufacturer} {product}, {number}") };
+            return Some(device);
+        }
+    }
+    return None;
+}
+
+pub fn resolve_permission(serial: Option<String>) {
     if !Uid::current().is_root() {
-        exit(rerun_with_sudo());
+        exit(fix_with_sudo(serial));
     }
-
-    let devices = find_devices();
-
-    if devices.is_empty() {
-        NO_DEVICES_FOUND.println();
-        exit(0);
-    }
-    let mut index = 0;
-    if devices.len() > 1 {
-        index = ask_target_device_or_exit(&devices);
-    }
-    let device = devices.get(index).unwrap();
-
-    match apply(device) {
-        true => SUCCESSFULLY.println(),
-        false => ERROR.println(),
+    let devices = fetch_devices();
+    let serial = match () {
+        _ if serial.is_some() => serial.unwrap(),
+        _ if devices.is_empty() => return NO_DEVICES_FOUND.println(),
+        _ if devices.len() == 1 => match devices.first() {
+            Some(a) => a.serial.clone(),
+            None => return DEVICE_NOT_FOUND.println(),
+        },
+        _ => serial.unwrap_or_else(|| ask_device(&devices)),
+    };
+    let device = match find_device(serial.clone()) {
+        Some(device) => device,
+        None => return DEVICE_NOT_FOUND.println(),
+    };
+    match apply(&device) {
+        Ok(_) => SUCCESSFULLY.println(),
+        Err(cause) => println!("{}", cause),
     }
 }
 
-fn find_devices() -> Vec<UsbDevice> {
-    let lines_before = fetch_lsusb().unwrap();
-
-    CONNECT_OR_DISCONNECT.print();
-
-    io::stdin().read_line(&mut String::new()).unwrap();
-
-    let lines_after = fetch_lsusb().unwrap();
-    let mut diffs = find_diffs(&lines_before, &lines_after);
-
-    if diffs.is_empty() {
-        PLEASE_WAIT.println();
-        sleep(Duration::from_secs(3));
-        let lines_after = fetch_lsusb().unwrap();
-        diffs = find_diffs(&lines_before, &lines_after);
-    }
-    return diffs
-        .iter()
-        .filter(|it| it.starts_with("Bus "))
-        .map(UsbDevice::from)
-        .collect::<Vec<UsbDevice>>();
-}
-
-fn fetch_lsusb() -> Result<Vec<String>, String> {
-    let output = Command::new(LSUSB).output().unwrap();
-    if !output.status.success() {
-        let error = String::from_utf8(output.stderr).unwrap();
-        return Err(error);
-    }
-    let result = String::from_utf8(output.stdout)
-        .unwrap()
-        .trim()
-        .split_to_vec('\n');
-    return Ok(result);
-}
-
-fn find_diffs(first: &Vec<String>, second: &Vec<String>) -> Vec<String> {
-    let mut diffs = Vec::new();
-    for line in first {
-        if !second.contains(line) {
-            diffs.push(line.clone());
-        }
-    }
-    for line in second {
-        if !first.contains(line) {
-            diffs.push(line.clone());
-        }
-    }
-    diffs
-}
-
-fn ask_target_device_or_exit(devices: &Vec<UsbDevice>) -> usize {
-    let items = devices.iter().map(|it| it.description.clone()).collect::<Vec<String>>();
+fn ask_device(devices: &Vec<AdbDevice>) -> String {
+    let mut items = devices.iter()
+        .map(|it| it.serial.clone())
+        .collect::<Vec<String>>();
+    items.push(CANCEL.value().to_string());
     let selection = FuzzySelect::new()
         .with_prompt(SELECT_DEVICE.value())
         .default(0)
         .items(&items)
         .interact()
         .unwrap();
-    if selection >= devices.len() {
-        exit(0);
-    }
-    return selection;
+    devices.get(selection)
+        .unwrap_or_else(|| exit(0))
+        .serial.clone()
 }
 
-fn apply(device: &UsbDevice) -> bool {
-    if let Err(cause) = add_to_config(device) {
-        println!("{}", cause);
-        return false;
-    }
-    if let Err(cause) = restart_service() {
-        println!("{}", cause);
-        return false;
-    }
-    return true;
+fn apply(device: &UsbDevice) -> Result<(), Error> {
+    add_to_config(device)?;
+    restart_service()?;
+    return Ok(());
 }
 
 fn restart_service() -> Result<(), Error> {
@@ -140,7 +115,7 @@ fn restart_service() -> Result<(), Error> {
 
 fn add_to_config(device: &UsbDevice) -> Result<(), Error> {
     fs::create_dir_all(TARGET_DIR)?;
-    let mut file = OpenOptions::new()
+    let mut file = fs::OpenOptions::new()
         .create(true)
         .write(true)
         .append(true)
@@ -152,10 +127,12 @@ fn add_to_config(device: &UsbDevice) -> Result<(), Error> {
     return Ok(());
 }
 
-fn rerun_with_sudo() -> i32 {
+pub fn fix_with_sudo(serial: Option<String>) -> i32 {
     let path = std::env::current_exe().unwrap();
     return Command::new(SUDO)
         .arg(path)
+        .arg(ARG_FIX)
+        .some_arg(serial)
         .status()
         .unwrap()
         .code()
