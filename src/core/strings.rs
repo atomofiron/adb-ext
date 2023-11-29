@@ -3,10 +3,12 @@ use std::fmt::{Display, Formatter};
 
 static mut LANGUAGE: Language = Language::En;
 
+#[cfg(target_os = "linux")]
 pub static NO_DEVICES_FOUND: Label = Label::new(
     "No devices found, try again",
     "Устройств не обнаружено, попробуйте снова",
 );
+#[cfg(target_os = "linux")]
 pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",
     "Готово, переподключите устройство!",
@@ -43,6 +45,7 @@ pub static SAVED: Label = Label::new(
     "Saved",
     "Сохранено",
 );
+#[cfg(target_os = "linux")]
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",
     "Неизвестная ошибка",
