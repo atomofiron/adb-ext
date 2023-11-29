@@ -177,10 +177,8 @@ fn run_adb(args: AdbArgs) -> Output {
         NO_ADB.print();
         exit(ERROR_CODE);
     }
-    let mut adb = &mut Command::new(adb_path);
-    for arg in args.args {
-        adb = adb.arg(arg);
-    }
+    let mut adb = Command::new(adb_path);
+    adb.args(args.args);
     return if args.interactive {
         Output {
             status: adb.spawn().unwrap().wait().unwrap(),
