@@ -77,7 +77,7 @@ pub fn resolve_device_and_run_args() {
     let first = args.args.first();
     let output = match first {
         None => run_adb(args),
-        _ if !DEVICE_COMMANDS.contains(&first.unwrap().as_str()) => run_adb(args),
+        Some(first) if !DEVICE_COMMANDS.contains(&first.as_str()) => run_adb(args),
         _ => run_adb_with(&resolve_device(), args)
     };
     exit(output.code());

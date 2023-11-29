@@ -21,11 +21,8 @@ enum Feature {
 }
 
 fn main() {
-    if env::var("LANG")
-        .map(|lang| lang.starts_with("ru"))
-        .unwrap_or(false)
-    {
-        Language::set_language(Language::Ru)
+    if let Ok(true) = env::var("LANG").map(|lang| lang.starts_with("ru")) {
+        Language::set_language(Language::Ru);
     }
     match resolve_feature().short_unwrap() {
         Feature::FixPermission(serial) => fix_on_linux(serial),
@@ -39,20 +36,20 @@ fn main() {
 fn resolve_feature() -> Result<Feature, String> {
     let args = args().collect::<Vec<String>>();
     let feature = match () {
-        _ if args[0] == "lss" => Feature::LastScreenShots(get_params(args.get(2))),
-        _ if args[0] == "lsc" => Feature::LastScreenCasts(get_params(args.get(2))),
-        _ if args[0] == "mss" || args[0] == "shot" => Feature::MakeScreenShot(args.get(2).cloned().unwrap_or(String::new())),
+        _ if args[0] == "lss" => Feature::LastScreenShots(get_params(args.get(1).cloned())),
+        _ if args[0] == "lsc" => Feature::LastScreenCasts(get_params(args.get(1).cloned())),
+        _ if args[0] == "mss" || args[0] == "shot" => Feature::MakeScreenShot(args.get(1).cloned().unwrap_or(String::new())),
         _ if args.len() > 1 && args[1] == ARG_FIX => Feature::FixPermission(args.get(2).cloned()),
         _ => Feature::RunAdbWithArgs,
     };
     return Ok(feature);
 }
 
-fn get_params(arg: Option<&String>) -> Params {
+fn get_params(arg: Option<String>) -> Params {
     arg.map_or_else(
         || Params::Single(String::new()),
         |it| it.parse::<usize>().map_or(
-            Params::Single(it.clone()),
+            Params::Single(it),
             |it| Params::Count(it),
         ),
     )

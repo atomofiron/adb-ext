@@ -75,7 +75,7 @@ case \":\${PATH}:\" in
 		export PATH=\$HOME/$local_bin:\$PATH
         ;;
 esac
-alias adb='adb-ext'
+alias adb=adb-ext
 unalias lss 2>/dev/null
 unalias lsc 2>/dev/null
 unalias mss 2>/dev/null

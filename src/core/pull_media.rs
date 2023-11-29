@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
 use std::path::Path;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, StrExt, VecExt};
@@ -23,6 +24,15 @@ const PART_TIME: usize = 6;
 pub enum Params {
     Count(usize),
     Single(String),
+}
+
+impl Display for Params {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Params::Count(count) => write!(f, "Params::Count({count})"),
+            Params::Single(path) => write!(f, "Params::Single(\"{path})\""),
+        }
+    }
 }
 
 pub fn pull_screenshots(params: Params) {
