@@ -1,12 +1,12 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
 use crate::core::strings::{CANCEL, ERROR, NO_ADB, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
-use crate::core::r#const::{SHELL, SUCCESS};
+use crate::core::r#const::{ERROR_CODE, SHELL, SUCCESS_CODE};
 use std::env;
 use std::process::{exit, Command, Output};
 use dialoguer::FuzzySelect;
 use crate::core::adb_command::AdbArgs;
-use crate::core::usb_resolver::fix_with_sudo;
+use crate::core::fix::sudo_fix_on_linux;
 
 const WHICH: &str = "/usr/bin/which";
 const ADB: &str = "adb";
@@ -111,14 +111,14 @@ pub fn resolve_device() -> AdbDevice {
     let device = match () {
         _ if devices.is_empty() => {
             print_no_one();
-            exit(1);
+            exit(ERROR_CODE);
         },
         _ if devices.len() == 1 => devices.remove(0),
         _ => ask_for_device(devices),
     };
-    if !device.no_permissions && fix_with_sudo(Some(device.serial.clone())) != SUCCESS {
+    if device.no_permissions && sudo_fix_on_linux(Some(device.serial.clone())) != SUCCESS_CODE {
         ERROR.println();
-        exit(1);
+        exit(ERROR_CODE);
     }
     return device;
 }
@@ -140,7 +140,7 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
         .interact()
         .unwrap();
     if selection >= devices.len() {
-        exit(0);
+        exit(SUCCESS_CODE);
     }
     return devices.remove(selection);
 }
@@ -175,15 +175,18 @@ fn run_adb(args: AdbArgs) -> Output {
     let adb_path = output.stdout();
     if adb_path.is_empty() {
         NO_ADB.print();
-        exit(1);
+        exit(ERROR_CODE);
     }
     let mut adb = &mut Command::new(adb_path);
     for arg in args.args {
         adb = adb.arg(arg);
     }
     return if args.interactive {
-        adb.spawn().unwrap()
-            .wait_with_output().unwrap()
+        Output {
+            status: adb.spawn().unwrap().wait().unwrap(),
+            stdout: vec![],
+            stderr: vec![],
+        }
     } else {
         adb.output().unwrap()
     }

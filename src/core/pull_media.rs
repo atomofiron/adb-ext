@@ -75,7 +75,7 @@ fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: &str) {
             },
         };
         ensure_parent_exists(&dst);
-        let mut pull_args = AdbArgs::run(&[PULL]);
+        let mut pull_args = AdbArgs::spawn(&[PULL]);
         pull_args.args.append(&mut items);
         pull_args.args.push(dst.clone());
         let output = run_adb_with(&device, pull_args);

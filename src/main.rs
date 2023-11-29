@@ -1,13 +1,14 @@
 use crate::core::ext::ShortUnwrap;
 use crate::core::pull_media::{Params, pull_screencasts, pull_screenshots};
 use crate::core::selector::resolve_device_and_run_args;
-use crate::core::strings::{Language, LINUX_ONLY};
-use crate::core::usb_resolver::resolve_permission;
+use crate::core::strings::Language;
 use std::env;
 use std::env::args;
 use crate::core::make_screenshot::make_screenshot;
+use crate::core::fix::fix_on_linux;
 
 mod core;
+mod tests;
 
 pub const ARG_FIX: &str = "fix";
 
@@ -27,7 +28,7 @@ fn main() {
         Language::set_language(Language::Ru)
     }
     match resolve_feature().short_unwrap() {
-        Feature::FixPermission(serial) => resolve_permission(serial),
+        Feature::FixPermission(serial) => fix_on_linux(serial),
         Feature::RunAdbWithArgs => resolve_device_and_run_args(),
         Feature::LastScreenShots(params) => pull_screenshots(params),
         Feature::LastScreenCasts(params) => pull_screencasts(params),
@@ -41,12 +42,7 @@ fn resolve_feature() -> Result<Feature, String> {
         _ if args[0] == "lss" => Feature::LastScreenShots(get_params(args.get(2))),
         _ if args[0] == "lsc" => Feature::LastScreenCasts(get_params(args.get(2))),
         _ if args[0] == "mss" || args[0] == "shot" => Feature::MakeScreenShot(args.get(2).cloned().unwrap_or(String::new())),
-        _ if args.len() > 1 && args[1] == ARG_FIX => match () {
-            _ if cfg!(target_os = "linux") => {
-                Feature::FixPermission(args.get(2).cloned())
-            },
-            _ => return Err(LINUX_ONLY.value().to_string()),
-        },
+        _ if args.len() > 1 && args[1] == ARG_FIX => Feature::FixPermission(args.get(2).cloned()),
         _ => Feature::RunAdbWithArgs,
     };
     return Ok(feature);

@@ -8,9 +8,13 @@ pub fn print_the_fuck_out() {
     io::stdout().flush().unwrap();
 }
 
-pub fn gen_home_path(subpath: Option<&str>) -> String {
+pub fn home_dir() -> String {
     #[allow(deprecated)] // todo replace with a crate
-    let mut path = std::env::home_dir().unwrap().to_str().unwrap().to_string();
+    std::env::home_dir().unwrap().to_str().unwrap().to_string()
+}
+
+pub fn gen_home_path(subpath: Option<&str>) -> String {
+    let mut path = home_dir();
     if let Some(subpath) = subpath {
         if !subpath.starts_with('/') {
             path.push('/');

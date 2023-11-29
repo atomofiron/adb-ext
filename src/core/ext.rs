@@ -1,5 +1,6 @@
 use std::ffi::OsStr;
 use std::process::{Command, exit, Output};
+use crate::core::r#const::ERROR_CODE;
 
 
 const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
@@ -19,7 +20,7 @@ impl<T> ShortUnwrap<T> for Result<T, String> {
             Ok(value) => value,
             Err(message) => {
                 println!("{message}");
-                exit(1);
+                exit(ERROR_CODE);
             }
         }
     }

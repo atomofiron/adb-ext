@@ -12,10 +12,8 @@ impl AdbArgs {
         AdbArgs::new(args, true)
     }
     fn new<S: ToString>(args: &[S], interactive: bool) -> AdbArgs {
-        AdbArgs {
-            args: args.iter().map(ToString::to_string).collect::<Vec<String>>(),
-            interactive,
-        }
+        let args = args.iter().map(ToString::to_string).collect::<Vec<String>>();
+        AdbArgs { args, interactive }
     }
 }
 

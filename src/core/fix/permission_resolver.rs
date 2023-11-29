@@ -4,11 +4,12 @@ use crate::core::usb_device::UsbDevice;
 use nix::unistd::Uid;
 use std::io::{Error, ErrorKind, Write};
 use std::process::{exit, Command};
-use std::time::Duration;
 use std::fs;
 use std::path::Path;
+use std::time::Duration;
 use itertools::Itertools;
 use crate::ARG_FIX;
+use crate::core::r#const::{ERROR_CODE, SUCCESS_CODE};
 
 const SUDO: &str = "sudo";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
@@ -18,9 +19,21 @@ const VENDOR_ID_PLACE_HOLDER: &str = "vendor_id";
 const PAYLOAD: &str = "\nSUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\"";
 
 
-pub fn resolve_permission(serial: Option<String>) {
+pub fn sudo_fix_permission(serial: Option<String>) -> i32 {
+    let path = std::env::current_exe().unwrap();
+    return Command::new(SUDO)
+        .arg(path)
+        .arg(ARG_FIX)
+        .some_arg(serial)
+        .status()
+        .unwrap()
+        .code()
+        .unwrap_or(1);
+}
+
+pub fn fix_permission(serial: Option<String>) {
     if !Uid::current().is_root() {
-        exit(fix_with_sudo(serial));
+        exit(sudo_fix_permission(serial));
     }
     let ids = find_devices(serial.clone())
         .into_iter()
@@ -31,8 +44,14 @@ pub fn resolve_permission(serial: Option<String>) {
         return NO_DEVICES_FOUND.println();
     };
     match apply(&ids) {
-        Ok(_) => SUCCESSFULLY.println(),
-        Err(cause) => println!("{}", cause),
+        Ok(_) => {
+            SUCCESSFULLY.println();
+            exit(SUCCESS_CODE);
+        },
+        Err(cause) => {
+            println!("{}", cause);
+            exit(ERROR_CODE);
+        },
     }
 }
 
@@ -102,16 +121,4 @@ fn add_to_config(ids: &Vec<String>) -> Result<(), Error> {
         file.write_all(line.as_bytes())?;
     }
     return Ok(());
-}
-
-pub fn fix_with_sudo(serial: Option<String>) -> i32 {
-    let path = std::env::current_exe().unwrap();
-    return Command::new(SUDO)
-        .arg(path)
-        .arg(ARG_FIX)
-        .some_arg(serial)
-        .status()
-        .unwrap()
-        .code()
-        .unwrap_or(1);
 }
