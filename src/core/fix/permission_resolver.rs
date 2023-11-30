@@ -1,6 +1,7 @@
 use crate::core::ext::OptionArg;
+use crate::core::selector::fetch_adb_devices;
 use crate::core::strings::*;
-use crate::core::usb_device::UsbDevice;
+use crate::core::fix::usb_device::UsbDevice;
 use nix::unistd::Uid;
 use std::io::{Error, ErrorKind, Write};
 use std::process::{exit, Command};
@@ -9,6 +10,7 @@ use std::path::Path;
 use std::time::Duration;
 use itertools::Itertools;
 use crate::ARG_FIX;
+use crate::core::adb_device::AdbDevice;
 use crate::core::r#const::{ERROR_CODE, SUCCESS_CODE};
 
 const SUDO: &str = "sudo";
@@ -35,10 +37,13 @@ pub fn fix_permission(serial: Option<String>) {
     if !Uid::current().is_root() {
         exit(sudo_fix_permission(serial));
     }
-    let ids = find_devices(serial.clone())
+    let serials = fetch_adb_devices().iter()
+        .filter_map(|it| if it.no_permissions { Some(it.serial) } else { None })
+        .collect::<Vec<String>>();
+    let ids = find_usb_devices(serial.clone())
         .into_iter()
-        .map(|it| it.vendor_id)
         .unique()
+        .filter_map(|it| if serials.contains(it.serial) { Some(it.vendor_id) } else { None })
         .collect::<Vec<String>>();
     if ids.is_empty() {
         return NO_DEVICES_FOUND.println();
@@ -55,7 +60,7 @@ pub fn fix_permission(serial: Option<String>) {
     }
 }
 
-fn find_devices(serial: Option<String>) -> Vec<UsbDevice> {
+fn find_usb_devices(serial: Option<String>) -> Vec<UsbDevice> {
     let mut devices = vec![];
     let context = libusb::Context::new().unwrap();
     for device in context.devices().unwrap().iter() {
@@ -72,6 +77,7 @@ fn find_devices(serial: Option<String>) -> Vec<UsbDevice> {
         let device = UsbDevice {
             vendor_id: format!("{:04x}", device_des.vendor_id()),
             product_id: format!("{:04x}", device_des.product_id()),
+            serial: number.clone(),
         };
         match &serial {
             Some(serial) if number == *serial => return vec![device],

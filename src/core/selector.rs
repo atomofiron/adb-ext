@@ -89,7 +89,7 @@ pub fn run_adb_with(device: &AdbDevice, mut args: AdbArgs) -> Output {
     return run_adb(args);
 }
 
-fn fetch_devices() -> Vec<AdbDevice> {
+pub fn fetch_adb_devices() -> Vec<AdbDevice> {
     let output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
     return output.stdout().split('\n')
         .enumerate()
@@ -107,7 +107,7 @@ fn fetch_devices() -> Vec<AdbDevice> {
 }
 
 pub fn resolve_device() -> AdbDevice {
-    let mut devices = fetch_devices();
+    let mut devices = fetch_adb_devices();
     let device = match () {
         _ if devices.is_empty() => {
             print_no_one();
