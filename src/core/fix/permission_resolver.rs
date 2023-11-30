@@ -10,7 +10,6 @@ use std::path::Path;
 use std::time::Duration;
 use itertools::Itertools;
 use crate::ARG_FIX;
-use crate::core::adb_device::AdbDevice;
 use crate::core::r#const::{ERROR_CODE, SUCCESS_CODE};
 
 const SUDO: &str = "sudo";
@@ -30,24 +29,25 @@ pub fn sudo_fix_permission(serial: Option<String>) -> i32 {
         .status()
         .unwrap()
         .code()
-        .unwrap_or(1);
+        .unwrap_or(ERROR_CODE);
 }
 
 pub fn fix_permission(serial: Option<String>) {
     if !Uid::current().is_root() {
         exit(sudo_fix_permission(serial));
     }
-    let serials = fetch_adb_devices().iter()
+    let serials = fetch_adb_devices()
+        .into_iter()
         .filter_map(|it| if it.no_permissions { Some(it.serial) } else { None })
         .collect::<Vec<String>>();
     let ids = find_usb_devices(serial.clone())
         .into_iter()
+        .filter_map(|it| if serials.contains(&it.serial) { Some(it.vendor_id) } else { None })
         .unique()
-        .filter_map(|it| if serials.contains(it.serial) { Some(it.vendor_id) } else { None })
         .collect::<Vec<String>>();
     if ids.is_empty() {
         return NO_DEVICES_FOUND.println();
-    };
+    }
     match apply(&ids) {
         Ok(_) => {
             SUCCESSFULLY.println();
@@ -68,11 +68,11 @@ fn find_usb_devices(serial: Option<String>) -> Vec<UsbDevice> {
         let timeout = Duration::from_secs(1);
         let languages = handle.read_languages(timeout).unwrap();
         let language = languages.first().unwrap().clone();
-        let device_des = device.device_descriptor().unwrap();
-        let config_des = device.active_config_descriptor().unwrap();
+        let device_des = if let Ok(des) = device.device_descriptor() { des } else { continue };
+        let config = device.active_config_descriptor().map(|it| {
+            handle.read_configuration_string(language, &it, timeout).unwrap_or(String::new())
+        }).unwrap_or(String::new());
         let number = handle.read_serial_number_string(language, &device_des, timeout)
-            .unwrap_or(String::new());
-        let config = handle.read_configuration_string(language, &config_des, timeout)
             .unwrap_or(String::new());
         let device = UsbDevice {
             vendor_id: format!("{:04x}", device_des.vendor_id()),

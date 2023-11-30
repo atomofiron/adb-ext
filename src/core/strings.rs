@@ -5,14 +5,15 @@ static mut LANGUAGE: Language = Language::En;
 
 #[cfg(target_os = "linux")]
 pub static NO_DEVICES_FOUND: Label = Label::new(
-    "No devices found, try again",
-    "Устройств не обнаружено, попробуйте снова",
+    "No devices without permissions found, try again",
+    "Устройств без разрешений не обнаружено, попробуйте снова",
 );
 #[cfg(target_os = "linux")]
 pub static SUCCESSFULLY: Label = Label::new(
     "Reconnect device and enjoy!",
     "Готово, переподключите устройство!",
 );
+#[cfg(not(target_os = "linux"))]
 pub static LINUX_ONLY: Label = Label::new(
     "Permission resolving is only applicable for Linux",
     "Исправление разрешений ADB применимо только для Linux",

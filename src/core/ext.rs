@@ -38,7 +38,7 @@ pub trait OutputExt {
 
 impl OutputExt for Output {
     fn code(&self) -> i32 {
-        self.status.code().unwrap_or(1)
+        self.status.code().unwrap_or(ERROR_CODE)
     }
     fn stdout(&self) -> String {
         self.stdout.fix_nbsp_and_trim()

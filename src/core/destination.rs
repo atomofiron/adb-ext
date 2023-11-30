@@ -25,7 +25,7 @@ impl Destination for String {
 
     fn with_file(mut self, default_name_template: &str) -> String {
         let dot = default_name_template.last_index_of('.').unwrap();
-        let ext = &default_name_template.clone()[dot..];
+        let ext = &default_name_template[dot..];
         match () {
             _ if self.ends_with('/') => (),
             _ if fs::metadata(self.clone()).map_or(false, |it| it.is_dir()) => self.push('/'),
