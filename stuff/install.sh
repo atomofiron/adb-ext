@@ -61,7 +61,6 @@ ensure cd $home_local_bin
 println "downloading..."
 ensure curl -X GET -sSfL https://github.com/Atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
 ensure chmod u+x adb-ext
-ensure ln -sf adb-ext adb
 ensure ln -sf adb-ext lss
 ensure ln -sf adb-ext lsc
 ensure ln -sf adb-ext mss
