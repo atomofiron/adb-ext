@@ -1,18 +1,18 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
+use std::fs;
 use std::path::Path;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::r#const::{DESKTOP_SCREENCASTS, DESKTOP_SCREENSHOTS, SHELL};
+use crate::core::r#const::{PULL, SHELL};
 use std::process::exit;
+use crate::core::config::get_config;
 use crate::core::destination::Destination;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
-use crate::core::util::{ensure_parent_exists, gen_home_path};
+use crate::core::util::ensure_parent_exists;
 
-const PULL: &str = "pull";
-const LS_SCREENSHOTS: &str = "toybox ls -llcd /sdcard/Pictures/Screenshots/* /sdcard/DCIM/Screenshots/*";
-const LS_SCREENCASTS: &str = "toybox ls -llcd /sdcard/Pictures/Screenshots/* /sdcard/DCIM/Screen\\ recordings/* /sdcard/Movies/*";
+const TOYBOX_LS_LLCD: &str = "toybox ls -llcd";
 const PICS: &[&str; 3] = &[".png", ".jpg", ".jpeg"];
 const MOVS: &[&str; 3] = &[".mp4", ".mov", ".3gp"];
 // -rw-rw---- 1 u0_a173 media_rw 6217184 2023-10-23 00:15:07.020796477 +0200(wtf?) /sdcard/Pictures/Screenshots/screenshot.png
@@ -36,14 +36,28 @@ impl Display for Params {
 }
 
 pub fn pull_screenshots(params: Params) {
-    pull(params, PICS, &[SHELL, LS_SCREENSHOTS], DESKTOP_SCREENSHOTS);
+    let config = get_config().screenshots;
+    let command = get_ls_command(&config.sources);
+    pull(params, PICS, &[SHELL, command.as_str()], config.destination);
 }
 
 pub fn pull_screencasts(params: Params) {
-    pull(params, MOVS, &[SHELL, LS_SCREENCASTS], DESKTOP_SCREENCASTS);
+    let config = get_config().screencasts;
+    let command = get_ls_command(&config.sources);
+    pull(params, MOVS, &[SHELL, command.as_str()], config.destination);
 }
 
-fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: &str) {
+fn get_ls_command(sources: &Vec<String>) -> String {
+    let mut command = TOYBOX_LS_LLCD.to_string();
+    for src in sources {
+        let slash = if src.ends_with('/') { "" } else { "/" };
+        let part = format![" {src}{slash}*"];
+        command.push_str(part.as_str())
+    }
+    return command;
+}
+
+fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: String) {
     let count = match params {
         Params::Count(count) => count,
         Params::Single(_) => 1,
@@ -73,19 +87,26 @@ fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: &str) {
             .map(|it| it.path.to_string())
             .collect::<Vec<String>>();
         let dst = match params {
-            Params::Count(_) => gen_home_path(Some(default_dst)),
+            Params::Count(_) => {
+                let dst = default_dst.with_dir("");
+                fs::create_dir_all(&dst).unwrap();
+                dst
+            },
             Params::Single(path) => {
                 let name = Path::new(items.first().unwrap())
                     .file_name()
                     .unwrap()
                     .to_str()
                     .unwrap();
-                path.with_dir(default_dst)
-                    .with_file(name)
+                let dst = path
+                    .with_dir(&default_dst)
+                    .with_file(name);
+                ensure_parent_exists(&dst);
+                dst
             },
         };
-        ensure_parent_exists(&dst);
         let mut pull_args = AdbArgs::spawn(&[PULL]);
+        items.reverse();
         pull_args.args.append(&mut items);
         pull_args.args.push(dst.clone());
         let output = run_adb_with(&device, pull_args);

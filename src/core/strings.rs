@@ -9,9 +9,19 @@ pub static NO_DEVICES_FOUND: Label = Label::new(
     "Устройств без разрешений не обнаружено, попробуйте снова",
 );
 #[cfg(target_os = "linux")]
-pub static SUCCESSFULLY: Label = Label::new(
-    "Reconnect device and enjoy!",
-    "Готово, переподключите устройство!",
+pub static SUDO_EXPLANATION: Label = Label::new(
+    "To fix the ADB permissions superuser is required",
+    "Чтобы получить доступ к ADB устройства(м), необходимы права суперпользователя",
+);
+#[cfg(target_os = "linux")]
+pub static RECONNECT_DEVICES: Label = Label::new(
+    "Reconnect device(s) and enjoy!",
+    "Готово, переподключите устройство(а)!",
+);
+#[cfg(target_os = "linux")]
+pub static WELL_DONE: Label = Label::new(
+    "Well done, enjoy!",
+    "Готово!",
 );
 #[cfg(not(target_os = "linux"))]
 pub static LINUX_ONLY: Label = Label::new(
@@ -50,6 +60,11 @@ pub static SAVED: Label = Label::new(
 pub static UNKNOWN_ERROR: Label = Label::new(
     "Unknown error",
     "Неизвестная ошибка",
+);
+#[cfg(target_os = "linux")]
+pub static SOMETHING_WRONG: Label = Label::new(
+    "Something went wrong(",
+    "Что-то пошло не так(",
 );
 pub static CANCEL: Label = Label::new(
     "Cancel",

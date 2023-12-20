@@ -65,6 +65,8 @@ ensure ln -sf adb-ext lss
 ensure ln -sf adb-ext lsc
 ensure ln -sf adb-ext mss
 ensure ln -sf adb-ext shot
+ensure ln -sf adb-ext msc
+ensure ln -sf adb-ext rec
 
 env_script="
 case \":\${PATH}:\" in

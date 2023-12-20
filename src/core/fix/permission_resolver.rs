@@ -7,9 +7,11 @@ use std::io::{Error, ErrorKind, Write};
 use std::process::{exit, Command};
 use std::fs;
 use std::path::Path;
+use std::thread::sleep;
 use std::time::Duration;
 use itertools::Itertools;
 use crate::ARG_FIX;
+use crate::core::adb_device::AdbDevice;
 use crate::core::r#const::{ERROR_CODE, SUCCESS_CODE};
 
 const SUDO: &str = "sudo";
@@ -21,6 +23,7 @@ const PAYLOAD: &str = "\nSUBSYSTEM==\"usb\", ATTR{idVendor}==\"vendor_id\", MODE
 
 
 pub fn sudo_fix_permission(serial: Option<String>) -> i32 {
+    SUDO_EXPLANATION.println();
     let path = std::env::current_exe().unwrap();
     return Command::new(SUDO)
         .arg(path)
@@ -49,14 +52,12 @@ pub fn fix_permission(serial: Option<String>) {
         return NO_DEVICES_FOUND.println();
     }
     match apply(&ids) {
-        Ok(_) => {
-            SUCCESSFULLY.println();
-            exit(SUCCESS_CODE);
-        },
-        Err(cause) => {
-            println!("{}", cause);
-            exit(ERROR_CODE);
-        },
+        Err(cause) => cause.short_unwrap(),
+        _ => match serial {
+            None => RECONNECT_DEVICES.println(),
+            Some(serial) if wait_for_the_fixed_adb_device(serial) => WELL_DONE.println(),
+            _ => SOMETHING_WRONG.println(),
+        }
     }
 }
 
@@ -127,4 +128,12 @@ fn add_to_config(ids: &Vec<String>) -> Result<(), Error> {
         file.write_all(line.as_bytes())?;
     }
     return Ok(());
+}
+
+fn wait_for_the_fixed_adb_device(serial: String) -> bool {
+    while fetch_adb_devices().into_iter()
+        .find(|it| it.serial == serial && !it.no_permissions)
+        .is_none() {
+        sleep(Duration::from_secs(1));
+    }
 }

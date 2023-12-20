@@ -166,6 +166,10 @@ pub trait StrExt {
     fn last_index_of_or(&self, default: usize, c: char) -> usize;
 }
 
+pub trait StringExt {
+    fn with_slash(self) -> Self;
+}
+
 fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
     let mut index = if rev { value.last_index() } else { 0 };
     match rev {
@@ -205,6 +209,15 @@ impl StrExt for str {
 
     fn last_index_of_or(&self, default: usize, c: char) -> usize {
         inner_index_of(self, c, true).unwrap_or(default)
+    }
+}
+
+impl StringExt for String {
+    fn with_slash(mut self) -> Self {
+        if !self.ends_with('/') {
+            self.push('/');
+        }
+        return self;
     }
 }
 
