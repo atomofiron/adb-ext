@@ -43,17 +43,28 @@ fn main() {
 
 fn resolve_feature() -> Result<Feature, String> {
     let args = args().collect::<Vec<String>>();
+    let mut arg_index = 1;
+    let first = args[0].clone();
+    let mut command = first.as_str();
+    if ["adb", "adb-ext"].contains(&command) {
+        arg_index += 1;
+        command = args.get(1)
+            .map(|it| it.as_str())
+            .unwrap_or("");
+    }
     let feature = match () {
-        _ if args[0] == "lss" => Feature::LastScreenShots(get_params(args.get(1).cloned())),
-        _ if args[0] == "lsc" => Feature::LastScreenCasts(get_params(args.get(1).cloned())),
-        _ if args[0] == "mss" || args[0] == "shot" => Feature::MakeScreenShot(args.get(1).cloned().unwrap_or(String::new())),
-        _ if args[0] == "msc" || args[0] == "rec" => Feature::MakeScreenCast(args.get(1).cloned().unwrap_or(String::new())),
-        _ if args.len() == 1 => Feature::RunAdbWithArgs,
-        _ if args[1] == ARG_FIX => Feature::FixPermission(args.get(2).cloned()),
-        _ if args[1] == "run" => Feature::RunApk(args[2].clone()),
-        _ if args[1] == "steal" => Feature::StealApk(
-            args.get(2).expect("No package name passed").clone(),
-            args.get(3).cloned(),
+        _ if command == "" => Feature::RunAdbWithArgs,
+        _ if command == "lss" => Feature::LastScreenShots(get_params(args.get(arg_index).cloned())),
+        _ if command == "lsc" => Feature::LastScreenCasts(get_params(args.get(arg_index).cloned())),
+        _ if command == "mss"
+            || command == "shot" => Feature::MakeScreenShot(args.get(arg_index).cloned().unwrap_or(String::new())),
+        _ if command == "msc"
+            || command == "rec" => Feature::MakeScreenCast(args.get(arg_index).cloned().unwrap_or(String::new())),
+        _ if command == ARG_FIX => Feature::FixPermission(args.get(arg_index).cloned()),
+        _ if command == "run" => Feature::RunApk(args[arg_index].clone()),
+        _ if command == "steal" => Feature::StealApk(
+            args.get(arg_index).expect("No package name passed").clone(),
+            args.get(arg_index + 1).cloned(),
         ),
         _ => Feature::RunAdbWithArgs,
     };

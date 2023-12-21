@@ -32,14 +32,12 @@ impl Destination for String {
     fn with_file(mut self, default_name_template: &str) -> String {
         let dot = default_name_template.last_index_of('.').unwrap();
         let ext = &default_name_template[dot..];
-        println!("WTF {self} {default_name_template}");
         match () {
             _ if self.ends_with('/') => {},
             _ if fs::metadata(self.clone()).map_or(false, |it| it.is_dir()) => self.push('/'),
             _ if self.to_lowercase().ends_with(ext) => return self,
             _  => return format!("{self}{ext}"),
         };
-        println!("NUUU {self}");
         format!("{self}{}", Local::now().format(default_name_template))
     }
 }
