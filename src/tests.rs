@@ -38,7 +38,7 @@ mod tests {
         let expected = in_exp.iter().map(|(_,it)| it.clone()).collect::<Vec<String>>();
         let output = in_exp.iter().map(|(input, expected)| {
             let output = input.to_string()
-                .with_dir("/Subpath/")
+                .with_dir("~/Subpath/")
                 .with_file("template.png");
             let equals = output == *expected;
             let expected = if equals { String::new() } else { expected.clone() };
