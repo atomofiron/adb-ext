@@ -82,10 +82,8 @@ pub fn get_config() -> Config {
         fs::create_dir_all(config_path.parent().unwrap()).unwrap();
         File::create(config_path).unwrap();
     }
-    let config = config::Config::builder()
-        .add_source(config::File::with_name(config_path.to_str().unwrap()))
-        .build().unwrap()
-        .try_deserialize::<Config>().unwrap();
+    let text = fs::read_to_string(config_path).unwrap_or("".to_string());
+    let config = serde_yaml::from_str::<Config>(&text).unwrap();
     let text = serde_yaml::to_string(&config).unwrap();
     fs::write(config_path, text).unwrap();
     return config;

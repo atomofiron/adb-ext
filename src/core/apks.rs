@@ -53,7 +53,7 @@ fn get_aapt() -> String {
         },
         Some(path) => path.with_dir(""),
     };
-    let pattern = Regex::new(r"\d\.\d\.\d").unwrap();
+    let pattern = Regex::new(r"/\d+\.\d\.\d$").unwrap();
     return fs::read_dir(&path).unwrap()
         .map(|it| it.unwrap().path().display().to_string())
         .filter(|it| pattern.is_match(it))
