@@ -5,6 +5,8 @@ use serde_derive::{Deserialize, Serialize};
 use crate::core::util::home_dir;
 
 
+pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
+
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Config {
     #[serde(default = "default_hook")]
@@ -18,7 +20,9 @@ pub struct Config {
 }
 #[derive(Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Environment {
+    #[serde(rename = "build-tools")]
     pub build_tools: Option<String>,
+    #[serde(rename = "platform-tools")]
     pub platform_tools: Option<String>,
 }
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -87,4 +91,4 @@ pub fn get_config() -> Config {
     return config;
 }
 
-fn get_config_path() -> String { format!("{}/.config/adb-ext.yaml", home_dir()) }
+fn get_config_path() -> String { format!("{}{}", home_dir(), &CONFIG_PATH[1..]) }

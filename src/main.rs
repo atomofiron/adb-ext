@@ -17,7 +17,7 @@ pub const ARG_FIX: &str = "fix";
 enum Feature {
     FixPermission(Option<String>),
     RunAdbWithArgs,
-    RunApk,
+    RunApk(String),
     StealApk(String,Option<String>),
     LastScreenShots(Params),
     LastScreenCasts(Params),
@@ -32,7 +32,7 @@ fn main() {
     match resolve_feature().short_unwrap() {
         Feature::FixPermission(serial) => fix_on_linux(serial),
         Feature::RunAdbWithArgs => resolve_device_and_run_args(),
-        Feature::RunApk => run_apk(),
+        Feature::RunApk(apk) => run_apk(apk),
         Feature::LastScreenShots(params) => pull_screenshots(params),
         Feature::LastScreenCasts(params) => pull_screencasts(params),
         Feature::MakeScreenShot(dst) => make_screenshot(dst),
@@ -50,7 +50,7 @@ fn resolve_feature() -> Result<Feature, String> {
         _ if args[0] == "msc" || args[0] == "rec" => Feature::MakeScreenCast(args.get(1).cloned().unwrap_or(String::new())),
         _ if args.len() == 1 => Feature::RunAdbWithArgs,
         _ if args[1] == ARG_FIX => Feature::FixPermission(args.get(2).cloned()),
-        _ if args[1] == "run" => Feature::RunApk,
+        _ if args[1] == "run" => Feature::RunApk(args[2].clone()),
         _ if args[1] == "steal" => Feature::StealApk(
             args.get(2).expect("No package name passed").clone(),
             args.get(3).cloned(),

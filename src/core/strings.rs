@@ -1,5 +1,7 @@
 use crate::core::util::print_the_fuck_out;
 use std::fmt::{Display, Formatter};
+use std::process::exit;
+use crate::core::r#const::ERROR_CODE;
 
 static mut LANGUAGE: Language = Language::En;
 
@@ -31,6 +33,14 @@ pub static LINUX_ONLY: Label = Label::new(
 pub static NO_ADB: Label = Label::new(
     "ADB wasn't recognized",
     "ADB не обнаружен",
+);
+pub static NO_BUILD_TOOLS: Label = Label::new(
+    "Specify a path to the Android Build Tools in ",
+    "Укажите путь до Android Build Tools в ",
+);
+pub static NO_FILE: Label = Label::new(
+    "No such file",
+    "Такого файла нет",
 );
 pub static SELECT_DEVICE: Label = Label::new(
     "Select a device",
@@ -112,6 +122,10 @@ impl Label<'_> {
     }
     pub fn println(&self) {
         println!("{}", self);
+    }
+    pub fn exit_err(&self) -> ! {
+        println!("{}", self);
+        exit(ERROR_CODE);
     }
 }
 
