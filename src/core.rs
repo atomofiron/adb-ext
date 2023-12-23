@@ -12,4 +12,4 @@ pub mod r#const;
 pub mod destination;
 pub mod apks;
 pub mod config;
-mod updater;
+pub mod updater;

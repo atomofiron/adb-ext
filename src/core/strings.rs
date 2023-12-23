@@ -30,6 +30,14 @@ pub static LINUX_ONLY: Label = Label::new(
     "Permission resolving is only applicable for Linux",
     "Исправление разрешений ADB применимо только для Linux",
 );
+pub static INSTALLATION: Label = Label::new(
+    "Installation",
+    "Установка",
+);
+pub static UPDATE: Label = Label::new(
+    "Update",
+    "Обновление",
+);
 pub static NO_ADB: Label = Label::new(
     "ADB wasn't recognized",
     "ADB не обнаружен",
