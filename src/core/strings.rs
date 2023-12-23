@@ -54,6 +54,10 @@ pub static DESTINATION: Label = Label::new(
     "Destination: ",
     "Место назначения: ",
 );
+pub static PRESS_ENTER_TO_STOP_REC: Label = Label::new(
+    "Press Enter to stop recording",
+    "Нажмите Enter, чтобы остановить запись",
+);
 pub static UNAUTHORIZED_BY_DEVICE: Label = Label::new(
     "Unauthorized by the device",
     "На устройстве не дано разрешение",

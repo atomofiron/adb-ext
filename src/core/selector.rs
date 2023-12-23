@@ -83,10 +83,14 @@ pub fn resolve_device_and_run_args() {
     exit(output.code());
 }
 
-pub fn run_adb_with(device: &AdbDevice, mut args: AdbArgs) -> Output {
+pub fn adb_args_with(device: &AdbDevice, mut args: AdbArgs) -> AdbArgs {
     args.args.insert(0, ARG_S.to_string());
     args.args.insert(1, device.serial.clone());
-    return run_adb(args);
+    return args;
+}
+
+pub fn run_adb_with(device: &AdbDevice, args: AdbArgs) -> Output {
+    run_adb(adb_args_with(device, args))
 }
 
 pub fn fetch_adb_devices() -> Vec<AdbDevice> {
@@ -167,7 +171,7 @@ fn get_model(name: &String) -> String {
     return if suitable.is_empty() { name.clone() } else { suitable.to_string() }
 }
 
-fn run_adb(args: AdbArgs) -> Output {
+pub fn adb_command(args: AdbArgs) -> Command {
     let output = Command::new(WHICH)
         .arg(ADB)
         .output()
@@ -179,13 +183,17 @@ fn run_adb(args: AdbArgs) -> Output {
     }
     let mut adb = Command::new(adb_path);
     adb.args(args.args);
-    return if args.interactive {
+    return adb
+}
+
+fn run_adb(args: AdbArgs) -> Output {
+    if args.interactive {
         Output {
-            status: adb.spawn().unwrap().wait().unwrap(),
+            status: adb_command(args).spawn().unwrap().wait().unwrap(),
             stdout: vec![],
             stderr: vec![],
         }
     } else {
-        adb.output().unwrap()
+        adb_command(args).output().unwrap()
     }
 }

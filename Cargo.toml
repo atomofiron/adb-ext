@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nix = { version = "0.27.1", features = ["user"] }
+nix = { version = "0.27.1", features = ["user", "signal"] }
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
 chrono = "0.4.31"
 itertools = "0.12.0"
