@@ -5,7 +5,7 @@ use std::process::{Command, exit, Output};
 use regex::Regex;
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;
-use crate::core::config::{CONFIG_PATH, get_config};
+use crate::core::config::{Config, CONFIG_PATH};
 use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, StrExt};
 use crate::core::r#const::{PULL, SHELL};
@@ -45,7 +45,7 @@ pub fn run_apk(apk: String) {
 }
 
 fn get_aapt() -> String {
-    let path = match get_config().environment.build_tools {
+    let path = match Config::read().environment.build_tools {
         None => {
             NO_BUILD_TOOLS.print();
             println!("{}", CONFIG_PATH);

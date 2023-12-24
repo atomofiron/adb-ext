@@ -7,7 +7,7 @@ use crate::core::ext::{OutputExt, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{PULL, SHELL};
 use std::process::exit;
-use crate::core::config::get_config;
+use crate::core::config::Config;
 use crate::core::destination::Destination;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
 use crate::core::util::ensure_parent_exists;
@@ -36,13 +36,13 @@ impl Display for Params {
 }
 
 pub fn pull_screenshots(params: Params) {
-    let config = get_config().screenshots;
+    let config = Config::read().screenshots;
     let command = get_ls_command(&config.sources);
     pull(params, PICS, &[SHELL, command.as_str()], config.destination);
 }
 
 pub fn pull_screencasts(params: Params) {
-    let config = get_config().screencasts;
+    let config = Config::read().screencasts;
     let command = get_ls_command(&config.sources);
     pull(params, MOVS, &[SHELL, command.as_str()], config.destination);
 }

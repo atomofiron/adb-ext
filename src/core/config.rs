@@ -10,7 +10,7 @@ pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Config {
     #[serde(default = "default_hook")]
-    pub hook: String,
+    pub hook: Option<String>,
     #[serde(default)]
     pub environment: Environment,
     #[serde(default)]
@@ -31,7 +31,7 @@ pub struct Screenshots {
     pub name: String,
     pub sources: Vec<String>,
     pub destination: String,
-    pub hook: String,
+    pub hook: Option<String>,
 }
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -39,12 +39,12 @@ pub struct Screencasts {
     pub name: String,
     pub sources: Vec<String>,
     pub destination: String,
-    pub hook: String,
+    pub hook: Option<String>,
     pub args: String,
 }
 
 // NOTE: replace the '~' with home dir path for the Windows in the future
-fn default_hook() -> String { "~/Android/hook".to_string() }
+fn default_hook() -> Option<String> { Some("~/Android/hook".to_string()) }
 
 impl Default for Config {
     fn default() -> Self {
@@ -66,7 +66,7 @@ impl Default for Screenshots {
                 "/sdcard/DCIM/Screenshots".to_string(),
             ],
             destination: "~/Android/Screenshots".to_string(),
-            hook: "~/Android/Screenshots/hook".to_string(),
+            hook: Some("~/Android/Screenshots/hook".to_string()),
         }
     }
 }
@@ -80,24 +80,32 @@ impl Default for Screencasts {
                 "/sdcard/Movies".to_string(),
             ],
             destination: "~/Android/Screencasts".to_string(),
-            hook: "~/Android/Screencasts/hook".to_string(),
+            hook: Some("~/Android/Screencasts/hook".to_string()),
             args: "--bit-rate 5M".to_string(),
         }
     }
 }
 
-pub fn get_config() -> Config {
-    let config_path = get_config_path();
-    let config_path = Path::new(&config_path);
-    if !config_path.exists() {
-        fs::create_dir_all(config_path.parent().unwrap()).unwrap();
-        File::create(config_path).unwrap();
+impl Config {
+    pub fn read() -> Config {
+        let config_path = format!("{}{}", home_dir(), &CONFIG_PATH[1..]);
+        let config_path = Path::new(&config_path);
+        if !config_path.exists() {
+            fs::create_dir_all(config_path.parent().unwrap()).unwrap();
+            File::create(config_path).unwrap();
+        }
+        let text = fs::read_to_string(config_path).unwrap_or("".to_string());
+        let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|_| Config::default());
+        let text = serde_yaml::to_string(&config).unwrap();
+        fs::write(config_path, text).unwrap();
+        return config;
     }
-    let text = fs::read_to_string(config_path).unwrap_or("".to_string());
-    let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|_| Config::default());
-    let text = serde_yaml::to_string(&config).unwrap();
-    fs::write(config_path, text).unwrap();
-    return config;
-}
 
-fn get_config_path() -> String { format!("{}{}", home_dir(), &CONFIG_PATH[1..]) }
+    pub fn screenshot_hook(&self) -> Option<String> {
+        self.screenshots.hook.clone().or(self.hook.clone())
+    }
+
+    pub fn screencast_hook(&self) -> Option<String> {
+        self.screencasts.hook.clone().or(self.hook.clone())
+    }
+}

@@ -5,7 +5,7 @@ use crate::core::destination::Destination;
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::SHELL;
 use std::process::exit;
-use crate::core::config::get_config;
+use crate::core::config::Config;
 use crate::core::strings::SAVED;
 use crate::core::util::ensure_parent_exists;
 
@@ -19,7 +19,7 @@ pub fn make_screenshot(dst: String) {
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if output.status.success() {
-        let config = get_config();
+        let config = Config::read();
         let dst = dst
             .with_dir(&config.screenshots.destination)
             .with_file(&config.screenshots.name);

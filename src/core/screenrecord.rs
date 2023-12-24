@@ -11,14 +11,14 @@ use nix::libc::pid_t;
 use nix::sys::signal;
 use nix::sys::signal::Signal;
 use nix::unistd::Pid;
-use crate::core::config::get_config;
+use crate::core::config::Config;
 use crate::core::strings::{DESTINATION, PRESS_ENTER_TO_STOP_REC};
 use crate::core::util::ensure_parent_exists;
 
 const SCREENRECORD: &str = "screenrecord";
 
 pub fn make_screencast(dst: String) {
-    let config = get_config();
+    let config = Config::read();
     let tmp = "/data/local/tmp/record.mp4";
     let args = &[SHELL, SCREENRECORD, &config.screencasts.args, &tmp];
     let device = resolve_device();

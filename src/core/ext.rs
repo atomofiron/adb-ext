@@ -233,3 +233,17 @@ impl OptionArg for Command {
         }
     }
 }
+
+trait OptionExt<T> {
+    fn or(self, other: Option<T>) -> Option<T>;
+}
+
+impl<T> OptionExt<T> for Option<T> {
+    fn or(self, other: Option<T>) -> Option<T> {
+        match &self {
+            None => other,
+            Some(_) => self,
+        }
+    }
+}
+
