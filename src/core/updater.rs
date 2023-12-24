@@ -6,7 +6,7 @@ use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, UPDATE_SUCCE
 use crate::core::util::home_dir;
 
 
-const SCRIPT_URL: &str = "https://github.com/atomofiron/adb-ext/raw/develop/stuff/install.sh";
+const SCRIPT_URL: &str = "https://github.com/atomofiron/adb-ext/raw/main/stuff/install.sh";
 const SCRIPT_NAME: &str = "install-adb-ext.sh";
 const ENV_VERSION: &str = "4";
 const BOLD: &str = "\x1b[1m";
