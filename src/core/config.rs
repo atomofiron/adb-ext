@@ -46,6 +46,17 @@ pub struct Screencasts {
 // NOTE: replace the '~' with home dir path for the Windows in the future
 fn default_hook() -> String { "~/Android/hook".to_string() }
 
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            hook: default_hook(),
+            environment: Environment::default(),
+            screenshots: Screenshots::default(),
+            screencasts: Screencasts::default(),
+        }
+    }
+}
+
 impl Default for Screenshots {
     fn default() -> Self {
         Screenshots {
@@ -83,7 +94,7 @@ pub fn get_config() -> Config {
         File::create(config_path).unwrap();
     }
     let text = fs::read_to_string(config_path).unwrap_or("".to_string());
-    let config = serde_yaml::from_str::<Config>(&text).unwrap();
+    let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|| Config::default());
     let text = serde_yaml::to_string(&config).unwrap();
     fs::write(config_path, text).unwrap();
     return config;
