@@ -1,18 +1,34 @@
 use std::{env, fs};
 use std::io::Write;
+use std::process::{Command, exit};
 use itertools::Itertools;
-use crate::core::strings::{INSTALLATION, UPDATE};
+use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, UPDATE_SUCCEED};
 use crate::core::util::home_dir;
 
 
+const SCRIPT_URL: &str = "https://github.com/atomofiron/adb-ext/raw/develop/stuff/install.sh";
+const SCRIPT_NAME: &str = "install-adb-ext.sh";
 const ENV_VERSION: &str = "4";
 const BOLD: &str = "\x1b[1m";
 const CLEAR: &str = "\x1b[0m";
-const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "adb run app.apk", "adb steal app.package.name", "adb update"];
-
+const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
 
 pub fn update() {
-
+    let bytes = reqwest::blocking::get(SCRIPT_URL).unwrap()
+        .bytes().unwrap();
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(false)
+        .open(SCRIPT_NAME).unwrap();
+    file.write(&bytes).unwrap();
+    std::io::stdin().read_line(&mut String::new()).unwrap();
+    let code = Command::new("sh")
+        .arg(SCRIPT_NAME)
+        .spawn().unwrap()
+        .wait().unwrap()
+        .code().unwrap();
+    exit(code);
 }
 
 pub fn deploy() {
@@ -22,11 +38,11 @@ pub fn deploy() {
     let env_file = format!("{home}/.local/env");
     let bin_dir = format!("{home}/{local_bin}");
     let adb_ext = "adb-ext";
-    let adb_ext_path = format!("{bin_dir}/{adb_ext}2");
-    let mut action = INSTALLATION.value();
-    for name in ["green-pain", "adb-ext"] {
+    let adb_ext_path = format!("{bin_dir}/{adb_ext}");
+    let mut action = INSTALLATION_SUCCEED.value();
+    for name in ["green-pain", adb_ext] {
         if fs::metadata(format!("{bin_dir}/{name}")).is_ok() {
-            action = UPDATE.value();
+            action = UPDATE_SUCCEED.value();
         }
     }
     let _ = fs::remove_file(format!("{bin_dir}/green-pain"));
@@ -70,9 +86,9 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
         }
     }
     let sep = format!("{CLEAR}, {BOLD}");
-    println!("{action} succeed, run {BOLD}{}{CLEAR}", EXAMPLES.iter().join(&sep));
+    println!("{action} {BOLD}{}{CLEAR}", EXAMPLES.iter().join(&sep));
     if !auto_configure || current_env_version != ENV_VERSION {
-        println!("... however, first of all to configure your current shell, run:");
+        HOWEVER_CONFIGURE.println();
         println!("{BOLD}source {env_path}{CLEAR}");
     }
 }

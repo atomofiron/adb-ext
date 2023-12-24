@@ -30,13 +30,13 @@ pub static LINUX_ONLY: Label = Label::new(
     "Permission resolving is only applicable for Linux",
     "Исправление разрешений ADB применимо только для Linux",
 );
-pub static INSTALLATION: Label = Label::new(
-    "Installation",
-    "Установка",
+pub static INSTALLATION_SUCCEED: Label = Label::new(
+    "Installation succeed, run",
+    "Установка завершена, можете запустить",
 );
-pub static UPDATE: Label = Label::new(
-    "Update",
-    "Обновление",
+pub static UPDATE_SUCCEED: Label = Label::new(
+    "Update succeed, run",
+    "Обновление завершена, можете запустить",
 );
 pub static NO_ADB: Label = Label::new(
     "ADB wasn't recognized",
@@ -69,6 +69,10 @@ pub static PRESS_ENTER_TO_STOP_REC: Label = Label::new(
 pub static UNAUTHORIZED_BY_DEVICE: Label = Label::new(
     "Unauthorized by the device",
     "На устройстве не дано разрешение",
+);
+pub static HOWEVER_CONFIGURE: Label = Label::new(
+    "... however, first of all to configure your current shell, run:",
+    "... однако, для начала, чтобы настроить текущую сессию, запустите:",
 );
 pub static UNKNOWN: Label = Label::new(
     "Unknown",
