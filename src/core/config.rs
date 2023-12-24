@@ -94,7 +94,7 @@ pub fn get_config() -> Config {
         File::create(config_path).unwrap();
     }
     let text = fs::read_to_string(config_path).unwrap_or("".to_string());
-    let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|| Config::default());
+    let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|_| Config::default());
     let text = serde_yaml::to_string(&config).unwrap();
     fs::write(config_path, text).unwrap();
     return config;
