@@ -52,11 +52,16 @@ pub fn fix_permission(serial: Option<String>) {
         return NO_DEVICES_FOUND.println();
     }
     match apply(&ids) {
-        Err(cause) => cause.short_unwrap(),
+        Err(cause) => {
+            println!("{}", cause);
+            exit(ERROR_CODE);
+        },
         _ => match serial {
             None => RECONNECT_DEVICES.println(),
-            Some(serial) if wait_for_the_fixed_adb_device(serial) => WELL_DONE.println(),
-            _ => SOMETHING_WRONG.println(),
+            Some(serial) => {
+                wait_for_the_fixed_adb_device(serial);
+                WELL_DONE.println()
+            },
         }
     }
 }
@@ -130,7 +135,7 @@ fn add_to_config(ids: &Vec<String>) -> Result<(), Error> {
     return Ok(());
 }
 
-fn wait_for_the_fixed_adb_device(serial: String) -> bool {
+fn wait_for_the_fixed_adb_device(serial: String) {
     while fetch_adb_devices().into_iter()
         .find(|it| it.serial == serial && !it.no_permissions)
         .is_none() {
