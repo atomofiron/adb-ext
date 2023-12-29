@@ -1,12 +1,13 @@
 use crate::core::ext::{OptionExt, ResultToOption, ShortUnwrap};
 use crate::core::pull_media::{Params, pull_screencasts, pull_screenshots};
 use crate::core::selector::resolve_device_and_run_args;
-use crate::core::strings::Language;
+use crate::core::strings::{Language, NO_PACKAGE_NAME};
 use std::env;
 use std::env::args;
 use crate::core::screencap::make_screenshot;
 use crate::core::fix::fix_on_linux;
 use crate::core::apks::{run_apk, steal_apk};
+use crate::core::config::Config;
 use crate::core::screenrecord::make_screencast;
 use crate::core::updater::{deploy, update};
 
@@ -32,14 +33,16 @@ fn main() {
     if let Ok(true) = env::var("LANG").map(|lang| lang.starts_with("ru")) {
         Language::set_language(Language::Ru);
     }
+    let config = Config::read();
+    config.update_adb_path();
     match resolve_feature().short_unwrap() {
         Feature::FixPermission(serial) => fix_on_linux(serial),
         Feature::RunAdbWithArgs => resolve_device_and_run_args(),
-        Feature::RunApk(apk) => run_apk(apk),
-        Feature::LastScreenShots(params) => pull_screenshots(params),
-        Feature::LastScreenCasts(params) => pull_screencasts(params),
-        Feature::MakeScreenShot(cmd,dst) => make_screenshot(cmd, dst),
-        Feature::MakeScreenCast(cmd,dst) => make_screencast(cmd, dst),
+        Feature::RunApk(apk) => run_apk(apk, &config),
+        Feature::LastScreenShots(params) => pull_screenshots(params, config),
+        Feature::LastScreenCasts(params) => pull_screencasts(params, config),
+        Feature::MakeScreenShot(cmd,dst) => make_screenshot(cmd, dst, &config),
+        Feature::MakeScreenCast(cmd,dst) => make_screencast(cmd, dst, &config),
         Feature::StealApk(package, dst) => steal_apk(package, dst),
         Feature::Deploy => deploy(),
         Feature::Update => update(),
@@ -72,7 +75,7 @@ fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
         _ if cmd == ARG_FIX => Feature::FixPermission(args.get(next).cloned()),
         _ if cmd == "run" => Feature::RunApk(args[next].clone()),
         _ if cmd == "steal" => Feature::StealApk(
-            args.get(next).expect("No package name passed").clone(),
+            args.get(next).expect(NO_PACKAGE_NAME.value()).clone(),
             args.get(next + 1).cloned(),
         ),
         _ if cmd == "deploy" => Feature::Deploy,

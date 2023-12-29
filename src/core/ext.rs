@@ -1,4 +1,5 @@
 use std::ffi::OsStr;
+use std::fs;
 use std::process::{Command, exit, Output};
 use crate::core::r#const::ERROR_CODE;
 
@@ -9,6 +10,15 @@ const NO_TARGETS: &str = "adb: no devices/emulators found";
 const NBSP: u8 = 0xA0;
 const BF: u8 = 0xBF;
 const C2: u8 = 0xC2;
+
+
+pub trait AnyExt<T> {
+    fn option(self) -> Option<T>;
+}
+
+impl<T> AnyExt<T> for T {
+    fn option(self) -> Option<T> { Some(self) }
+}
 
 pub trait ShortUnwrap<T> {
     fn short_unwrap(self) -> T;
@@ -165,6 +175,7 @@ pub trait StrExt {
     fn last_index_of(&self, c: char) -> Option<usize>;
     fn last_index_of_or(&self, default: usize, c: char) -> usize;
     fn file_name(&self) -> String;
+    fn is_file(&self) -> bool;
 }
 
 fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
@@ -215,6 +226,10 @@ impl StrExt for str {
             .unwrap_or(0);
         return self.to_string()[offset..].to_string()
     }
+
+    fn is_file(&self) -> bool {
+        fs::metadata(self).map_or(false, |it| it.is_file())
+    }
 }
 
 pub trait StringExt {
@@ -245,6 +260,7 @@ impl OptionArg for Command {
 
 pub trait OptionExt<T> {
     fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
+    fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T>;
     fn flat_map<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>;
 }
 
@@ -254,6 +270,12 @@ impl<T> OptionExt<T> for Option<T> {
             None => self,
             Some(value) if f(value) => self,
             _ => None,
+        }
+    }
+    fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T> {
+        match self {
+            None => f(),
+            Some(_) => self,
         }
     }
     fn flat_map<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>{

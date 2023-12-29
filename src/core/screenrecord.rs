@@ -1,7 +1,7 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::OutputExt;
 use crate::core::destination::Destination;
-use crate::core::selector::{adb_args_with, adb_command, resolve_device, run_adb_with};
+use crate::core::selector::{adb_args_with, resolve_device, run_adb_with};
 use crate::core::r#const::{PULL, SHELL};
 use std::process::exit;
 use std::io;
@@ -17,13 +17,12 @@ use crate::core::util::{ensure_parent_exists, try_run_hook_and_exit};
 
 const SCREENRECORD: &str = "screenrecord";
 
-pub fn make_screencast(cmd: String, dst: String) {
-    let config = Config::read();
+pub fn make_screencast(cmd: String, dst: String, config: &Config) {
     let tmp = "/data/local/tmp/record.mp4";
     let args = &[SHELL, SCREENRECORD, &config.screencasts.args, &tmp];
     let device = resolve_device();
     let args = adb_args_with(&device, AdbArgs::spawn(args));
-    let mut command = adb_command(args);
+    let mut command = args.command();
     let mut child = command.spawn().unwrap();
     PRESS_ENTER_TO_STOP_REC.print();
     io::stdin().read_line(&mut String::new()).unwrap();

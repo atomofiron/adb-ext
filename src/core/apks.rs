@@ -32,11 +32,11 @@ pub fn steal_apk(package: String, dst: Option<String>) {
     exit(output.code());
 }
 
-pub fn run_apk(apk: String) {
+pub fn run_apk(apk: String, config: &Config) {
     if !Path::new(&apk).exists() {
         NO_FILE.exit_err();
     }
-    let aapt = get_aapt();
+    let aapt = get_aapt(&config);
     let device = resolve_device();
     install(&device, &apk);
     let (package, activity) = get_package_activity(aapt, &apk);
@@ -44,8 +44,8 @@ pub fn run_apk(apk: String) {
     exit(output.code());
 }
 
-fn get_aapt() -> String {
-    let path = match Config::read().build_tools() {
+fn get_aapt(config: &Config) -> String {
+    let path = match config.build_tools() {
         None => {
             NO_BUILD_TOOLS.print();
             println!("{}", CONFIG_PATH);

@@ -58,6 +58,10 @@ pub static MEDIAS_NOT_FOUND: Label = Label::new(
     "Screenshots/casts were not found",
     "Скриншоты/записи не найдены",
 );
+pub static NO_PACKAGE_NAME: Label = Label::new(
+    "No package name passed",
+    "Не указано имя пакета",
+);
 pub static DESTINATION: Label = Label::new(
     "Destination: ",
     "Место назначения: ",
@@ -113,7 +117,7 @@ impl Language {
         }
     }
     fn get_language() -> &'static Language {
-        unsafe { return &LANGUAGE }
+        return unsafe { &LANGUAGE }
     }
 }
 

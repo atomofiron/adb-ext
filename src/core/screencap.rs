@@ -13,13 +13,12 @@ const SCREENCAP_P: &str = "screencap -p";
 const OD: u8 = 0x0D;
 const OA: u8 = 0x0A;
 
-pub fn make_screenshot(cmd: String, dst: String) {
+pub fn make_screenshot(cmd: String, dst: String, config: &Config) {
     let device = resolve_device();
     let args = &[SHELL, SCREENCAP_P];
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if output.status.success() {
-        let config = Config::read();
         let dst = dst
             .dst_with_parent(&config.screenshots.destination)
             .with_file(&config.screenshots.name);
@@ -31,7 +30,7 @@ pub fn make_screenshot(cmd: String, dst: String) {
         };
         fs::write(dst.clone(), bytes).unwrap();
         println!("{}: {dst}", SAVED);
-        let hook = Config::read().screenshot_hook();
+        let hook = config.screenshot_hook();
         try_run_hook_and_exit(hook, cmd, dst);
     } else {
         output.print_err();

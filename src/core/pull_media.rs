@@ -40,14 +40,12 @@ impl Display for Params {
     }
 }
 
-pub fn pull_screenshots(params: Params) {
-    let config = Config::read();
+pub fn pull_screenshots(params: Params, config: Config) {
     let command = get_ls_command(&config.screenshots.sources);
     pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), config.screenshots.destination);
 }
 
-pub fn pull_screencasts(params: Params) {
-    let config = Config::read();
+pub fn pull_screencasts(params: Params, config: Config) {
     let command = get_ls_command(&config.screencasts.sources);
     pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), config.screencasts.destination);
 }

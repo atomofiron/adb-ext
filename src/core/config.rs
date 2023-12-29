@@ -1,13 +1,15 @@
 use std::fs;
 use std::fs::File;
 use std::path::Path;
+use std::process::Command;
 use serde_derive::{Deserialize, Serialize};
 use crate::core::destination::Destination;
 use crate::core::util::home_dir;
-use crate::core::ext::OptionExt;
+use crate::core::ext::{OptionExt, OutputExt, ResultToOption, StrExt, StringExt};
 
 
 pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
+static mut ADB_PATH: Option<String> = None;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Config {
@@ -102,6 +104,25 @@ impl Config {
         let text = serde_yaml::to_string(&config).unwrap();
         fs::write(config_path, text).unwrap();
         return config;
+    }
+
+    pub fn update_adb_path(&self) {
+        unsafe {
+            ADB_PATH = self.platform_tools()
+                .map(|it| format!("{}adb", it.with_slash()))
+                .take_some_if(|it| it.is_file())
+                .if_none(|| {
+                    Command::new("/usr/bin/which").arg("adb")
+                        .output()
+                        .to_option()
+                        .map(|it| it.stdout())
+                        .take_some_if(|it| it.is_file())
+                });
+        }
+    }
+
+    pub fn get_adb_path() -> Option<String> {
+        return unsafe { ADB_PATH.clone() }
     }
 
     pub fn build_tools(&self) -> Option<String> {

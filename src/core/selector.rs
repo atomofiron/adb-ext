@@ -1,15 +1,13 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{OutputExt, print_no_one, StrExt};
-use crate::core::strings::{CANCEL, ERROR, NO_ADB, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
 use crate::core::r#const::{ERROR_CODE, SHELL, SUCCESS_CODE};
 use std::env;
-use std::process::{exit, Command, Output};
+use std::process::{exit, Output};
 use dialoguer::FuzzySelect;
 use crate::core::adb_command::AdbArgs;
 use crate::core::fix::sudo_fix_on_linux;
 
-const WHICH: &str = "/usr/bin/which";
-const ADB: &str = "adb";
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
@@ -171,29 +169,14 @@ fn get_model(name: &String) -> String {
     return if suitable.is_empty() { name.clone() } else { suitable.to_string() }
 }
 
-pub fn adb_command(args: AdbArgs) -> Command {
-    let output = Command::new(WHICH)
-        .arg(ADB)
-        .output()
-        .unwrap();
-    let adb_path = output.stdout();
-    if adb_path.is_empty() {
-        NO_ADB.print();
-        exit(ERROR_CODE);
-    }
-    let mut adb = Command::new(adb_path);
-    adb.args(args.args);
-    return adb
-}
-
 fn run_adb(args: AdbArgs) -> Output {
     if args.interactive {
         Output {
-            status: adb_command(args).spawn().unwrap().wait().unwrap(),
+            status: args.command().spawn().unwrap().wait().unwrap(),
             stdout: vec![],
             stderr: vec![],
         }
     } else {
-        adb_command(args).output().unwrap()
+        args.command().output().unwrap()
     }
 }
