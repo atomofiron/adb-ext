@@ -261,7 +261,7 @@ impl OptionArg for Command {
 pub trait OptionExt<T> {
     fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
     fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T>;
-    fn flat_map<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>;
+    fn transform<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
@@ -278,7 +278,7 @@ impl<T> OptionExt<T> for Option<T> {
             Some(_) => self,
         }
     }
-    fn flat_map<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>{
+    fn transform<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>{
         match self {
             Some(value) => f(value),
             None => None,

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::Path;
 use crate::core::adb_command::AdbArgs;
-use crate::core::ext::{OutputExt, StrExt, VecExt};
+use crate::core::ext::{OptionExt, OutputExt, ResultToOption, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{PULL, SHELL};
 use std::process::{Command, exit};
@@ -24,6 +24,15 @@ const PART_TIME: usize = 6;
 pub enum Params {
     Count(String,usize),
     Single(String,Option<String>),
+}
+
+impl Params {
+    pub fn from(cmd: String, arg: Option<String>) -> Params {
+        match arg.transform(|it| it.parse::<usize>().to_option()) {
+            Some(count) => Params::Count(cmd, count),
+            None => Params::Single(cmd, arg),
+        }
+    }
 }
 
 impl Display for Params {

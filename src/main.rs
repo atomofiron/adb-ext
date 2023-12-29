@@ -1,4 +1,4 @@
-use crate::core::ext::{OptionExt, ResultToOption, ShortUnwrap};
+use crate::core::ext::ShortUnwrap;
 use crate::core::pull_media::{Params, pull_screencasts, pull_screenshots};
 use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, NO_PACKAGE_NAME};
@@ -66,8 +66,8 @@ fn resolve_feature() -> Result<Feature, String> {
 fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
     match () {
         _ if cmd == "" => Feature::RunAdbWithArgs,
-        _ if cmd == "lss" => Feature::LastScreenShots(get_params(cmd, args.get(next).cloned())),
-        _ if cmd == "lsc" => Feature::LastScreenCasts(get_params(cmd, args.get(next).cloned())),
+        _ if cmd == "lss" => Feature::LastScreenShots(Params::from(cmd, args.get(next).cloned())),
+        _ if cmd == "lsc" => Feature::LastScreenCasts(Params::from(cmd, args.get(next).cloned())),
         _ if cmd == "mss"
             || cmd == "shot" => Feature::MakeScreenShot(cmd, args.get(next).cloned().unwrap_or(String::new())),
         _ if cmd == "msc"
@@ -81,12 +81,5 @@ fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
         _ if cmd == "deploy" => Feature::Deploy,
         _ if cmd == "update" => Feature::Update,
         _ => Feature::RunAdbWithArgs,
-    }
-}
-
-fn get_params(cmd: String, arg: Option<String>) -> Params {
-    match arg.flat_map(|it| it.parse::<usize>().to_option()) {
-        Some(count) => Params::Count(cmd, count),
-        None => Params::Single(cmd, arg),
     }
 }

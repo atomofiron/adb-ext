@@ -1,5 +1,6 @@
 use std::fs;
 use std::fs::File;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::Command;
 use serde_derive::{Deserialize, Serialize};
@@ -146,7 +147,7 @@ impl Config {
             file_checker,
             self.screenshots.hook.clone().map(|it| it.dst()),
             self.hook.clone().map(|it| it.dst()),
-        )
+        ).transform(|it| make_executable(it).to_option())
     }
 
     pub fn screencast_hook(&self) -> Option<String> {
@@ -154,7 +155,7 @@ impl Config {
             file_checker,
             self.screencasts.hook.clone().map(|it| it.dst()),
             self.hook.clone().map(|it| it.dst()),
-        )
+        ).transform(|it| make_executable(it).to_option())
     }
 }
 
@@ -171,4 +172,14 @@ fn dir_checker(path: &String) -> bool {
 
 fn file_checker(path: &String) -> bool {
     fs::metadata(path).map(|it| it.is_file()).unwrap_or(false)
+}
+
+fn make_executable(path: &String) -> std::io::Result<String> {
+    let mut perms = fs::metadata(&path)?.permissions();
+    let mode = perms.mode();
+    if mode & 0o111 == 0 {
+        perms.set_mode(mode | 0o100);
+        fs::set_permissions(&path, perms)?;
+    }
+    return Ok(path.clone());
 }
