@@ -1,4 +1,4 @@
-use crate::core::ext::ShortUnwrap;
+use crate::core::ext::{OptionExt, ResultToOption, ShortUnwrap};
 use crate::core::pull_media::{Params, pull_screencasts, pull_screenshots};
 use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::Language;
@@ -22,8 +22,8 @@ enum Feature {
     StealApk(String,Option<String>),
     LastScreenShots(Params),
     LastScreenCasts(Params),
-    MakeScreenShot(String),
-    MakeScreenCast(String),
+    MakeScreenShot(String,String),
+    MakeScreenCast(String,String),
     Deploy,
     Update,
 }
@@ -38,8 +38,8 @@ fn main() {
         Feature::RunApk(apk) => run_apk(apk),
         Feature::LastScreenShots(params) => pull_screenshots(params),
         Feature::LastScreenCasts(params) => pull_screencasts(params),
-        Feature::MakeScreenShot(dst) => make_screenshot(dst),
-        Feature::MakeScreenCast(dst) => make_screencast(dst),
+        Feature::MakeScreenShot(cmd,dst) => make_screenshot(cmd, dst),
+        Feature::MakeScreenCast(cmd,dst) => make_screencast(cmd, dst),
         Feature::StealApk(package, dst) => steal_apk(package, dst),
         Feature::Deploy => deploy(),
         Feature::Update => update(),
@@ -53,40 +53,37 @@ fn resolve_feature() -> Result<Feature, String> {
         .collect::<Vec<String>>();
     let mut feature = Feature::RunAdbWithArgs;
     for (i, arg) in first.iter().enumerate() {
-        feature = match_arg(arg, args.clone(), i + 1);
+        feature = match_arg(arg.to_string(), args.clone(), i + 1);
         if !matches!(feature, Feature::RunAdbWithArgs) {
             break
         }
     }
     return Ok(feature);
 }
-fn match_arg(arg: &str, args: Vec<String>, next: usize) -> Feature {
+fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
     match () {
-        _ if arg == "" => Feature::RunAdbWithArgs,
-        _ if arg == "lss" => Feature::LastScreenShots(get_params(args.get(next).cloned())),
-        _ if arg == "lsc" => Feature::LastScreenCasts(get_params(args.get(next).cloned())),
-        _ if arg == "mss"
-            || arg == "shot" => Feature::MakeScreenShot(args.get(next).cloned().unwrap_or(String::new())),
-        _ if arg == "msc"
-            || arg == "rec" => Feature::MakeScreenCast(args.get(next).cloned().unwrap_or(String::new())),
-        _ if arg == ARG_FIX => Feature::FixPermission(args.get(next).cloned()),
-        _ if arg == "run" => Feature::RunApk(args[next].clone()),
-        _ if arg == "steal" => Feature::StealApk(
+        _ if cmd == "" => Feature::RunAdbWithArgs,
+        _ if cmd == "lss" => Feature::LastScreenShots(get_params(cmd, args.get(next).cloned())),
+        _ if cmd == "lsc" => Feature::LastScreenCasts(get_params(cmd, args.get(next).cloned())),
+        _ if cmd == "mss"
+            || cmd == "shot" => Feature::MakeScreenShot(cmd, args.get(next).cloned().unwrap_or(String::new())),
+        _ if cmd == "msc"
+            || cmd == "rec" => Feature::MakeScreenCast(cmd, args.get(next).cloned().unwrap_or(String::new())),
+        _ if cmd == ARG_FIX => Feature::FixPermission(args.get(next).cloned()),
+        _ if cmd == "run" => Feature::RunApk(args[next].clone()),
+        _ if cmd == "steal" => Feature::StealApk(
             args.get(next).expect("No package name passed").clone(),
             args.get(next + 1).cloned(),
         ),
-        _ if arg == "deploy" => Feature::Deploy,
-        _ if arg == "update" => Feature::Update,
+        _ if cmd == "deploy" => Feature::Deploy,
+        _ if cmd == "update" => Feature::Update,
         _ => Feature::RunAdbWithArgs,
     }
 }
 
-fn get_params(arg: Option<String>) -> Params {
-    arg.map_or_else(
-        || Params::Single(String::new()),
-        |it| it.parse::<usize>().map_or(
-            Params::Single(it),
-            |it| Params::Count(it),
-        ),
-    )
+fn get_params(cmd: String, arg: Option<String>) -> Params {
+    match arg.flat_map(|it| it.parse::<usize>().to_option()) {
+        Some(count) => Params::Count(cmd, count),
+        None => Params::Single(cmd, arg),
+    }
 }

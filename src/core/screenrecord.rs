@@ -13,11 +13,11 @@ use nix::sys::signal::Signal;
 use nix::unistd::Pid;
 use crate::core::config::Config;
 use crate::core::strings::{DESTINATION, PRESS_ENTER_TO_STOP_REC};
-use crate::core::util::ensure_parent_exists;
+use crate::core::util::{ensure_parent_exists, try_run_hook_and_exit};
 
 const SCREENRECORD: &str = "screenrecord";
 
-pub fn make_screencast(dst: String) {
+pub fn make_screencast(cmd: String, dst: String) {
     let config = Config::read();
     let tmp = "/data/local/tmp/record.mp4";
     let args = &[SHELL, SCREENRECORD, &config.screencasts.args, &tmp];
@@ -31,7 +31,7 @@ pub fn make_screencast(dst: String) {
     child.wait().unwrap();
     sleep(Duration::from_secs(1));
     let dst = dst
-        .with_dir(&config.screencasts.destination)
+        .dst_with_parent(&config.screencasts.destination)
         .with_file(&config.screencasts.name);
     ensure_parent_exists(&dst);
     let output = run_adb_with(&device, AdbArgs::run(&[PULL, tmp, &dst]));
@@ -39,6 +39,7 @@ pub fn make_screencast(dst: String) {
     if output.status.success() {
         DESTINATION.print();
         println!("{dst}");
+        try_run_hook_and_exit(config.screencast_hook(), cmd, dst)
     }
     exit(output.code());
 }

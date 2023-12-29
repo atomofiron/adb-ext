@@ -2,7 +2,9 @@ use std::fs;
 use std::fs::File;
 use std::path::Path;
 use serde_derive::{Deserialize, Serialize};
+use crate::core::destination::Destination;
 use crate::core::util::home_dir;
+use crate::core::ext::OptionExt;
 
 
 pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
@@ -10,9 +12,9 @@ pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Config {
     #[serde(default = "default_hook")]
-    pub hook: Option<String>,
+    hook: Option<String>,
     #[serde(default)]
-    pub environment: Environment,
+    environment: Environment,
     #[serde(default)]
     pub screenshots: Screenshots,
     #[serde(default)]
@@ -20,10 +22,11 @@ pub struct Config {
 }
 #[derive(Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Environment {
+    sdk: Option<String>,
     #[serde(rename = "build-tools")]
-    pub build_tools: Option<String>,
+    build_tools: Option<String>,
     #[serde(rename = "platform-tools")]
-    pub platform_tools: Option<String>,
+    platform_tools: Option<String>,
 }
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -31,7 +34,7 @@ pub struct Screenshots {
     pub name: String,
     pub sources: Vec<String>,
     pub destination: String,
-    pub hook: Option<String>,
+    hook: Option<String>,
 }
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -39,7 +42,7 @@ pub struct Screencasts {
     pub name: String,
     pub sources: Vec<String>,
     pub destination: String,
-    pub hook: Option<String>,
+    hook: Option<String>,
     pub args: String,
 }
 
@@ -101,11 +104,50 @@ impl Config {
         return config;
     }
 
+    pub fn build_tools(&self) -> Option<String> {
+        existing_or_none(
+            dir_checker,
+            self.environment.build_tools.clone().map(|it| it.dst()),
+            self.environment.sdk.clone().map(|it| it.dst()),
+        )
+    }
+
+    pub fn platform_tools(&self) -> Option<String> {
+        existing_or_none(
+            dir_checker,
+            self.environment.platform_tools.clone().map(|it| it.dst()),
+            self.environment.sdk.clone().map(|it| it.dst()),
+        )
+    }
+
     pub fn screenshot_hook(&self) -> Option<String> {
-        self.screenshots.hook.clone().or(self.hook.clone())
+        existing_or_none(
+            file_checker,
+            self.screenshots.hook.clone().map(|it| it.dst()),
+            self.hook.clone().map(|it| it.dst()),
+        )
     }
 
     pub fn screencast_hook(&self) -> Option<String> {
-        self.screencasts.hook.clone().or(self.hook.clone())
+        existing_or_none(
+            file_checker,
+            self.screencasts.hook.clone().map(|it| it.dst()),
+            self.hook.clone().map(|it| it.dst()),
+        )
     }
+}
+
+fn existing_or_none<F>(checker: F, first: Option<String>, second: Option<String>) -> Option<String> where F: Fn(&String) -> bool {
+    first.clone()
+        .take_some_if(&checker)
+        .or(second)
+        .take_some_if(&checker)
+}
+
+fn dir_checker(path: &String) -> bool {
+    fs::metadata(path).map(|it| it.is_dir()).unwrap_or(false)
+}
+
+fn file_checker(path: &String) -> bool {
+    fs::metadata(path).map(|it| it.is_file()).unwrap_or(false)
 }

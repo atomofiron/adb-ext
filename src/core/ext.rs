@@ -164,10 +164,7 @@ pub trait StrExt {
     fn index_of_or(&self, default: usize, c: char) -> usize;
     fn last_index_of(&self, c: char) -> Option<usize>;
     fn last_index_of_or(&self, default: usize, c: char) -> usize;
-}
-
-pub trait StringExt {
-    fn with_slash(self) -> Self;
+    fn file_name(&self) -> String;
 }
 
 fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
@@ -210,6 +207,18 @@ impl StrExt for str {
     fn last_index_of_or(&self, default: usize, c: char) -> usize {
         inner_index_of(self, c, true).unwrap_or(default)
     }
+
+    fn file_name(&self) -> String {
+        let offset = self
+            .last_index_of('/')
+            .map(|it| it + 1)
+            .unwrap_or(0);
+        return self.to_string()[offset..].to_string()
+    }
+}
+
+pub trait StringExt {
+    fn with_slash(self) -> Self;
 }
 
 impl StringExt for String {
@@ -234,15 +243,23 @@ impl OptionArg for Command {
     }
 }
 
-trait OptionExt<T> {
-    fn or(self, other: Option<T>) -> Option<T>;
+pub trait OptionExt<T> {
+    fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
+    fn flat_map<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
-    fn or(self, other: Option<T>) -> Option<T> {
+    fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool {
         match &self {
-            None => other,
-            Some(_) => self,
+            None => self,
+            Some(value) if f(value) => self,
+            _ => None,
+        }
+    }
+    fn flat_map<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>{
+        match self {
+            Some(value) => f(value),
+            None => None,
         }
     }
 }

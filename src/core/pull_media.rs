@@ -6,7 +6,7 @@ use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OutputExt, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{PULL, SHELL};
-use std::process::exit;
+use std::process::{Command, exit};
 use crate::core::config::Config;
 use crate::core::destination::Destination;
 use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
@@ -22,29 +22,34 @@ const PART_TIME: usize = 6;
 
 
 pub enum Params {
-    Count(usize),
-    Single(String),
+    Count(String,usize),
+    Single(String,Option<String>),
 }
 
 impl Display for Params {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Params::Count(count) => write!(f, "Params::Count({count})"),
-            Params::Single(path) => write!(f, "Params::Single(\"{path})\""),
+            Params::Count(cmd,count) => write!(f, "Params::Count({cmd},{count})"),
+            Params::Single(cmd,path) => {
+                let path = path.clone()
+                    .map(|it| format!("\"{it}\""))
+                    .unwrap_or("null".to_string());
+                write!(f, "Params::Single({cmd},{path})", )
+            },
         }
     }
 }
 
 pub fn pull_screenshots(params: Params) {
-    let config = Config::read().screenshots;
-    let command = get_ls_command(&config.sources);
-    pull(params, PICS, &[SHELL, command.as_str()], config.destination);
+    let config = Config::read();
+    let command = get_ls_command(&config.screenshots.sources);
+    pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), config.screenshots.destination);
 }
 
 pub fn pull_screencasts(params: Params) {
-    let config = Config::read().screencasts;
-    let command = get_ls_command(&config.sources);
-    pull(params, MOVS, &[SHELL, command.as_str()], config.destination);
+    let config = Config::read();
+    let command = get_ls_command(&config.screencasts.sources);
+    pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), config.screencasts.destination);
 }
 
 fn get_ls_command(sources: &Vec<String>) -> String {
@@ -56,11 +61,10 @@ fn get_ls_command(sources: &Vec<String>) -> String {
     }
     return command;
 }
-
-fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: String) {
+fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, default_dst: String) {
     let count = match params {
-        Params::Count(count) => count,
-        Params::Single(_) => 1,
+        Params::Count(_,count) => count,
+        Params::Single(_,_) => 1,
     };
     if count <= 0 {
         return
@@ -86,27 +90,26 @@ fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: String) {
             .take(count)
             .map(|it| it.path.to_string())
             .collect::<Vec<String>>();
-        let dst = match params {
-            Params::Count(_) => {
-                let dst = default_dst.with_dir("");
+        let (cmd,dst) = match params {
+            Params::Count(cmd,_) => {
+                let dst = default_dst.dst();
                 fs::create_dir_all(&dst).unwrap();
-                dst
+                (cmd,dst)
             },
-            Params::Single(path) => {
+            Params::Single(cmd,path) => {
                 let name = Path::new(items.first().unwrap())
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap();
-                let dst = path
-                    .with_dir(&default_dst)
+                    .file_name().unwrap()
+                    .to_str().unwrap();
+                let dst = path.unwrap_or(String::new())
+                    .dst_with_parent(&default_dst)
                     .with_file(name);
                 ensure_parent_exists(&dst);
-                dst
+                (cmd,dst)
             },
         };
         let mut pull_args = AdbArgs::spawn(&[PULL]);
         items.reverse();
+        let hook = hook_or_none(hook, cmd, dst.clone(), &items);
         pull_args.args.append(&mut items);
         pull_args.args.push(dst.clone());
         let output = run_adb_with(&device, pull_args);
@@ -115,7 +118,30 @@ fn pull(params: Params, exts: &[&str], args: &[&str], default_dst: String) {
             DESTINATION.print();
             println!("{dst}");
         }
-        exit(output.code());
+        let status = hook
+            .map(|mut it| it.spawn().unwrap().wait().unwrap())
+            .unwrap_or(output.status);
+        exit(status.code().unwrap());
+    }
+}
+
+fn hook_or_none(hook: Option<String>, cmd: String, dst: String, items: &Vec<String>) -> Option<Command> {
+    match hook {
+        Some(hook) => {
+            let mut command = Command::new(hook);
+            command.arg(cmd);
+            match fs::metadata(&dst).map(|it| it.is_file()) {
+                Err(_) => return None,
+                Ok(true) => { command.arg(dst); },
+                Ok(false) => {
+                    for it in items {
+                        command.arg(dst.clone().with_file(it.file_name().as_str()));
+                    }
+                },
+            }
+            Some(command)
+        }
+        None => None,
     }
 }
 

@@ -2,6 +2,8 @@ use std::fs::create_dir_all;
 use std::io;
 use std::io::Write;
 use std::path::Path;
+use std::process::{Command, exit};
+use crate::core::r#const::ERROR_CODE;
 
 
 pub fn print_the_fuck_out() {
@@ -30,3 +32,17 @@ pub fn ensure_parent_exists(path: &String) {
     let parent = Path::new(&path).parent().unwrap();
     create_dir_all(parent).unwrap();
 }
+
+pub fn try_run_hook_and_exit(hook: Option<String>, cmd: String, arg: String) {
+    if let Some(hook) = hook {
+        println!("try_run_hook_and_exit {hook}");
+        Command::new(hook).arg(cmd).arg(arg)
+            .spawn().unwrap()
+            .wait()
+            .map_or_else(
+                |_| exit(ERROR_CODE),
+                |it| exit(it.code().unwrap_or(ERROR_CODE))
+            )
+    }
+}
+

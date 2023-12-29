@@ -43,8 +43,8 @@ pub static NO_ADB: Label = Label::new(
     "ADB не обнаружен",
 );
 pub static NO_BUILD_TOOLS: Label = Label::new(
-    "Specify a path to the Android Build Tools in ",
-    "Укажите путь до Android Build Tools в ",
+    "Specify a path to the Android SDK or Build Tools in ",
+    "Укажите путь до Android SDK или Build Tools в ",
 );
 pub static NO_FILE: Label = Label::new(
     "No such file",

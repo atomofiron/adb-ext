@@ -6,13 +6,16 @@ use crate::core::util::gen_home_path;
 
 
 pub trait Destination {
-    fn with_dir(self, default_sub_path: &str) -> String;
+    fn dst(self) -> String;
+    fn dst_with_parent(self, default_sub_path: &str) -> String;
     fn with_file(self, default_template: &str) -> String;
 }
 
 impl Destination for String {
 
-    fn with_dir(self, default_parent: &str) -> String {
+    fn dst(self) -> String { self.dst_with_parent("") }
+
+    fn dst_with_parent(self, default_parent: &str) -> String {
         match () {
             _ if self == "~" => gen_home_path(None),
             _ if self == "." => self,
@@ -23,7 +26,7 @@ impl Destination for String {
             _ if self.starts_with("~/") => gen_home_path(Some(&self[1..])),
             _ if default_parent.is_empty() => self,
             _ => default_parent.to_string()
-                .with_dir("")
+                .dst()
                 .with_slash()
                 .add(&self),
         }

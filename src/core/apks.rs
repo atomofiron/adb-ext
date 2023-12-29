@@ -45,21 +45,21 @@ pub fn run_apk(apk: String) {
 }
 
 fn get_aapt() -> String {
-    let path = match Config::read().environment.build_tools {
+    let path = match Config::read().build_tools() {
         None => {
             NO_BUILD_TOOLS.print();
             println!("{}", CONFIG_PATH);
             exit(0);
         },
-        Some(path) => path.with_dir(""),
+        Some(path) => path,
     };
     let pattern = Regex::new(r"/\d+\.\d\.\d$").unwrap();
     return fs::read_dir(&path).unwrap()
         .map(|it| it.unwrap().path().display().to_string())
         .filter(|it| pattern.is_match(it))
         .collect::<Vec<String>>()
-        .first().unwrap()
-        .clone().add("/aapt");
+        .first().unwrap().clone()
+        .add("/aapt");
 }
 
 fn install(device: &AdbDevice, apk: &String) -> bool {
