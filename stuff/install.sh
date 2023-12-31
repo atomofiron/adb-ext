@@ -22,5 +22,5 @@ fi
 
 ensure curl -X GET -sSfL https://github.com/Atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
 ensure chmod u+x adb-ext
-./adb-ext deploy
+ensure ./adb-ext deploy
 rm $0
