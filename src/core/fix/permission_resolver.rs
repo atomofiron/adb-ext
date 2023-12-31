@@ -11,8 +11,7 @@ use std::thread::sleep;
 use std::time::Duration;
 use itertools::Itertools;
 use crate::ARG_FIX;
-use crate::core::adb_device::AdbDevice;
-use crate::core::r#const::{ERROR_CODE, SUCCESS_CODE};
+use crate::core::r#const::ERROR_CODE;
 
 const SUDO: &str = "sudo";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";

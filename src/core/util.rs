@@ -35,7 +35,6 @@ pub fn ensure_parent_exists(path: &String) {
 
 pub fn try_run_hook_and_exit(hook: Option<String>, cmd: String, arg: String) {
     if let Some(hook) = hook {
-        println!("try_run_hook_and_exit {hook}");
         Command::new(hook).arg(cmd).arg(arg)
             .spawn().unwrap()
             .wait()
