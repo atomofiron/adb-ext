@@ -1,15 +1,15 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
-use std::fs;
+use std::{fs, io};
 use std::path::Path;
 use crate::core::adb_command::AdbArgs;
 use crate::core::ext::{OptionExt, OutputExt, ResultToOption, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{PULL, SHELL};
-use std::process::{Command, exit};
+use std::process::{Child, Command, exit};
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::strings::{DESTINATION, MEDIAS_NOT_FOUND};
+use crate::core::strings::{ADD_INTERPRETER, DESTINATION, MEDIAS_NOT_FOUND};
 use crate::core::util::ensure_parent_exists;
 
 const TOYBOX_LS_LLCD: &str = "toybox ls -llcd";
@@ -19,6 +19,8 @@ const MOVS: &[&str; 3] = &[".mp4", ".mov", ".3gp"];
 const PART_MIN_COUNT: usize = 8;
 const PART_DATE: usize = 5;
 const PART_TIME: usize = 6;
+
+const EXEC_ERROR: &str = "Exec format error";
 
 
 pub enum Params {
@@ -126,7 +128,7 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, defa
             println!("{dst}");
         }
         let status = hook
-            .map(|mut it| it.spawn().unwrap().wait().unwrap())
+            .map(|mut it| check_exec_error(it.spawn()).wait().unwrap())
             .unwrap_or(output.status);
         exit(status.code().unwrap());
     }
@@ -193,6 +195,13 @@ fn splitn_by(str: &str, limit: usize, sep: char) -> Vec<String> {
         release_part(&mut buf, &mut parts);
     }
     return parts;
+}
+
+fn check_exec_error(child: io::Result<Child>) -> Child {
+    child.unwrap_or_else(|err| match () {
+        _ if format!("{err}").starts_with(EXEC_ERROR) => ADD_INTERPRETER.exit_err(),
+        _ => panic!("{err}"),
+    })
 }
 
 struct Item {

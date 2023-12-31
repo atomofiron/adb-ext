@@ -78,6 +78,10 @@ pub static HOWEVER_CONFIGURE: Label = Label::new(
     "... however, first of all to configure your current shell, run:",
     "... однако, для начала, чтобы настроить текущую сессию, запустите:",
 );
+pub static ADD_INTERPRETER: Label = Label::new(
+    "Add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
+    "Добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
+);
 pub static UNKNOWN: Label = Label::new(
     "Unknown",
     "Неизвестно",
