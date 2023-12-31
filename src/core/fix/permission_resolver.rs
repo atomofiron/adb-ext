@@ -58,8 +58,9 @@ pub fn fix_permission(serial: Option<String>) {
         _ => match serial {
             None => RECONNECT_DEVICES.println(),
             Some(serial) => {
+                RECONNECT_DEVICES.println();
                 wait_for_the_fixed_adb_device(serial);
-                WELL_DONE.println()
+                WELL_DONE.println();
             },
         }
     }
