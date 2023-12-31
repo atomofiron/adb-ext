@@ -49,7 +49,10 @@ pub fn deploy() {
     if fs::metadata(&bin_dir).is_err() {
         fs::create_dir_all(&bin_dir).unwrap();
     }
-    fs::copy(env::args().collect::<Vec<String>>().first().unwrap().to_string(), adb_ext_path.clone()).unwrap();
+    let src = env::args().collect::<Vec<String>>().first().unwrap().to_string();
+    // try fix on the next line: Os { code: 26, kind: ExecutableFileBusy, message: "Text file busy" }
+    let _ = fs::remove_file(adb_ext_path.clone());
+    fs::copy(src, adb_ext_path.clone()).unwrap();
     env::set_current_dir(bin_dir.clone()).unwrap();
     for link in ["lss", "mss", "shot", "lsc", "msc", "rec", "record"] {
         let _ = fs::remove_file(link);
