@@ -12,13 +12,8 @@
 curl -sSfL https://github.com/atomofiron/adb-ext/raw/main/stuff/install.sh | sh
 ```
 
-# Run
-resolve usb adb permission (Linux only)
-```
-adb fix
-```
 <details>
-  <summary>MacOS feature (after each installation or update)</summary>
+  <summary>MacOS feature (on each installation or update)</summary>
   <br>
   0. execute the adb-ext<br>
   1. click Cancel<br>
@@ -29,6 +24,11 @@ adb fix
 <img width="978" alt="adb-ext-macos-feature" src="https://github.com/atomofiron/adb-ext/assets/14147217/d765de66-a273-4b93-a8a4-8441e40c06ba">
 </details>
 
+# Run
+resolve usb adb permission (Linux only)
+```
+adb fix
+```
 common use of ADB
 ```
 $ adb shell
