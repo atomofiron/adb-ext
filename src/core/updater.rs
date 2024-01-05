@@ -59,6 +59,8 @@ pub fn deploy() {
         std::os::unix::fs::symlink(adb_ext, link).unwrap();
     }
     let env = format!("
+#!/bin/sh
+# adb-ext shell setup
 case \":${{PATH}}:\" in
     *:\"$HOME/{local_bin}\":*)
         ;;
