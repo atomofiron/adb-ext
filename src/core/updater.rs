@@ -61,13 +61,9 @@ pub fn deploy() {
     let env = format!("
 #!/bin/sh
 # adb-ext shell setup
-case \":${{PATH}}:\" in
-    *:\"$HOME/{local_bin}\":*)
-        ;;
-    *)
-		export PATH=$HOME/{local_bin}:$PATH
-        ;;
-esac
+if [[ \":$PATH:\" != *:\"$HOME/{local_bin}\":* ]]; then
+    export PATH=$HOME/.local/bin:$PATH
+fi
 alias adb=adb-ext
 unalias lss 2>/dev/null
 unalias lsc 2>/dev/null
