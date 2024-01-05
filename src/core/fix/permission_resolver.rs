@@ -70,7 +70,10 @@ fn find_usb_devices(serial: Option<String>) -> Vec<UsbDevice> {
     let mut devices = vec![];
     let context = libusb::Context::new().unwrap();
     for device in context.devices().unwrap().iter() {
-        let handle = device.open().unwrap();
+        let handle = match device.open() {
+            Ok(value) => value,
+            Err(_) => continue, // NoDevice: No such device (it may have been disconnected)
+        };
         let timeout = Duration::from_secs(1);
         let languages = handle.read_languages(timeout).unwrap();
         let language = languages.first().unwrap().clone();
