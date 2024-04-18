@@ -1,14 +1,14 @@
 use std::fs;
 use std::ops::Add;
 use std::path::Path;
-use std::process::{Command, exit, Output};
+use std::process::{Command, exit, ExitStatus, Output};
 use regex::Regex;
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;
 use crate::core::config::{Config, CONFIG_PATH};
 use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, StrExt};
-use crate::core::r#const::{PULL, SHELL};
+use crate::core::r#const::{ERROR_CODE, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE};
 
@@ -38,7 +38,10 @@ pub fn run_apk(apk: String, config: &Config) {
     }
     let aapt = get_aapt(&config);
     let device = resolve_device();
-    install(&device, &apk);
+    let output = install(&device, &apk);
+    if !output.status.success() {
+        exit(output.code());
+    }
     let (package, activity) = get_package_activity(aapt, &apk);
     let output = launch(&device, package, activity);
     exit(output.code());
@@ -62,10 +65,9 @@ fn get_aapt(config: &Config) -> String {
         .add("/aapt");
 }
 
-fn install(device: &AdbDevice, apk: &String) -> bool {
+fn install(device: &AdbDevice, apk: &String) -> Output {
     let args = AdbArgs::spawn(&["install", apk.as_str()]);
-    let output = run_adb_with(&device, args);
-    return output.status.success();
+    return run_adb_with(&device, args);
 }
 
 fn get_package_activity(aapt: String, apk: &String) -> (String, String) {
