@@ -8,7 +8,7 @@ use crate::core::adb_device::AdbDevice;
 use crate::core::config::{Config, CONFIG_PATH};
 use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, StrExt};
-use crate::core::r#const::{ERROR_CODE, PULL, SHELL};
+use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE};
 
@@ -66,7 +66,7 @@ fn get_aapt(config: &Config) -> String {
 }
 
 fn install(device: &AdbDevice, apk: &String) -> Output {
-    let args = AdbArgs::spawn(&["install", apk.as_str()]);
+    let args = AdbArgs::spawn(&[INSTALL, apk.as_str()]);
     return run_adb_with(&device, args);
 }
 
