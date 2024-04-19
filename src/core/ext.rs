@@ -158,18 +158,30 @@ impl StringVec for Vec<&str> {
 }
 
 pub trait VecExt {
+    type Item: PartialEq;
     fn last_index(&self) -> usize;
+    fn index_of(&self, target: &Self::Item) -> Option<usize>;
 }
 
-impl<T> VecExt for Vec<T> {
+impl<T> VecExt for Vec<T> where T: PartialEq {
+    type Item = T;
+
     fn last_index(&self) -> usize {
         self.len() - 1
+    }
+
+    fn index_of(&self, target: &T) -> Option<usize> {
+        for (i, it) in self.iter().enumerate() {
+            if it.eq(target) {
+                return Some(i);
+            }
+        }
+        return None;
     }
 }
 
 pub trait StrExt {
     fn last_index(&self) -> usize;
-    fn contains_upper(&self) -> bool;
     fn index_of(&self, c: char) -> Option<usize>;
     fn index_of_or(&self, default: usize, c: char) -> usize;
     fn last_index_of(&self, c: char) -> Option<usize>;
@@ -196,11 +208,6 @@ fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
 impl StrExt for str {
     fn last_index(&self) -> usize {
         self.len() - 1
-    }
-
-    fn contains_upper(&self) -> bool {
-        // A-Z
-        self.chars().any(|it| (65..=90u8).contains(&(it as u8)))
     }
 
     fn index_of(&self, c: char) -> Option<usize> {
@@ -234,6 +241,7 @@ impl StrExt for str {
 
 pub trait StringExt {
     fn with_slash(self) -> Self;
+    fn contains_ci(&self, other: &String) -> bool;
 }
 
 impl StringExt for String {
@@ -242,6 +250,10 @@ impl StringExt for String {
             self.push('/');
         }
         return self;
+    }
+
+    fn contains_ci(&self, other: &String) -> bool {
+        self.to_lowercase().contains(other.to_lowercase().as_str())
     }
 }
 

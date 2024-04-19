@@ -1,7 +1,7 @@
 use std::fs;
 use std::ops::Add;
 use std::path::Path;
-use std::process::{Command, exit, ExitStatus, Output};
+use std::process::{Command, exit, Output};
 use regex::Regex;
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;

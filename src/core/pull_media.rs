@@ -70,6 +70,7 @@ fn get_ls_command(sources: &Vec<String>) -> String {
     }
     return command;
 }
+
 fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, default_dst: String) {
     let count = match params {
         Params::Count(_,count) => count,

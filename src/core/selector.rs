@@ -1,10 +1,11 @@
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
-use crate::core::ext::{OutputExt, print_no_one, StrExt};
+use crate::core::ext::{OutputExt, print_no_one, StringExt, VecExt};
 use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
 use crate::core::r#const::{ERROR_CODE, SHELL, SUCCESS_CODE};
 use std::env;
 use std::process::{exit, Output};
 use dialoguer::FuzzySelect;
+use itertools::Itertools;
 use crate::core::adb_command::AdbArgs;
 use crate::core::fix::sudo_fix_on_linux;
 
@@ -14,17 +15,29 @@ const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
 const ARG_S: &str = "-s";
 const GETPROPS: &str = "
+getprop ro.build.version.sdk;
+
+getprop ro.product.brand;
+getprop ro.product.manufacturer;
+getprop ro.product.product.brand;
+getprop ro.product.product.manufacturer;
+getprop ro.product.system.brand;
+getprop ro.product.system.manufacturer;
+getprop ro.product.vendor.brand;
+getprop ro.product.vendor.manufacturer;
+
+print anime
+
 getprop persist.sys.nt.device.name;
 getprop ro.product.brand_device_name;
 
-getprop ro.product.model
-getprop ro.product.product.model
-getprop ro.product.system.model
-getprop ro.product.vendor.model
-
 getprop ro.build.product;
-getprop ro.product.bootimage.device;
-getprop ro.product.bootimage.name;
+
+getprop ro.product.model;
+getprop ro.product.product.model;
+getprop ro.product.system.model;
+getprop ro.product.vendor.model;
+
 getprop ro.product.device;
 getprop ro.product.name;
 getprop ro.product.odm.device;
@@ -34,12 +47,13 @@ getprop ro.product.vendor.name;
 
 getprop ro.product.product.device;
 getprop ro.product.product.name;
-getprop ro.product.vendor_dlkm.device;
-getprop ro.product.vendor_dlkm.name;
 getprop ro.product.system.name;
 getprop ro.product.system_ext.device;
 getprop ro.product.system_ext.name;
 ";
+
+const VERSIONS: [&str; 33] = ["1.0", "1.1", "1.5", "1.6", "2.0 ", "2.0.1", "2.1", "2.2", "2.3.0–2.3.2", "2.3.3–2.3.7", "3.0", "3.1", "3.2", "4.0.1–4.0.2", "4.0.3–4.0.4", "4.1", "4.2", "4.3", "4.4", "4.4W", "5.0", "5.1", "6", "7.0", "7.1", "8.0", "8.1", "9", "10", "11", "12 ", "12L", "13"];//, "14", "15"];
+
 const DEVICE_COMMANDS: [&str; 19] = [
     // file transfer
     "push",
@@ -103,7 +117,7 @@ pub fn fetch_adb_devices() -> Vec<AdbDevice> {
             let ok = parts[1] == DEVICE;
             let unauthorized = parts[1] == UNAUTHORIZED;
             let no_permissions = parts[1].starts_with(NO_PERMISSIONS);
-            let model = if ok { get_model(&serial) } else { serial.clone() };
+            let model = if ok { get_description(&serial) } else { serial.clone() };
             AdbDevice { serial, model, ok, unauthorized, no_permissions }
         }).collect::<Vec<AdbDevice>>();
 }
@@ -154,19 +168,66 @@ fn get_adb_args() -> Vec<String> {
     return args;
 }
 
-fn get_model(name: &String) -> String {
-    let output = run_adb(AdbArgs::run(&[ARG_S, name.as_str(), SHELL, GETPROPS])).stdout();
-    let props = output.split('\n').collect::<Vec<&str>>();
-    let mut suitable = "";
-    for prop in props {
-        suitable = match () {
-            _ if prop.len() > suitable.len() => prop,
-            _ if prop.contains(' ') && !suitable.contains(' ') => prop,
-            _ if prop.contains_upper() && !suitable.contains_upper() => prop,
-            _ => suitable,
-        };
+fn get_description(serial: &String) -> String {
+    let output = run_adb(AdbArgs::run(&[ARG_S, serial.as_str(), SHELL, GETPROPS]));
+    if !output.status.success() {
+        return serial.clone();
     }
-    return if suitable.is_empty() { name.clone() } else { suitable.to_string() }
+    let stdout = output.stdout();
+    let mut properties = stdout.split('\n')
+        .map(|it| it.to_string())
+        .collect::<Vec<String>>();
+    let sdk = properties.remove(0).parse::<usize>();
+    let version = VERSIONS.get(sdk.clone().unwrap_or(VERSIONS.len())).unwrap_or(&"n/a");
+    let version = format!("{version} [{}]", sdk.unwrap_or(0));
+
+    let index = match properties.index_of(&"anime".to_string()) {
+        None => return serial.clone(),
+        Some(index) => index,
+    };
+    let mut vendor = properties[0..index].iter()
+        .find_or_first(|it| !it.is_empty())
+        .map(|it| it.clone());
+    let models = &properties[(index + 1)..properties.len()];
+
+    let mut suitable: Vec<String> = vec![];
+    for property in models {
+        let mut skip = false;
+        let prop = property.to_lowercase();
+        for (i, it) in suitable.iter().enumerate() {
+            let it = it.to_lowercase();
+            match () {
+                _ if prop == it => (),
+                // this value is less complete
+                _ if it.contains(prop.as_str()) => (),
+                // this value is more complete
+                _ if prop.contains(it.as_str()) => suitable[i] = property.clone(),
+                // this value is unique for now
+                _ => continue,
+            }
+            skip = true;
+            break
+        }
+        if !skip {
+            suitable.push(property.clone());
+        }
+    }
+    if let Some(vendor_name) = vendor.clone() {
+        suitable.sort_by(|first, second| {
+            let first = first.contains_ci(&vendor_name);
+            let second = second.contains_ci(&vendor_name);
+            if first || second {
+                vendor = None;
+            }
+            second.cmp(&first)
+        })
+    }
+    let prefix = match vendor {
+        Some(vendor) if suitable.is_empty() => vendor,
+        Some(vendor) => format!("{vendor}: "),
+        None => "".to_string(),
+    };
+    return format!("{prefix}{}, serial: {serial}, Android {version}", suitable.join(", "))
 }
 
 fn run_adb(args: AdbArgs) -> Output {
