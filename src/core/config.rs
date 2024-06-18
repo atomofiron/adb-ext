@@ -1,7 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 use serde_derive::{Deserialize, Serialize};
 use crate::core::destination::Destination;
@@ -17,7 +17,7 @@ pub struct Config {
     #[serde(default = "default_hook")]
     hook: Option<String>,
     #[serde(default)]
-    environment: Environment,
+    pub environment: Environment,
     #[serde(default)]
     pub screenshots: Screenshots,
     #[serde(default)]
@@ -25,7 +25,7 @@ pub struct Config {
 }
 #[derive(Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Environment {
-    sdk: Option<String>,
+    pub sdk: Option<String>,
     #[serde(rename = "build-tools")]
     build_tools: Option<String>,
     #[serde(rename = "platform-tools")]
@@ -94,19 +94,30 @@ impl Default for Screencasts {
     }
 }
 
+fn get_existing_config_path() -> PathBuf {
+    let config_path = format!("{}{}", home_dir(), &CONFIG_PATH[1..]);
+    let config_path = PathBuf::from(config_path);
+    if !config_path.exists() {
+        fs::create_dir_all(config_path.parent().unwrap()).unwrap();
+        File::create(&config_path).unwrap();
+    }
+    return config_path;
+}
+
 impl Config {
     pub fn read() -> Config {
-        let config_path = format!("{}{}", home_dir(), &CONFIG_PATH[1..]);
-        let config_path = Path::new(&config_path);
-        if !config_path.exists() {
-            fs::create_dir_all(config_path.parent().unwrap()).unwrap();
-            File::create(config_path).unwrap();
-        }
-        let text = fs::read_to_string(config_path).unwrap_or("".to_string());
+        let config_path = get_existing_config_path();
+        let text = fs::read_to_string(&config_path).unwrap_or("".to_string());
         let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|_| Config::default());
         let text = serde_yaml::to_string(&config).unwrap();
         fs::write(config_path, text).unwrap();
         return config;
+    }
+
+    pub fn write(&self) {
+        let config_path = get_existing_config_path();
+        let config_text = serde_yaml::to_string(self).unwrap();
+        fs::write(config_path, config_text).unwrap();
     }
 
     pub fn update_adb_path(&self) {

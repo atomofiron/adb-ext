@@ -3,6 +3,7 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::process::{Command, exit};
+use crate::core::config::Config;
 use crate::core::r#const::ERROR_CODE;
 
 
@@ -45,3 +46,12 @@ pub fn try_run_hook_and_exit(hook: Option<String>, cmd: String, arg: String) {
     }
 }
 
+pub fn set_sdk(path: Option<String>, mut config: Config) {
+    if let Some(_) = path {
+        config.environment.sdk = path;
+        config.write();
+    } else {
+        let path = config.environment.sdk.unwrap_or("null".to_string());
+        println!("{path}");
+    }
+}

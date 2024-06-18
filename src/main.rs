@@ -10,6 +10,7 @@ use crate::core::apks::{run_apk, steal_apk};
 use crate::core::config::Config;
 use crate::core::screenrecord::make_screencast;
 use crate::core::updater::{deploy, update};
+use crate::core::util::set_sdk;
 
 mod core;
 mod tests;
@@ -27,6 +28,7 @@ enum Feature {
     MakeScreenCast(String,String),
     Deploy,
     Update,
+    Skd(Option<String>),
 }
 
 fn main() {
@@ -46,6 +48,7 @@ fn main() {
         Feature::StealApk(package, dst) => steal_apk(package, dst),
         Feature::Deploy => deploy(),
         Feature::Update => update(),
+        Feature::Skd(path) => set_sdk(path, config),
     }
 }
 
@@ -56,13 +59,14 @@ fn resolve_feature() -> Result<Feature, String> {
         .collect::<Vec<String>>();
     let mut feature = Feature::RunAdbWithArgs;
     for (i, arg) in first.iter().enumerate() {
-        feature = match_arg(arg.to_string(), args.clone(), i + 1);
+        feature = match_arg(arg.to_string().to_lowercase(), args.clone(), i + 1);
         if !matches!(feature, Feature::RunAdbWithArgs) {
             break
         }
     }
     return Ok(feature);
 }
+
 fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
     match () {
         _ if cmd == "" => Feature::RunAdbWithArgs,
@@ -80,6 +84,7 @@ fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
         ),
         _ if cmd == "deploy" => Feature::Deploy,
         _ if cmd == "update" => Feature::Update,
+        _ if cmd == "sdk" => Feature::Skd(args.get(next).cloned()),
         _ => Feature::RunAdbWithArgs,
     }
 }
