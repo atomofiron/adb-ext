@@ -10,7 +10,7 @@ use crate::core::ext::{OptionExt, OutputExt, ResultToOption, StrExt, StringExt};
 
 
 pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
-static mut ADB_PATH: Option<String> = None;
+pub static mut ADB_PATH: Option<String> = None;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Config {
@@ -132,7 +132,7 @@ impl Config {
         existing_or_none(
             dir_checker,
             self.environment.build_tools.clone().map(|it| it.dst()),
-            self.environment.sdk.clone().map(|it| it.dst()),
+            self.environment.sdk.clone().map(|it| format!("{}build-tools/", it.dst().dir())),
         )
     }
 
@@ -140,7 +140,7 @@ impl Config {
         existing_or_none(
             dir_checker,
             self.environment.platform_tools.clone().map(|it| it.dst()),
-            self.environment.sdk.clone().map(|it| it.dst()),
+            self.environment.sdk.clone().map(|it| format!("{}platform-tools/", it.dst().dir())),
         )
     }
 

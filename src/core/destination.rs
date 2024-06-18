@@ -9,6 +9,7 @@ pub trait Destination {
     fn dst(self) -> String;
     fn dst_with_parent(self, default_sub_path: &str) -> String;
     fn with_file(self, default_template: &str) -> String;
+    fn dir(self) -> String;
 }
 
 impl Destination for String {
@@ -42,5 +43,12 @@ impl Destination for String {
             _  => return format!("{self}{ext}"),
         };
         format!("{self}{}", Local::now().format(default_name_template))
+    }
+
+    fn dir(self) -> String {
+        match () {
+            _ if self.ends_with('/') => self,
+            _ => format!("${self}/"),
+        }
     }
 }
