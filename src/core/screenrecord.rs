@@ -24,10 +24,10 @@ const OFF: &str = "0";
 
 pub fn make_screencast(cmd: String, dst: String, config: &Config) {
     let device = resolve_device();
-    let touches_was_enabled = run_adb_with(&device, AdbArgs::run(&[SHELL, GET_TOUCHES]))
-        .stdout()
-        == ON;
-    if !touches_was_enabled {
+    let toggle_touches = config.screencasts.show_touches &&
+        run_adb_with(&device, AdbArgs::run(&[SHELL, GET_TOUCHES])).stdout()
+            == OFF;
+    if toggle_touches {
         run_adb_with(&device, AdbArgs::run(&[SHELL, PUT_TOUCHES, ON]));
     }
     let args = &[SHELL, SCREENRECORD, &config.screencasts.args, TMP];
@@ -38,7 +38,7 @@ pub fn make_screencast(cmd: String, dst: String, config: &Config) {
     io::stdin().read_line(&mut String::new()).unwrap();
     signal::kill(Pid::from_raw(child.id() as pid_t), Signal::SIGINT).unwrap();
     child.wait().unwrap();
-    if !touches_was_enabled {
+    if toggle_touches {
         run_adb_with(&device, AdbArgs::run(&[SHELL, PUT_TOUCHES, OFF]));
     }
     sleep(Duration::from_secs(1));
