@@ -48,7 +48,7 @@ impl Destination for String {
     fn dir(self) -> String {
         match () {
             _ if self.ends_with('/') => self,
-            _ => format!("${self}/"),
+            _ => format!("{self}/"),
         }
     }
 }

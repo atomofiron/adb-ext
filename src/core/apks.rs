@@ -50,8 +50,7 @@ pub fn run_apk(apk: String, config: &Config) {
 fn get_aapt(config: &Config) -> String {
     let path = match config.build_tools() {
         None => {
-            NO_BUILD_TOOLS.print();
-            println!("{}", CONFIG_PATH);
+            println!("{NO_BUILD_TOOLS} {}", CONFIG_PATH);
             exit(0);
         },
         Some(path) => path,
@@ -61,8 +60,11 @@ fn get_aapt(config: &Config) -> String {
         .map(|it| it.unwrap().path().display().to_string())
         .filter(|it| pattern.is_match(it))
         .collect::<Vec<String>>()
-        .first().unwrap().clone()
-        .add("/aapt");
+        .first()
+        .unwrap_or_else(|| {
+            println!("{NO_BUILD_TOOLS} {}", CONFIG_PATH);
+            exit(0);
+        }).clone().add("/aapt");
 }
 
 fn install(device: &AdbDevice, apk: &String) -> Output {
