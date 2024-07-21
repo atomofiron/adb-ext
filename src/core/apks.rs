@@ -10,7 +10,7 @@ use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE};
+use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH};
 
 pub fn steal_apk(package: String, dst: Option<String>) {
     let pm_command = format!("pm path {package}");
@@ -33,6 +33,9 @@ pub fn steal_apk(package: String, dst: Option<String>) {
 }
 
 pub fn run_apk(apk: String, config: &Config) {
+    if apk.is_empty() {
+        NO_PATH.exit_err();
+    }
     if !Path::new(&apk).exists() {
         NO_FILE.exit_err();
     }

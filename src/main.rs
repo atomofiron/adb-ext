@@ -77,7 +77,7 @@ fn match_arg(cmd: String, args: Vec<String>, next: usize) -> Feature {
         _ if cmd == "msc"
             || cmd == "rec" => Feature::MakeScreenCast(cmd, args.get(next).cloned().unwrap_or(String::new())),
         _ if cmd == ARG_FIX => Feature::FixPermission(args.get(next).cloned()),
-        _ if cmd == "run" => Feature::RunApk(args[next].clone()),
+        _ if cmd == "run" => Feature::RunApk(args.get(next).cloned().unwrap_or(String::new())),
         _ if cmd == "steal" => Feature::StealApk(
             args.get(next).expect(NO_PACKAGE_NAME.value()).clone(),
             args.get(next + 1).cloned(),

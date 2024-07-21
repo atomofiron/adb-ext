@@ -50,6 +50,10 @@ pub static NO_FILE: Label = Label::new(
     "No such file",
     "Такого файла нет",
 );
+pub static NO_PATH: Label = Label::new(
+    "No path specified",
+    "Путь не указан",
+);
 pub static SELECT_DEVICE: Label = Label::new(
     "Select a device",
     "Выберите устройство",
