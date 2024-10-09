@@ -23,4 +23,4 @@ fi
 ensure curl -X GET -fL --progress-bar https://github.com/atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
 ensure chmod u+x adb-ext
 ensure ./adb-ext deploy
-rm ./adb-ext
+rm $0
