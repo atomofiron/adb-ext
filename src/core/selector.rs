@@ -52,7 +52,7 @@ getprop ro.product.system_ext.device;
 getprop ro.product.system_ext.name;
 ";
 
-const VERSIONS: [&str; 35] = ["1.0", "1.1", "1.5", "1.6", "2.0 ", "2.0.1", "2.1", "2.2", "2.3.0–2.3.2", "2.3.3–2.3.7", "3.0", "3.1", "3.2", "4.0.1–4.0.2", "4.0.3–4.0.4", "4.1", "4.2", "4.3", "4.4", "4.4W", "5.0", "5.1", "6", "7.0", "7.1", "8.0", "8.1", "9", "10", "11", "12 ", "12L", "13", "14", "15"];
+const VERSIONS: [&str; 37] = ["Astro Boy or Bender", "1.0", "1.1", "1.5", "1.6", "2.0 ", "2.0.1", "2.1", "2.2", "2.3.0–2", "2.3.3–7", "3.0", "3.1", "3.2", "4.0.1–2", "4.0.3–4", "4.1", "4.2", "4.3", "4.4", "4.4W", "5.0", "5.1", "6", "7.0", "7.1", "8.0", "8.1", "9", "10", "11", "12", "12L", "13", "14", "15", "16"];
 
 const DEVICE_COMMANDS: [&str; 19] = [
     // file transfer
@@ -62,7 +62,7 @@ const DEVICE_COMMANDS: [&str; 19] = [
     // shell
     "shell",
     //"emu",
-    // app installation
+    // app (un)installation
     "install",
     "install-multiple",
     "install-multi-package",
