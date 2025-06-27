@@ -10,6 +10,7 @@ use std::path::Path;
 use std::thread::sleep;
 use std::time::Duration;
 use itertools::Itertools;
+use rusb::UsbContext;
 use crate::ARG_FIX;
 use crate::core::r#const::ERROR_CODE;
 
@@ -68,7 +69,7 @@ pub fn fix_permission(serial: Option<String>) {
 
 fn find_usb_devices(serial: Option<String>) -> Vec<UsbDevice> {
     let mut devices = vec![];
-    let context = libusb::Context::new().unwrap();
+    let context = rusb::Context::new().unwrap();
     for device in context.devices().unwrap().iter() {
         let handle = match device.open() {
             Ok(value) => value,
