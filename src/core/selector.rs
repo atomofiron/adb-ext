@@ -14,6 +14,9 @@ const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
 const ARG_S: &str = "-s";
+const ADB_EXT: &str = "adb-ext";
+const SLASH_ADB_EXT: &str = "/adb-ext";
+const VERSION: &str = "--version";
 const GETPROPS: &str = "
 getprop ro.build.version.sdk;
 
@@ -85,12 +88,20 @@ const DEVICE_COMMANDS: [&str; 19] = [
 
 
 pub fn resolve_device_and_run_args() {
-    let args = AdbArgs::spawn(get_adb_args().as_slice());
-    let first = args.args.first();
-    let output = match first {
-        None => run_adb(args),
-        Some(first) if !DEVICE_COMMANDS.contains(&first.as_str()) => run_adb(args),
-        _ => run_adb_with(&resolve_device(), args)
+    let mut all_args = env::args().collect::<Vec<String>>();
+    let program = all_args.remove(0);
+    let args = AdbArgs::spawn(all_args.as_slice());
+    let first = match args.args.first() {
+        None => exit(run_adb(args).code()),
+        Some(first) => first,
+    };
+    if first == VERSION && (program.ends_with(ADB_EXT) || program.ends_with(SLASH_ADB_EXT)) {
+        println!("{} v{}", ADB_EXT, env!("CARGO_PKG_VERSION"));
+        return;
+    }
+    let output = match DEVICE_COMMANDS.contains(&first.as_str()) {
+        true => run_adb_with(&resolve_device(), args),
+        false => run_adb(args),
     };
     exit(output.code());
 }
@@ -159,13 +170,6 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
         exit(SUCCESS_CODE);
     }
     return devices.remove(selection);
-}
-
-fn get_adb_args() -> Vec<String> {
-    let mut args = env::args().collect::<Vec<String>>();
-    // ignore "adb-ext" (or another command name or path)
-    args.remove(0);
-    return args;
 }
 
 fn get_description(serial: &String) -> String {
