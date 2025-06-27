@@ -15,7 +15,6 @@ const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
 const ARG_S: &str = "-s";
 const ADB_EXT: &str = "adb-ext";
-const SLASH_ADB_EXT: &str = "/adb-ext";
 const VERSION: &str = "--version";
 const GETPROPS: &str = "
 getprop ro.build.version.sdk;
@@ -95,7 +94,7 @@ pub fn resolve_device_and_run_args() {
         None => exit(run_adb(args).code()),
         Some(first) => first,
     };
-    if first == VERSION && (program.ends_with(ADB_EXT) || program.ends_with(SLASH_ADB_EXT)) {
+    if first == VERSION && program.ends_with(ADB_EXT) {
         println!("{} v{}", ADB_EXT, env!("CARGO_PKG_VERSION"));
         return;
     }
