@@ -1,9 +1,10 @@
-use std::{env, fs};
-use std::io::Write;
-use std::process::{Command, exit};
-use itertools::Itertools;
-use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, UPDATE_SUCCEED};
+use crate::core::r#const::*;
+use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
 use crate::core::util::home_dir;
+use itertools::Itertools;
+use std::io::Write;
+use std::process::{exit, Command};
+use std::{env, fs};
 
 
 const SCRIPT_URL: &str = "https://github.com/atomofiron/adb-ext/raw/main/stuff/install.sh";
@@ -11,7 +12,7 @@ const SCRIPT_NAME: &str = "install-adb-ext.sh";
 const ENV_VERSION: &str = "4";
 const BOLD: &str = "\x1b[1m";
 const CLEAR: &str = "\x1b[0m";
-const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
+const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "bounds", "[f]port|[f]land|[no]accel", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
 
 pub fn update() {
     let bytes = reqwest::blocking::get(SCRIPT_URL).unwrap()
@@ -54,9 +55,11 @@ pub fn deploy() {
     let _ = fs::remove_file(adb_ext_path.clone());
     fs::copy(src, adb_ext_path.clone()).unwrap();
     env::set_current_dir(bin_dir.clone()).unwrap();
-    for link in ["lss", "mss", "shot", "lsc", "msc", "rec", "record"] {
+    for link in [LSS, MSS, SHOT, LSC, MSC, REC, RECORD, BOUNDS, PORT, LAND, FPORT, FLAND, ACCEL, NOACCEL] {
         let _ = fs::remove_file(link);
-        std::os::unix::fs::symlink(adb_ext, link).unwrap();
+        std::os::unix::fs::symlink(adb_ext, link).unwrap_or_else(|_|
+            println!("{SYMLINK_FAIL}{link}")
+        );
     }
     let env = format!("
 #!/bin/sh

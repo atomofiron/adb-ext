@@ -13,3 +13,5 @@ pub mod destination;
 pub mod apks;
 pub mod config;
 pub mod updater;
+pub mod orientation;
+pub mod layout_bounds;

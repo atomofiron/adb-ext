@@ -136,7 +136,7 @@ impl Config {
     }
 
     pub fn get_adb_path() -> Option<String> {
-        return unsafe { ADB_PATH.clone() }
+        return unsafe { Option::clone(&*&raw const ADB_PATH) }
     }
 
     pub fn build_tools(&self) -> Option<String> {

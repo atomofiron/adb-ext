@@ -38,6 +38,10 @@ pub static UPDATE_SUCCEED: Label = Label::new(
     "Update succeed, run",
     "Обновление завершена, можете запустить",
 );
+pub static SYMLINK_FAIL: Label = Label::new(
+    "Symlink creation failed: ",
+    "Ошибка при создании симлинка: ",
+);
 pub static NO_ADB: Label = Label::new(
     "ADB wasn't recognized",
     "ADB не обнаружен",
@@ -125,7 +129,7 @@ impl Language {
         }
     }
     fn get_language() -> &'static Language {
-        return unsafe { &LANGUAGE }
+        unsafe { &*&raw const LANGUAGE }
     }
 }
 
