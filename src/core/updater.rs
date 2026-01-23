@@ -1,4 +1,3 @@
-#[cfg(unix)]
 use crate::core::ext::PathBufExt;
 #[cfg(windows)]
 use crate::core::ext::StringExt;
@@ -9,6 +8,7 @@ use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 use crate::core::system::{env_adb_ext_path, PATH};
 #[cfg(unix)]
 use crate::core::system::{env_path, home_dir};
+#[cfg(unix)]
 use crate::core::util::string;
 use itertools::Itertools;
 use std::io::Write;
@@ -51,7 +51,6 @@ pub fn update() {
         .append(false)
         .open(SCRIPT_NAME).unwrap();
     file.write(&bytes).unwrap();
-    std::io::stdin().read_line(&mut String::new()).unwrap();
     let code = Command::new(SHELL)
         .args(SCRIPT_ARGS)
         .spawn().unwrap()
@@ -134,9 +133,8 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
 #[cfg(windows)]
 fn init_env(action: &str) {
     println!("{action} {}", EXAMPLES.iter().join(", "));
-    let path = env_adb_ext_path();
-    if !path_contains(&path) {
-        HOWEVER_CONFIGURE.println_formatted(&[&path]);
+    if !path_contains(&bin_dir().to_string()) {
+        HOWEVER_CONFIGURE.println_formatted(&[&env_adb_ext_path()]);
     }
 }
 
