@@ -17,6 +17,8 @@ use crate::core::util::{set_sdk, string};
 use std::env;
 use std::env::args;
 use std::path::Path;
+use crate::core::pointer::toggle_pointer;
+use crate::core::taps::toggle_taps;
 
 mod core;
 mod tests;
@@ -36,6 +38,8 @@ enum Feature {
     Update,
     Orientation(Orientation),
     LayoutBounds,
+    Touches,
+    Pointer,
     Sdk(Option<String>),
 }
 
@@ -59,6 +63,8 @@ fn main() {
         Feature::Update => update(),
         Feature::Orientation(param) => orientation(param),
         Feature::LayoutBounds => debug_layout_bounds(),
+        Feature::Touches => toggle_taps(),
+        Feature::Pointer => toggle_pointer(),
         Feature::Sdk(path) => set_sdk(path, config),
     }
 }
@@ -115,6 +121,8 @@ fn match_arg(args: Vec<String>) -> Result<Feature, String> {
         ACCEL => Feature::Orientation(Orientation::accelerometer(true)),
         NOACCEL => Feature::Orientation(Orientation::accelerometer(false)),
         BOUNDS => Feature::LayoutBounds,
+        TAPS => Feature::Touches,
+        POINTER => Feature::Pointer,
         SDK => Feature::Sdk(args.get(1).cloned()),
         "shit" => return Err(string("💩")),
         _ => Feature::RunAdbWithArgs,

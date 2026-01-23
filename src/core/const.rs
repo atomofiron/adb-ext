@@ -20,6 +20,8 @@ pub const FLAND: &str = "fland";
 pub const ACCEL: &str = "accel";
 pub const NOACCEL: &str = "noaccel";
 pub const BOUNDS: &str = "bounds";
+pub const TAPS: &str = "taps";
+pub const POINTER: &str = "pointer";
 pub const SDK: &str = "sdk";
 
 pub const ADB: &str = "adb";
@@ -28,3 +30,6 @@ pub const PLATFORM_TOOLS: &str = "platform-tools";
 pub const SUCCESS_CODE: i32 = 0;
 pub const ERROR_CODE: i32 = 1;
 pub const NULL: &str = "null";
+
+pub const ON: &str = "1";
+pub const OFF: &str = "0";

@@ -11,21 +11,17 @@ use std::io;
 use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
+use crate::core::taps::{is_taps_on, turn_taps};
 
 const SCREENRECORD: &str = "screenrecord";
 const TMP: &str = "/data/local/tmp/record.mp4";
-const GET_TOUCHES: &str = "settings get system show_touches";
-const PUT_TOUCHES: &str = "settings put system show_touches";
-const ON: &str = "1";
-const OFF: &str = "0";
 
 pub fn make_screencast(cmd: String, dst: String, config: &Config) {
     let device = resolve_device();
-    let toggle_touches = config.screencasts.show_touches &&
-        run_adb_with(&device, AdbArgs::run(&[SHELL, GET_TOUCHES])).stdout()
-            == OFF;
-    if toggle_touches {
-        run_adb_with(&device, AdbArgs::run(&[SHELL, PUT_TOUCHES, ON]));
+    let show_taps = config.screencasts.show_taps;
+    let toggle_taps = show_taps != is_taps_on(&device);
+    if toggle_taps {
+        turn_taps(&device, show_taps);
     }
     let args = &[SHELL, SCREENRECORD, &config.screencasts.args, TMP];
     let args = adb_args_with(&device, AdbArgs::spawn(args));
@@ -39,8 +35,8 @@ pub fn make_screencast(cmd: String, dst: String, config: &Config) {
     io::stdin().read_line(&mut String::new()).unwrap();
     kill(child.id());
     child.wait().unwrap();
-    if toggle_touches {
-        run_adb_with(&device, AdbArgs::run(&[SHELL, PUT_TOUCHES, OFF]));
+    if toggle_taps {
+        turn_taps(&device, !show_taps);
     }
     sleep(Duration::from_secs(1));
     let dst = dst

@@ -45,7 +45,7 @@ pub struct Screencasts {
     pub sources: Vec<String>,
     pub destination: String,
     hook: Option<String>,
-    pub show_touches: bool,
+    pub show_taps: bool,
     pub args: String,
 }
 
@@ -87,7 +87,7 @@ impl Default for Screencasts {
             ],
             destination: string("~/Android/Screencasts"),
             hook: Some(string("~/Android/Screencasts/hook")),
-            show_touches: true,
+            show_taps: true,
             args: string("--bit-rate 5M"),
         }
     }

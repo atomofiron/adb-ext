@@ -16,3 +16,5 @@ pub mod updater;
 pub mod orientation;
 pub mod layout_bounds;
 pub mod system;
+pub mod taps;
+pub mod pointer;
