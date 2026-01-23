@@ -10,7 +10,7 @@ use std::process::{Child, Command, exit};
 use crate::core::config::Config;
 use crate::core::destination::Destination;
 use crate::core::strings::{ADD_INTERPRETER, DESTINATION, MEDIAS_NOT_FOUND};
-use crate::core::util::ensure_parent_exists;
+use crate::core::util::{ensure_parent_exists, null, string};
 
 const TOYBOX_LS_LLCD: &str = "toybox ls -llcd";
 const PICS: &[&str; 3] = &[".png", ".jpg", ".jpeg"];
@@ -44,7 +44,7 @@ impl Display for Params {
             Params::Single(cmd,path) => {
                 let path = path.clone()
                     .map(|it| format!("\"{it}\""))
-                    .unwrap_or("null".to_string());
+                    .unwrap_or(null());
                 write!(f, "Params::Single({cmd},{path})", )
             },
         }

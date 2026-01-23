@@ -5,10 +5,14 @@ use std::path::PathBuf;
 use std::process::{Command, exit};
 use chrono::Local;
 use crate::core::config::Config;
-use crate::core::r#const::ERROR_CODE;
+use crate::core::r#const::{ERROR_CODE, NULL};
 
 pub fn string(value: &str) -> String {
     String::from(value)
+}
+
+pub fn null() -> String {
+    string(NULL)
 }
 
 pub fn print_the_fuck_out() {
@@ -37,7 +41,7 @@ pub fn set_sdk(path: Option<String>, mut config: Config) {
         config.environment.sdk = path;
         config.write();
     } else {
-        let path = config.environment.sdk.unwrap_or("null".to_string());
+        let path = config.environment.sdk.unwrap_or(null());
         println!("{path}");
     }
 }

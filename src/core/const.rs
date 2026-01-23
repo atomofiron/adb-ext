@@ -27,3 +27,4 @@ pub const PLATFORM_TOOLS: &str = "platform-tools";
 
 pub const SUCCESS_CODE: i32 = 0;
 pub const ERROR_CODE: i32 = 1;
+pub const NULL: &str = "null";

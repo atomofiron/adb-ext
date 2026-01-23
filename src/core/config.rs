@@ -1,5 +1,5 @@
 use crate::core::destination::Destination;
-use crate::core::ext::{OptionExt, PathBufExt, ResultToOption, StringExt};
+use crate::core::ext::{OptionExt, PathBufExt, ResultToOption, StrExt};
 use crate::core::r#const::{ADB, PLATFORM_TOOLS};
 use crate::core::system::{adb_name, config_path, make_executable};
 use itertools::Itertools;
@@ -7,8 +7,8 @@ use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::path::PathBuf;
+use crate::core::util::string;
 
-pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
 pub static mut ADB_PATH: Option<String> = None;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -50,7 +50,7 @@ pub struct Screencasts {
 }
 
 // NOTE: replace the '~' with home dir path for the Windows in the future
-fn default_hook() -> Option<String> { Some("~/Android/hook".to_string()) }
+fn default_hook() -> Option<String> { Some(string("~/Android/hook")) }
 
 impl Default for Config {
     fn default() -> Self {
@@ -66,54 +66,48 @@ impl Default for Config {
 impl Default for Screenshots {
     fn default() -> Self {
         Screenshots {
-            name: "Screenshot_%Y%m%d-%H%M%S.png".to_string(),
+            name: string("Screenshot_%Y%m%d-%H%M%S.png"),
             sources: vec![
-                "/sdcard/Pictures/Screenshots".to_string(),
-                "/sdcard/DCIM/Screenshots".to_string(),
+                string("/sdcard/Pictures/Screenshots"),
+                string("/sdcard/DCIM/Screenshots"),
             ],
-            destination: "~/Android/Screenshots".to_string(),
-            hook: Some("~/Android/Screenshots/hook".to_string()),
+            destination: string("~/Android/Screenshots"),
+            hook: Some(string("~/Android/Screenshots/hook")),
         }
     }
 }
 impl Default for Screencasts {
     fn default() -> Self {
         Screencasts {
-            name: "Screencast_%Y%m%d-%H%M%S.mp4".to_string(),
+            name: string("Screencast_%Y%m%d-%H%M%S.mp4"),
             sources: vec![
-                "/sdcard/Pictures/Screenshots".to_string(),
-                "/sdcard/DCIM/Screen recordings".to_string(),
-                "/sdcard/Movies".to_string(),
+                string("/sdcard/Pictures/Screenshots"),
+                string("/sdcard/DCIM/Screen recordings"),
+                string("/sdcard/Movies"),
             ],
-            destination: "~/Android/Screencasts".to_string(),
-            hook: Some("~/Android/Screencasts/hook".to_string()),
+            destination: string("~/Android/Screencasts"),
+            hook: Some(string("~/Android/Screencasts/hook")),
             show_touches: true,
-            args: "--bit-rate 5M".to_string(),
+            args: string("--bit-rate 5M"),
         }
     }
 }
 
-fn get_existing_config_path() -> PathBuf {
-    let config_path = config_path();
-    if !config_path.exists() {
-        fs::create_dir_all(config_path.parent().unwrap()).unwrap();
-        File::create(&config_path).unwrap();
-    }
-    return config_path;
-}
-
 impl Config {
     pub fn read() -> Config {
-        let config_path = get_existing_config_path();
-        let text = fs::read_to_string(&config_path).unwrap_or("".to_string());
-        let config = serde_yaml::from_str::<Config>(&text).unwrap_or_else(|_| Config::default());
-        let text = serde_yaml::to_string(&config).unwrap();
-        fs::write(config_path, text).unwrap();
-        return config;
+        let config_path = config_path();
+        let text = fs::read_to_string(&config_path)
+            .unwrap_or_default();
+        return serde_yaml::from_str::<Config>(&text)
+            .unwrap_or_default();
     }
 
     pub fn write(&self) {
-        let config_path = get_existing_config_path();
+        let config_path = config_path();
+        if !config_path.exists() {
+            fs::create_dir_all(config_path.parent().unwrap()).unwrap();
+            File::create(&config_path).unwrap();
+        }
         let config_text = serde_yaml::to_string(self).unwrap();
         fs::write(config_path, config_text).unwrap();
     }
@@ -125,7 +119,7 @@ impl Config {
                 .take_some_if(|it| it.is_file())
                 .if_none(|| {
                     let adb_name = adb_name();
-                    let platform_adb = (PLATFORM_TOOLS.to_string().path()).join(&adb_name);
+                    let platform_adb = PLATFORM_TOOLS.path().join(&adb_name);
                     let paths = which::which_all(&adb_name)
                         .map(|it| it.collect::<Vec<_>>())
                         .unwrap_or(vec![]);

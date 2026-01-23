@@ -1,7 +1,7 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;
-use crate::core::config::{Config, CONFIG_PATH};
-use crate::core::ext::{OutputExt, StrExt};
+use crate::core::config::Config;
+use crate::core::ext::{OutputExt, PathBufExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH};
@@ -12,6 +12,7 @@ use std::ops::Add;
 use std::path::Path;
 use std::process::{exit, Command, Output};
 use crate::core::destination::Destination;
+use crate::core::system::config_path;
 
 pub fn steal_apk(package: String, dst: Option<String>) {
     let pm_command = format!("pm path {package}");
@@ -54,7 +55,7 @@ pub fn run_apk(apk: String, config: &Config) {
 fn get_aapt(config: &Config) -> String {
     let path = match config.build_tools() {
         None => {
-            println!("{NO_BUILD_TOOLS} {}", CONFIG_PATH);
+            println!("{NO_BUILD_TOOLS} {}", config_path().to_string());
             exit(0);
         },
         Some(path) => path,
@@ -66,7 +67,7 @@ fn get_aapt(config: &Config) -> String {
         .collect::<Vec<String>>()
         .first()
         .unwrap_or_else(|| {
-            println!("{NO_BUILD_TOOLS} {}", CONFIG_PATH);
+            println!("{NO_BUILD_TOOLS} {}", config_path().to_string());
             exit(0);
         }).clone().add("/aapt");
 }

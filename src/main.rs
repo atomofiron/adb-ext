@@ -44,6 +44,7 @@ fn main() {
         Language::set_language(Language::Ru);
     }
     let config = Config::read();
+    config.write();
     config.update_adb_path();
     match resolve_feature().short_unwrap() {
         Feature::FixPermission(serial) => fix_on_linux(serial),

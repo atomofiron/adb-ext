@@ -111,18 +111,16 @@ pub fn bin_path() -> PathBuf {
 
 #[cfg(unix)]
 pub fn config_path() -> PathBuf {
-    dirs::config_dir()
-        .expect("no ~/.config")
-        .join("adb-ext")
-        .join("config.yaml")
+    home_dir()
+        .join(".config")
+        .join("adb-ext.yaml")
 }
 
 #[cfg(windows)]
 pub fn config_path() -> PathBuf {
     dirs::config_dir()
         .expect("no AppData/Roaming")
-        .join("adb-ext")
-        .join("config.yaml")
+        .join("adb-ext.yaml")
 }
 
 #[cfg(unix)]
