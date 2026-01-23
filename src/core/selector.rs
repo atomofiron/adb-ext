@@ -9,13 +9,13 @@ use dialoguer::FuzzySelect;
 use itertools::Itertools;
 use std::env;
 use std::process::{exit, Output};
+use crate::core::system::bin_name;
 
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
 const ARG_S: &str = "-s";
-const ADB_EXT: &str = "adb-ext";
 const VERSION: &str = "--version";
 const GETPROPS: &str = "
 getprop ro.build.version.sdk;
@@ -95,8 +95,8 @@ pub fn resolve_device_and_run_args() {
         None => exit(run_adb(args).code()),
         Some(first) => first,
     };
-    if first == VERSION && program.ends_with(ADB_EXT) {
-        println!("{} v{}", ADB_EXT, env!("CARGO_PKG_VERSION"));
+    if first == VERSION && program.ends_with(&bin_name()) {
+        println!("{} v{}", bin_name(), env!("CARGO_PKG_VERSION"));
         return;
     }
     let output = match DEVICE_COMMANDS.contains(&first.as_str()) {

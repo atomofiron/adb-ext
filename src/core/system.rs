@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use std::{fs, io};
 
 const ADB_EXT: &str = "adb-ext";
+const ADB_EXT_YAML: &str = "adb-ext.yaml";
 #[cfg(windows)]
 pub const DOT_EXE: &str = ".exe";
 #[cfg(windows)]
@@ -77,7 +78,7 @@ pub fn bin_dir() -> PathBuf {
     dirs::data_local_dir()
         .expect("no LocalAppData")
         .join(PROGRAMS)
-        .join("adb-ext")
+        .join(ADB_EXT)
 }
 
 pub fn bin_name() -> String {
@@ -113,14 +114,14 @@ pub fn bin_path() -> PathBuf {
 pub fn config_path() -> PathBuf {
     home_dir()
         .join(".config")
-        .join("adb-ext.yaml")
+        .join(ADB_EXT_YAML)
 }
 
 #[cfg(windows)]
 pub fn config_path() -> PathBuf {
     dirs::config_dir()
         .expect("no AppData/Roaming")
-        .join("adb-ext.yaml")
+        .join(ADB_EXT_YAML)
 }
 
 #[cfg(unix)]
