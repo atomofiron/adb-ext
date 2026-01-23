@@ -1,13 +1,12 @@
+use crate::core::destination::Destination;
+use crate::core::ext::{OptionExt, PathBufExt, ResultToOption, StringExt};
+use crate::core::r#const::{ADB, PLATFORM_TOOLS};
+use crate::core::system::{adb_name, config_path, make_executable};
+use itertools::Itertools;
+use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
-use std::process::Command;
-use serde_derive::{Deserialize, Serialize};
-use crate::core::destination::Destination;
-use crate::core::util::home_dir;
-use crate::core::ext::{OptionExt, OutputExt, ResultToOption, StrExt, StringExt};
-
 
 pub const CONFIG_PATH: &str = "~/.config/adb-ext.yaml";
 pub static mut ADB_PATH: Option<String> = None;
@@ -95,8 +94,7 @@ impl Default for Screencasts {
 }
 
 fn get_existing_config_path() -> PathBuf {
-    let config_path = format!("{}{}", home_dir(), &CONFIG_PATH[1..]);
-    let config_path = PathBuf::from(config_path);
+    let config_path = config_path();
     if !config_path.exists() {
         fs::create_dir_all(config_path.parent().unwrap()).unwrap();
         File::create(&config_path).unwrap();
@@ -123,15 +121,18 @@ impl Config {
     pub fn update_adb_path(&self) {
         unsafe {
             ADB_PATH = self.platform_tools()
-                .map(|it| format!("{}adb", it.with_slash()))
+                .map(|it| it.join(ADB))
                 .take_some_if(|it| it.is_file())
                 .if_none(|| {
-                    Command::new("/usr/bin/which").arg("adb")
-                        .output()
-                        .to_option()
-                        .map(|it| it.stdout())
-                        .take_some_if(|it| it.is_file())
-                });
+                    let adb_name = adb_name();
+                    let platform_adb = (PLATFORM_TOOLS.to_string().path()).join(&adb_name);
+                    let paths = which::which_all(&adb_name)
+                        .map(|it| it.collect::<Vec<_>>())
+                        .unwrap_or(vec![]);
+                    paths.iter()
+                        .find_or_first(|it| it.is_file() && it.ends_with(&platform_adb))
+                        .cloned()
+                }).map(|p| p.to_string());
         }
     }
 
@@ -139,60 +140,50 @@ impl Config {
         return unsafe { Option::clone(&*&raw const ADB_PATH) }
     }
 
-    pub fn build_tools(&self) -> Option<String> {
+    pub fn build_tools(&self) -> Option<PathBuf> {
         existing_or_none(
             dir_checker,
             self.environment.build_tools.clone().map(|it| it.dst()),
-            self.environment.sdk.clone().map(|it| format!("{}build-tools/", it.dst().dir())),
+            self.environment.sdk.clone().map(|it| it.dst().join("build-tools")),
         )
     }
 
-    pub fn platform_tools(&self) -> Option<String> {
+    pub fn platform_tools(&self) -> Option<PathBuf> {
         existing_or_none(
             dir_checker,
             self.environment.platform_tools.clone().map(|it| it.dst()),
-            self.environment.sdk.clone().map(|it| format!("{}platform-tools/", it.dst().dir())),
+            self.environment.sdk.clone().map(|it| it.dst().join("platform-tools")),
         )
     }
 
-    pub fn screenshot_hook(&self) -> Option<String> {
+    pub fn screenshot_hook(&self) -> Option<PathBuf> {
         existing_or_none(
             file_checker,
             self.screenshots.hook.clone().map(|it| it.dst()),
             self.hook.clone().map(|it| it.dst()),
-        ).transform(|it| make_executable(it).to_option())
+        ).and_then(|it| make_executable(it).to_option())
     }
 
-    pub fn screencast_hook(&self) -> Option<String> {
+    pub fn screencast_hook(&self) -> Option<PathBuf> {
         existing_or_none(
             file_checker,
             self.screencasts.hook.clone().map(|it| it.dst()),
             self.hook.clone().map(|it| it.dst()),
-        ).transform(|it| make_executable(it).to_option())
+        ).and_then(|it| make_executable(it).to_option())
     }
 }
 
-fn existing_or_none<F>(checker: F, first: Option<String>, second: Option<String>) -> Option<String> where F: Fn(&String) -> bool {
+fn existing_or_none<F>(checker: F, first: Option<PathBuf>, second: Option<PathBuf>) -> Option<PathBuf> where F: Fn(&PathBuf) -> bool {
     first.clone()
         .take_some_if(&checker)
         .or(second)
         .take_some_if(&checker)
 }
 
-fn dir_checker(path: &String) -> bool {
+fn dir_checker(path: &PathBuf) -> bool {
     fs::metadata(path).map(|it| it.is_dir()).unwrap_or(false)
 }
 
-fn file_checker(path: &String) -> bool {
+fn file_checker(path: &PathBuf) -> bool {
     fs::metadata(path).map(|it| it.is_file()).unwrap_or(false)
-}
-
-fn make_executable(path: &String) -> std::io::Result<String> {
-    let mut perms = fs::metadata(&path)?.permissions();
-    let mode = perms.mode();
-    if mode & 0o111 == 0 {
-        perms.set_mode(mode | 0o100);
-        fs::set_permissions(&path, perms)?;
-    }
-    return Ok(path.clone());
 }

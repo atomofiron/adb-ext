@@ -2,11 +2,12 @@
 mod tests {
     use itertools::assert_equal;
     use crate::core::destination::Destination;
-    use crate::core::util::home_dir;
+    use crate::core::ext::PathBufExt;
+    use crate::core::system::home_dir;
 
     #[test]
     fn destination() {
-        let home = home_dir();
+        let home = home_dir().to_string();
         let in_exp = &[
             ("".to_string(), format!("{home}/Subpath/template.png")),
             (".".to_string(), "./template.png".to_string()),
@@ -39,7 +40,8 @@ mod tests {
         let output = in_exp.iter().map(|(input, expected)| {
             let output = input.to_string()
                 .dst_with_parent("~/Subpath/")
-                .with_file("template.png");
+                .join("template.png")
+                .to_string();
             let equals = output == *expected;
             let expected = if equals { String::new() } else { expected.clone() };
             println!("{input} -> {output} ? {equals} {expected}");

@@ -1,13 +1,13 @@
+use crate::core::adb_command::AdbArgs;
+use crate::core::config::Config;
+use crate::core::destination::Destination;
+use crate::core::ext::{OutputExt, PathBufExt, VecExt};
+use crate::core::r#const::SHELL;
+use crate::core::selector::{resolve_device, run_adb_with};
+use crate::core::strings::SAVED;
+use crate::core::util::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
 use std::fs;
 use std::process::exit;
-use crate::core::adb_command::AdbArgs;
-use crate::core::ext::{OutputExt, VecExt};
-use crate::core::destination::Destination;
-use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::r#const::SHELL;
-use crate::core::config::Config;
-use crate::core::strings::SAVED;
-use crate::core::util::{ensure_parent_exists, try_run_hook_and_exit};
 
 const SCREENCAP_P: &str = "screencap -p";
 const OD: u8 = 0x0D;
@@ -21,15 +21,15 @@ pub fn make_screenshot(cmd: String, dst: String, config: &Config) {
     if output.status.success() {
         let dst = dst
             .dst_with_parent(&config.screenshots.destination)
-            .with_file(&config.screenshots.name);
+            .join(format_file_name(&config.screenshots.name));
         ensure_parent_exists(&dst);
 
         let bytes = match &output.stdout[4..=5] {
             &[OD, OA] => output.stdout,
             _ => filter_extra_zero_d(output.stdout),
         };
-        fs::write(dst.clone(), bytes).unwrap();
-        println!("{}: {dst}", SAVED);
+        fs::write(&dst, bytes).unwrap();
+        println!("{SAVED}: {}", dst.to_string());
         let hook = config.screenshot_hook();
         try_run_hook_and_exit(hook, cmd, dst);
     } else {

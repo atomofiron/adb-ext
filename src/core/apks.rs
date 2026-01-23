@@ -1,16 +1,17 @@
-use std::fs;
-use std::ops::Add;
-use std::path::Path;
-use std::process::{Command, exit, Output};
-use regex::Regex;
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;
 use crate::core::config::{Config, CONFIG_PATH};
-use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH};
+use crate::core::util::string;
+use regex::Regex;
+use std::fs;
+use std::ops::Add;
+use std::path::Path;
+use std::process::{exit, Command, Output};
+use crate::core::destination::Destination;
 
 pub fn steal_apk(package: String, dst: Option<String>) {
     let pm_command = format!("pm path {package}");
@@ -21,13 +22,13 @@ pub fn steal_apk(package: String, dst: Option<String>) {
         output.print_err();
         exit(output.code());
     }
-    let default_name = format!("{package}.apk");
     let destination = dst
-        .unwrap_or(default_name.clone())
-        .with_file(default_name.as_str());
+        .unwrap_or(string(""))
+        .dst()
+        .join(format!("{package}.apk"));
     // the output line is "package:/data/data/[…]/base.apk"
     let path = &output.stdout().clone()[8..];
-    let args = AdbArgs::spawn(&[PULL, path, destination.as_str()]);
+    let args = AdbArgs::spawn(&[PULL, path, destination.to_str().unwrap()]);
     let output = run_adb_with(&device, args);
     exit(output.code());
 }

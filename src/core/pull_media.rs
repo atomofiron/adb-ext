@@ -1,9 +1,9 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::{fs, io};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::core::adb_command::AdbArgs;
-use crate::core::ext::{OptionExt, OutputExt, ResultToOption, StrExt, VecExt};
+use crate::core::ext::{OutputExt, ResultToOption, StrExt, VecExt};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::r#const::{PULL, SHELL};
 use std::process::{Child, Command, exit};
@@ -30,7 +30,7 @@ pub enum Params {
 
 impl Params {
     pub fn from(cmd: String, arg: Option<String>) -> Params {
-        match arg.transform(|it| it.parse::<usize>().to_option()) {
+        match arg.clone().and_then(|it| it.parse::<usize>().to_option()) {
             Some(count) => Params::Count(cmd, count),
             None => Params::Single(cmd, arg),
         }
@@ -71,10 +71,10 @@ fn get_ls_command(sources: &Vec<String>) -> String {
     return command;
 }
 
-fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, default_dst: String) {
+fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: String) {
     let count = match params {
-        Params::Count(_,count) => count,
-        Params::Single(_,_) => 1,
+        Params::Count(_, count) => count,
+        Params::Single(..) => 1,
     };
     if count <= 0 {
         return
@@ -100,19 +100,19 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, defa
             .take(count)
             .map(|it| it.path.to_string())
             .collect::<Vec<String>>();
-        let (cmd,dst) = match params {
-            Params::Count(cmd,_) => {
+        let (cmd, dst) = match params {
+            Params::Count(cmd, _) => {
                 let dst = default_dst.dst();
                 fs::create_dir_all(&dst).unwrap();
                 (cmd,dst)
             },
-            Params::Single(cmd,path) => {
+            Params::Single(cmd, path) => {
                 let name = Path::new(items.first().unwrap())
                     .file_name().unwrap()
                     .to_str().unwrap();
-                let dst = path.unwrap_or(String::new())
+                let dst = path.unwrap_or_default()
                     .dst_with_parent(&default_dst)
-                    .with_file(name);
+                    .join(name);
                 ensure_parent_exists(&dst);
                 (cmd,dst)
             },
@@ -121,12 +121,12 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, defa
         items.reverse();
         let hook = hook_or_none(hook, cmd, dst.clone(), &items);
         pull_args.args.append(&mut items);
-        pull_args.args.push(dst.clone());
+        pull_args.args.push(dst.to_str().unwrap().to_string());
         let output = run_adb_with(&device, pull_args);
         output.print_out_and_err();
         if output.status.success() {
             DESTINATION.print();
-            println!("{dst}");
+            println!("{:?}", dst);
         }
         let status = hook
             .map(|mut it| check_exec_error(it.spawn()).wait().unwrap())
@@ -135,7 +135,7 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<String>, defa
     }
 }
 
-fn hook_or_none(hook: Option<String>, cmd: String, dst: String, items: &Vec<String>) -> Option<Command> {
+fn hook_or_none(hook: Option<PathBuf>, cmd: String, dst: PathBuf, items: &Vec<String>) -> Option<Command> {
     match hook {
         Some(hook) => {
             let mut command = Command::new(hook);
@@ -145,7 +145,7 @@ fn hook_or_none(hook: Option<String>, cmd: String, dst: String, items: &Vec<Stri
                 Ok(true) => { command.arg(dst); },
                 Ok(false) => {
                     for it in items {
-                        command.arg(dst.clone().with_file(it.file_name().as_str()));
+                        command.arg(dst.clone().join(it.file_name().as_str()));
                     }
                 },
             }

@@ -1,40 +1,26 @@
 use std::fs::create_dir_all;
 use std::io;
 use std::io::Write;
-use std::path::Path;
+use std::path::PathBuf;
 use std::process::{Command, exit};
+use chrono::Local;
 use crate::core::config::Config;
 use crate::core::r#const::ERROR_CODE;
 
+pub fn string(value: &str) -> String {
+    String::from(value)
+}
 
 pub fn print_the_fuck_out() {
     io::stdout().flush().unwrap();
 }
 
-pub fn home_dir() -> String {
-    #[allow(deprecated)] // todo replace with a crate
-    std::env::home_dir().unwrap().to_str().unwrap().to_string()
-}
-
-pub fn gen_home_path(subpath: Option<&str>) -> String {
-    let mut path = home_dir();
-    if let Some(subpath) = subpath {
-        if !subpath.starts_with('/') {
-            path.push('/');
-        }
-        path.push_str(subpath);
-    } else {
-        path.push('/');
-    }
-    return path;
-}
-
-pub fn ensure_parent_exists(path: &String) {
-    let parent = Path::new(&path).parent().unwrap();
+pub fn ensure_parent_exists(path: &PathBuf) {
+    let parent = path.parent().unwrap();
     create_dir_all(parent).unwrap();
 }
 
-pub fn try_run_hook_and_exit(hook: Option<String>, cmd: String, arg: String) {
+pub fn try_run_hook_and_exit(hook: Option<PathBuf>, cmd: String, arg: PathBuf) {
     if let Some(hook) = hook {
         Command::new(hook).arg(cmd).arg(arg)
             .spawn().unwrap()
@@ -54,4 +40,8 @@ pub fn set_sdk(path: Option<String>, mut config: Config) {
         let path = config.environment.sdk.unwrap_or("null".to_string());
         println!("{path}");
     }
+}
+
+pub fn format_file_name(name: &String) -> String {
+    Local::now().format(name).to_string()
 }

@@ -6,15 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nix = { version = "0.30", features = ["user", "signal"] }
+nix = { version = "0.31", features = ["user", "signal"] }
 dialoguer = { version = "0.12", features = ["fuzzy-select"] }
 chrono = "0.4.31"
+dirs = "6.0"
+which = "8.0"
 itertools = "0.14"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_derive = "1.0.193"
 serde_yaml = "0.9.27"
 regex = "1.10.2"
 reqwest = { version = "0.13", features = ["blocking"] }
+windows-sys = "0.61"
 
 [target.x86_64-unknown-linux-gnu.dependencies]
 rusb = "0.9.4"

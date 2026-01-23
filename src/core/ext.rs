@@ -1,24 +1,13 @@
 use std::ffi::OsStr;
-use std::fs;
+use std::path::PathBuf;
 use std::process::{Command, exit, Output};
 use crate::core::r#const::ERROR_CODE;
 
-
-const MORE_THAN_ONE: &str = "adb: more than one device/emulator";
 const NO_TARGETS: &str = "adb: no devices/emulators found";
 
 const NBSP: u8 = 0xA0;
 const BF: u8 = 0xBF;
 const C2: u8 = 0xC2;
-
-
-pub trait AnyExt<T> {
-    fn option(self) -> Option<T>;
-}
-
-impl<T> AnyExt<T> for T {
-    fn option(self) -> Option<T> { Some(self) }
-}
 
 pub trait ShortUnwrap<T> {
     fn short_unwrap(self) -> T;
@@ -40,7 +29,6 @@ pub trait OutputExt {
     fn code(&self) -> i32;
     fn stdout(&self) -> String;
     fn stderr(&self) -> String;
-    fn is_more_than_one(&self) -> bool;
     fn print_out(&self);
     fn print_err(&self);
     fn print_out_and_err(&self);
@@ -55,9 +43,6 @@ impl OutputExt for Output {
     }
     fn stderr(&self) -> String {
         self.stderr.fix_nbsp_and_trim()
-    }
-    fn is_more_than_one(&self) -> bool {
-        !self.status.success() && self.stderr() == MORE_THAN_ONE
     }
     fn print_out(&self) {
         let stdout = self.stdout();
@@ -86,6 +71,7 @@ trait Trim {
 }
 
 impl Trim for Vec<u8> {
+
     fn fix_nbsp_and_trim(&self) -> String {
         match count_nbsp(&self) {
             0 => String::from_utf8_lossy(self).trim().to_string(),
@@ -129,34 +115,6 @@ impl<T, E> ResultToOption<T> for Result<T, E> {
     }
 }
 
-pub trait Split {
-    fn split_to_vec(&self, pat: char) -> Vec<String>;
-    fn splitn_to_vec(&self, n: usize, pat: char) -> Vec<String>;
-}
-
-impl Split for str {
-    fn split_to_vec(&self, pat: char) -> Vec<String> {
-        str::split(self, pat)
-            .map(String::from)
-            .collect::<Vec<String>>()
-    }
-    fn splitn_to_vec(&self, n: usize, pat: char) -> Vec<String> {
-        str::splitn(self, n, pat)
-            .map(String::from)
-            .collect::<Vec<String>>()
-    }
-}
-
-pub trait StringVec {
-    fn to_string_vec(&self) -> Vec<String>;
-}
-
-impl StringVec for Vec<&str> {
-    fn to_string_vec(&self) -> Vec<String> {
-        self.iter().map(ToString::to_string).collect()
-    }
-}
-
 pub trait VecExt {
     type Item: PartialEq;
     fn last_index(&self) -> usize;
@@ -183,11 +141,9 @@ impl<T> VecExt for Vec<T> where T: PartialEq {
 pub trait StrExt {
     fn last_index(&self) -> usize;
     fn index_of(&self, c: char) -> Option<usize>;
-    fn index_of_or(&self, default: usize, c: char) -> usize;
     fn last_index_of(&self, c: char) -> Option<usize>;
-    fn last_index_of_or(&self, default: usize, c: char) -> usize;
     fn file_name(&self) -> String;
-    fn is_file(&self) -> bool;
+    fn path(&self) -> PathBuf;
 }
 
 fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
@@ -206,6 +162,7 @@ fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
 }
 
 impl StrExt for str {
+
     fn last_index(&self) -> usize {
         self.len() - 1
     }
@@ -214,16 +171,8 @@ impl StrExt for str {
         inner_index_of(self, c, false)
     }
 
-    fn index_of_or(&self, default: usize, c: char) -> usize {
-        inner_index_of(self, c, false).unwrap_or(default)
-    }
-
     fn last_index_of(&self, c: char) -> Option<usize> {
         inner_index_of(self, c, true)
-    }
-
-    fn last_index_of_or(&self, default: usize, c: char) -> usize {
-        inner_index_of(self, c, true).unwrap_or(default)
     }
 
     fn file_name(&self) -> String {
@@ -234,26 +183,34 @@ impl StrExt for str {
         return self.to_string()[offset..].to_string()
     }
 
-    fn is_file(&self) -> bool {
-        fs::metadata(self).map_or(false, |it| it.is_file())
+    fn path(&self) -> PathBuf {
+        PathBuf::from(self)
     }
 }
 
 pub trait StringExt {
-    fn with_slash(self) -> Self;
     fn contains_ci(&self, other: &String) -> bool;
+    fn path(&self) -> PathBuf;
 }
 
 impl StringExt for String {
-    fn with_slash(mut self) -> Self {
-        if !self.ends_with('/') {
-            self.push('/');
-        }
-        return self;
-    }
 
     fn contains_ci(&self, other: &String) -> bool {
         self.to_lowercase().contains(other.to_lowercase().as_str())
+    }
+
+    fn path(&self) -> PathBuf {
+        PathBuf::from(self)
+    }
+}
+
+pub trait PathBufExt {
+    fn to_string(&self) -> String;
+}
+
+impl PathBufExt for PathBuf {
+    fn to_string(&self) -> String {
+        self.to_string_lossy().to_string()
     }
 }
 
@@ -262,6 +219,7 @@ pub trait OptionArg {
 }
 
 impl OptionArg for Command {
+
     fn some_arg<S: AsRef<OsStr>>(&mut self, arg: Option<S>) -> &mut Command {
         match arg {
             None => self,
@@ -273,7 +231,6 @@ impl OptionArg for Command {
 pub trait OptionExt<T> {
     fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
     fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T>;
-    fn transform<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
@@ -288,12 +245,6 @@ impl<T> OptionExt<T> for Option<T> {
         match self {
             None => f(),
             Some(_) => self,
-        }
-    }
-    fn transform<F,R>(&self, f: F) -> Option<R> where F: FnOnce(&T) -> Option<R>{
-        match self {
-            Some(value) => f(value),
-            None => None,
         }
     }
 }

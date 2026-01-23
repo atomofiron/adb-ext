@@ -1,54 +1,29 @@
-use std::fs;
-use std::ops::Add;
-use chrono::Local;
-use crate::core::ext::{StrExt, StringExt};
-use crate::core::util::gen_home_path;
-
+use crate::core::system::home_dir;
+use std::path::PathBuf;
+use crate::core::ext::StringExt;
 
 pub trait Destination {
-    fn dst(self) -> String;
-    fn dst_with_parent(self, default_sub_path: &str) -> String;
-    fn with_file(self, default_template: &str) -> String;
-    fn dir(self) -> String;
+    fn dst(self) -> PathBuf;
+    fn dst_with_parent(self, default_sub_path: &str) -> PathBuf;
 }
 
 impl Destination for String {
 
-    fn dst(self) -> String { self.dst_with_parent("") }
+    fn dst(self) -> PathBuf { self.dst_with_parent("") }
 
-    fn dst_with_parent(self, default_parent: &str) -> String {
+    fn dst_with_parent(self, default_parent: &str) -> PathBuf {
         match () {
-            _ if self == "~" => gen_home_path(None),
-            _ if self == "." => self,
-            _ if self == ".." => self,
-            _ if self.starts_with("./") => self,
-            _ if self.starts_with("../") => self,
-            _ if self.starts_with('/') => self,
-            _ if self.starts_with("~/") => gen_home_path(Some(&self[1..])),
-            _ if default_parent.is_empty() => self,
+            _ if self == "~" => home_dir(),
+            _ if self == "." ||
+                self == ".." ||
+                self.starts_with("./") ||
+                self.starts_with("../") ||
+                self.starts_with('/') => self.path(),
+            _ if self.starts_with("~/") => home_dir().join(&self[2..]),
+            _ if default_parent.is_empty() => self.path(),
             _ => default_parent.to_string()
                 .dst()
-                .with_slash()
-                .add(&self),
-        }
-    }
-
-    fn with_file(mut self, default_name_template: &str) -> String {
-        let dot = default_name_template.last_index_of('.').unwrap();
-        let ext = &default_name_template[dot..];
-        match () {
-            _ if self.ends_with('/') => {},
-            _ if fs::metadata(self.clone()).map_or(false, |it| it.is_dir()) => self.push('/'),
-            _ if self.to_lowercase().ends_with(ext) => return self,
-            _  => return format!("{self}{ext}"),
-        };
-        format!("{self}{}", Local::now().format(default_name_template))
-    }
-
-    fn dir(self) -> String {
-        match () {
-            _ if self.ends_with('/') => self,
-            _ => format!("{self}/"),
+                .join(&self),
         }
     }
 }

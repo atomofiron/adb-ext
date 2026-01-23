@@ -1,9 +1,11 @@
+use crate::core::r#const::ERROR_CODE;
 use crate::core::util::print_the_fuck_out;
 use std::fmt::{Display, Formatter};
 use std::process::exit;
-use crate::core::r#const::ERROR_CODE;
 
 static mut LANGUAGE: Language = Language::En;
+
+pub const PLACEHOLDER: &str = "{}";
 
 #[cfg(target_os = "linux")]
 pub static NO_DEVICES_FOUND: Label = Label::new(
@@ -82,9 +84,15 @@ pub static UNAUTHORIZED_BY_DEVICE: Label = Label::new(
     "Unauthorized by the device",
     "На устройстве не дано разрешение",
 );
+#[cfg(unix)]
 pub static HOWEVER_CONFIGURE: Label = Label::new(
     "... however, first of all to configure your current shell, run:",
     "... однако, для начала, чтобы настроить текущую сессию, запустите:",
+);
+#[cfg(windows)]
+pub static HOWEVER_CONFIGURE: Label = Label::new(
+    "... however, first of all add {} in the top of PATH and restart CMD",
+    "... однако, для начала добавьте {} в самый верх PATH и перезапустить коммандрую строку",
 );
 pub static ADD_INTERPRETER: Label = Label::new(
     "Add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
@@ -154,6 +162,19 @@ impl Label<'_> {
     }
     pub fn println(&self) {
         println!("{}", self);
+    }
+    pub fn println_formatted(&self, parts: &[&str]) {
+        let mut value = self.value().to_string();
+        let mut i = 0;
+        while i < parts.len() {
+            if let Some(pos) = value.find(PLACEHOLDER) {
+                value.replace_range(pos..(pos + PLACEHOLDER.len()), parts[i]);
+                i += 1;
+            } else {
+                break;
+            }
+        }
+        println!("{value}");
     }
     pub fn exit_err(&self) -> ! {
         println!("{}", self);
