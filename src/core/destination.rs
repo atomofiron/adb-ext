@@ -1,6 +1,7 @@
 use crate::core::system::home_dir;
 use std::path::PathBuf;
 use crate::core::ext::StringExt;
+use crate::core::util::string;
 
 pub trait Destination {
     fn dst(self) -> PathBuf;
@@ -21,7 +22,7 @@ impl Destination for String {
                 self.starts_with('/') => self.path(),
             _ if self.starts_with("~/") => home_dir().join(&self[2..]),
             _ if default_parent.is_empty() => self.path(),
-            _ => default_parent.to_string()
+            _ => string(default_parent)
                 .dst()
                 .join(&self),
         }

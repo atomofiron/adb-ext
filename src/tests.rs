@@ -38,7 +38,7 @@ mod tests {
         ];
         let expected = in_exp.iter().map(|(_,it)| it.clone()).collect::<Vec<String>>();
         let output = in_exp.iter().map(|(input, expected)| {
-            let output = input.to_string()
+            let output = input.clone()
                 .dst_with_parent("~/Subpath/")
                 .join("template.png")
                 .to_string();

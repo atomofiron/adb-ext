@@ -62,7 +62,7 @@ pub fn pull_screencasts(params: Params, config: Config) {
 }
 
 fn get_ls_command(sources: &Vec<String>) -> String {
-    let mut command = TOYBOX_LS_LLCD.to_string();
+    let mut command = string(TOYBOX_LS_LLCD);
     for src in sources {
         let slash = if src.ends_with('/') { "" } else { "/" };
         let part = format![" {src}{slash}*"];

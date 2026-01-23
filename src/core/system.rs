@@ -89,7 +89,7 @@ pub fn bin_name() -> String {
 
 pub fn adb_name() -> String {
     #[cfg(unix)]
-    return ADB.to_string();
+    return string(ADB);
     #[cfg(windows)]
     return exe_name(ADB)
 }

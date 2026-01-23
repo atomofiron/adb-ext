@@ -1,13 +1,14 @@
+use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
-use crate::core::ext::{OutputExt, print_no_one, StringExt, VecExt};
-use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::ext::{print_no_one, OutputExt, StringExt, VecExt};
+use crate::core::fix::sudo_fix_on_linux;
 use crate::core::r#const::{ERROR_CODE, SHELL, SUCCESS_CODE};
-use std::env;
-use std::process::{exit, Output};
+use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::util::string;
 use dialoguer::FuzzySelect;
 use itertools::Itertools;
-use crate::core::adb_command::AdbArgs;
-use crate::core::fix::sudo_fix_on_linux;
+use std::env;
+use std::process::{exit, Output};
 
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
@@ -106,7 +107,7 @@ pub fn resolve_device_and_run_args() {
 }
 
 pub fn adb_args_with(device: &AdbDevice, mut args: AdbArgs) -> AdbArgs {
-    args.args.insert(0, ARG_S.to_string());
+    args.args.insert(0, string(ARG_S));
     args.args.insert(1, device.serial.clone());
     return args;
 }
@@ -178,13 +179,13 @@ fn get_description(serial: &String) -> String {
     }
     let stdout = output.stdout();
     let mut properties = stdout.split('\n')
-        .map(|it| it.to_string())
+        .map(|it| string(it))
         .collect::<Vec<String>>();
     let sdk = properties.remove(0).parse::<usize>();
     let version = VERSIONS.get(sdk.clone().unwrap_or(VERSIONS.len())).unwrap_or(&"n/a");
     let version = format!("{version} [{}]", sdk.unwrap_or(0));
 
-    let index = match properties.index_of(&"anime".to_string()) {
+    let index = match properties.index_of(&string("anime")) {
         None => return serial.clone(),
         Some(index) => index,
     };
@@ -228,7 +229,7 @@ fn get_description(serial: &String) -> String {
     let prefix = match vendor {
         Some(vendor) if suitable.is_empty() => vendor,
         Some(vendor) => format!("{vendor}: "),
-        None => "".to_string(),
+        None => string(""),
     };
     return format!("{prefix}{}, serial: {serial}, Android {version}", suitable.join(", "))
 }

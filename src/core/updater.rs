@@ -4,11 +4,12 @@ use crate::core::ext::PathBufExt;
 use crate::core::ext::StringExt;
 use crate::core::r#const::*;
 use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
-#[cfg(unix)]
-use crate::core::system::{env_path, home_dir};
 use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 #[cfg(windows)]
 use crate::core::system::{env_adb_ext_path, PATH};
+#[cfg(unix)]
+use crate::core::system::{env_path, home_dir};
+use crate::core::util::string;
 use itertools::Itertools;
 use std::io::Write;
 #[cfg(windows)]
@@ -108,7 +109,7 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
 ");
     let env_path = env_path();
     fs::write(&env_path, env).unwrap();
-    let current_env_version = env::var("ADB_EXT_VERSION_CODE").unwrap_or("".to_string());
+    let current_env_version = env::var("ADB_EXT_VERSION_CODE").unwrap_or(string(""));
     let mut auto_configure = !current_env_version.is_empty();
     if !auto_configure {
         for startup in [".profile", ".zshrc", ".bashrc", ".config/fish/config.fish"] {
