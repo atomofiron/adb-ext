@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::path::PathBuf;
-use std::process::{Command, exit, Output};
+use std::process::{Command, Output};
 use crate::core::r#const::ERROR_CODE;
 
 const NO_TARGETS: &str = "adb: no devices/emulators found";
@@ -8,22 +8,6 @@ const NO_TARGETS: &str = "adb: no devices/emulators found";
 const NBSP: u8 = 0xA0;
 const BF: u8 = 0xBF;
 const C2: u8 = 0xC2;
-
-pub trait ShortUnwrap<T> {
-    fn short_unwrap(self) -> T;
-}
-
-impl<T> ShortUnwrap<T> for Result<T, String> {
-    fn short_unwrap(self) -> T {
-        match self {
-            Ok(value) => value,
-            Err(message) => {
-                println!("{message}");
-                exit(ERROR_CODE);
-            }
-        }
-    }
-}
 
 pub trait OutputExt {
     fn code(&self) -> i32;

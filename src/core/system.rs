@@ -11,7 +11,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::{fs, io};
 
-const ADB_EXT: &str = "adb-ext";
+pub const ADB_EXT: &str = "adb-ext";
 const ADB_EXT_YAML: &str = "adb-ext.yaml";
 #[cfg(windows)]
 pub const DOT_EXE: &str = ".exe";
@@ -96,7 +96,7 @@ pub fn adb_name() -> String {
 }
 
 #[cfg(windows)]
-pub fn exe_name(name: &str) -> String {
+fn exe_name(name: &str) -> String {
     format!("{name}{DOT_EXE}")
 }
 

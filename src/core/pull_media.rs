@@ -51,14 +51,14 @@ impl Display for Params {
     }
 }
 
-pub fn pull_screenshots(params: Params, config: Config) {
+pub fn pull_screenshots(params: Params, config: &Config) {
     let command = get_ls_command(&config.screenshots.sources);
-    pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), config.screenshots.destination);
+    pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), &config.screenshots.destination);
 }
 
-pub fn pull_screencasts(params: Params, config: Config) {
+pub fn pull_screencasts(params: Params, config: &Config) {
     let command = get_ls_command(&config.screencasts.sources);
-    pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), config.screencasts.destination);
+    pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), &config.screencasts.destination);
 }
 
 fn get_ls_command(sources: &Vec<String>) -> String {
@@ -71,7 +71,7 @@ fn get_ls_command(sources: &Vec<String>) -> String {
     return command;
 }
 
-fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: String) {
+fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: &String) {
     let count = match params {
         Params::Count(_, count) => count,
         Params::Single(..) => 1,

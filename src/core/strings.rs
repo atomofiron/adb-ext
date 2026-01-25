@@ -98,6 +98,14 @@ pub static ADD_INTERPRETER: Label = Label::new(
     "Add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
     "Добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
 );
+pub static INPUT_PARAMETERS_OR_PRESS_ENTER: Label = Label::new(
+    "input parameters or press Enter to exit",
+    "введите параметры или нажмите Enter чтобы выйти",
+);
+pub static DONE_ANOTHER_ONE: Label = Label::new(
+    "it's done! another one?",
+    "готово! ещё что-то?",
+);
 pub static UNKNOWN: Label = Label::new(
     "Unknown",
     "Неизвестно",

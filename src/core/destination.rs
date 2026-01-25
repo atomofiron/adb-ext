@@ -4,15 +4,15 @@ use crate::core::ext::StringExt;
 use crate::core::util::string;
 
 pub trait Destination {
-    fn dst(self) -> PathBuf;
-    fn dst_with_parent(self, default_sub_path: &str) -> PathBuf;
+    fn dst(&self) -> PathBuf;
+    fn dst_with_parent(&self, default_sub_path: &str) -> PathBuf;
 }
 
 impl Destination for String {
 
-    fn dst(self) -> PathBuf { self.dst_with_parent("") }
+    fn dst(&self) -> PathBuf { self.dst_with_parent("") }
 
-    fn dst_with_parent(self, default_parent: &str) -> PathBuf {
+    fn dst_with_parent(&self, default_parent: &str) -> PathBuf {
         match () {
             _ if self == "~" => home_dir(),
             _ if self == "." ||
@@ -24,7 +24,7 @@ impl Destination for String {
             _ if default_parent.is_empty() => self.path(),
             _ => string(default_parent)
                 .dst()
-                .join(&self),
+                .join(self),
         }
     }
 }

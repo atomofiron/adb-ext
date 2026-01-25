@@ -8,9 +8,9 @@ use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 use crate::core::system::{env_adb_ext_path, PATH};
 #[cfg(unix)]
 use crate::core::system::{env_path, home_dir};
+use crate::core::util::get_help;
 #[cfg(unix)]
 use crate::core::util::string;
-use itertools::Itertools;
 use std::io::Write;
 #[cfg(windows)]
 use std::path::PathBuf;
@@ -30,12 +30,11 @@ const SCRIPT_ARGS: [&str; 1] = [SCRIPT_NAME];
 #[cfg(windows)]
 const SCRIPT_ARGS: [&str; 2] = ["/c", SCRIPT_NAME];
 #[cfg(unix)]
-const ENV_VERSION: &str = "4";
+const ENV_VERSION: &str = "5";
 #[cfg(unix)]
 const BOLD: &str = "\x1b[1m";
 #[cfg(unix)]
 const CLEAR: &str = "\x1b[0m";
-const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "bounds", "taps", "pointer", "[f]port|[f]land|[no]accel", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
 
 #[cfg(unix)]
 const SHELL: &str = "sh";
@@ -99,7 +98,7 @@ fn init_env(action: &str) {
 if [[ \":$PATH:\" != *:\"{bin_dir}\":* ]]; then
     export PATH={bin_dir}:$PATH
 fi
-alias adb=adb-ext
+unalias adb 2>/dev/null
 unalias lss 2>/dev/null
 unalias lsc 2>/dev/null
 unalias mss 2>/dev/null
@@ -123,7 +122,7 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
         }
     }
     let sep = format!("{CLEAR}, {BOLD}");
-    println!("{action} {BOLD}{}{CLEAR}", EXAMPLES.iter().join(&sep));
+    println!("{action} {BOLD}{}{CLEAR}", get_help(Some(&sep)));
     if !auto_configure || current_env_version != ENV_VERSION {
         HOWEVER_CONFIGURE.println();
         println!("{BOLD}source {}{CLEAR}", env_path.to_string());
@@ -132,7 +131,7 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
 
 #[cfg(windows)]
 fn init_env(action: &str) {
-    println!("{action} {}", EXAMPLES.iter().join(", "));
+    println!("{action} {}", get_help(Some(", ")));
     if !path_contains(&bin_dir().to_string()) {
         HOWEVER_CONFIGURE.println_formatted(&[&env_adb_ext_path()]);
     }
