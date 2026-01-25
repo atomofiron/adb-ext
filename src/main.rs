@@ -1,4 +1,5 @@
 use crate::core::apks::{run_apk, steal_apk};
+use crate::core::completer::CmdHelper;
 use crate::core::config::Config;
 use crate::core::ext::PrintExt;
 use crate::core::fix::fix_on_linux;
@@ -17,7 +18,8 @@ use crate::core::system::{adb_name, bin_name, history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
 use crate::core::util::{get_help, println, set_sdk, string};
-use rustyline::{error::ReadlineError, DefaultEditor};
+use rustyline::history::DefaultHistory;
+use rustyline::{error::ReadlineError, Editor};
 use std::env;
 use std::env::args;
 use std::path::Path;
@@ -25,6 +27,8 @@ use std::process::ExitCode;
 
 mod core;
 mod tests;
+
+type CmdEditor = Editor<CmdHelper, DefaultHistory>;
 
 enum StartName {
     Adb,
@@ -65,7 +69,8 @@ fn main() -> ExitCode {
     return if args.is_empty() && matches!(name, StartName::AdbExt) {
         println(&get_help(None));
         INPUT_PARAMETERS_OR_EXIT.println();
-        let mut input = DefaultEditor::new().unwrap();
+        let mut input = CmdEditor::new().unwrap();
+        input.set_helper(Some(CmdHelper::from(SUGGESTIONS)));
         let history_path = history_path();
         if history_path.exists() {
             input.load_history(&history_path).unwrap();
@@ -78,7 +83,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn looper_work(input: &mut DefaultEditor, config: &mut Config) -> ExitCode {
+fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
     let mut code: Option<ExitCode> = None;
     loop {
         let previous = code.map(|code| code == ExitCode::SUCCESS);

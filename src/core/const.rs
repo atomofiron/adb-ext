@@ -1,4 +1,5 @@
 
+const DEVICES: &str = "devices";
 pub const SHELL: &str = "shell";
 pub const PULL: &str = "pull";
 pub const INSTALL: &str = "install";
@@ -24,6 +25,9 @@ pub const TAPS: &str = "taps";
 pub const POINTER: &str = "pointer";
 pub const SDK: &str = "sdk";
 pub const FIX: &str = "fix";
+
+pub const HELP: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "bounds", "taps", "pointer", "[f]port|[f]land|[no]accel", "sdk", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
+pub const SUGGESTIONS: &[&str] = &[LSS, LSC, MSS, SHOT, MSC, REC, RECORD, RUN, STEAL, PORT, LAND, FPORT, FLAND, ACCEL, NOACCEL, BOUNDS, TAPS, POINTER, DEVICES, SHELL, PULL, INSTALL];
 
 pub const ADB: &str = "adb";
 pub const PLATFORM_TOOLS: &str = "platform-tools";

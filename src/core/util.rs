@@ -7,13 +7,11 @@ use chrono::Local;
 use itertools::Itertools;
 use crate::core::config::Config;
 use crate::core::ext::OutputExt;
-use crate::core::r#const::NULL;
-
-const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "bounds", "taps", "pointer", "[f]port|[f]land|[no]accel", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
+use crate::core::r#const::{HELP, NULL};
 
 pub fn get_help(separator: Option<&str>) -> String {
     let sep = separator.unwrap_or(", ");
-    EXAMPLES.iter().join(sep)
+    HELP.iter().join(sep)
 }
 
 pub fn string(value: &str) -> String {
