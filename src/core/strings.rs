@@ -105,8 +105,8 @@ pub static UNKNOWN: Label = Label::new(
     "неизвестно",
 );
 pub static SAVED: Label = Label::new(
-    "saved",
-    "сохранено",
+    "saved: {}",
+    "сохранено: {}",
 );
 #[cfg(target_os = "linux")]
 pub static UNKNOWN_ERROR: Label = Label::new(

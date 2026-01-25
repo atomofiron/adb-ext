@@ -5,7 +5,7 @@ use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, PathBufExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH};
+use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH, SAVED};
 use crate::core::system::config_path;
 use crate::core::util::{eprintln, string};
 use regex::Regex;
@@ -33,6 +33,9 @@ pub fn steal_apk(package: String, dst: Option<String>) -> ExitCode {
     let path = &output.stdout().clone()[8..];
     let args = AdbArgs::spawn(&[PULL, path, destination.to_str().unwrap()]);
     let output = run_adb_with(&device, args);
+    if output.status.success() {
+        SAVED.println_formatted(&[&destination.to_string()]);
+    }
     return output.exit_code()
 }
 

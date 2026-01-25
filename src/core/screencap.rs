@@ -33,7 +33,7 @@ pub fn make_screenshot(cmd: String, dst: String, config: &Config) -> ExitCode {
             _ => filter_extra_zero_d(output.stdout),
         };
         fs::write(&dst, bytes).unwrap();
-        println!("{SAVED}: {}", dst.to_string());
+        SAVED.println_formatted(&[&dst.to_string()]);
         config.screenshot_hook()
             .map(|hook| try_run_hook_and_exit(hook, cmd, dst))
             .unwrap_or(code)
