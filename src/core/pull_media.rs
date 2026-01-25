@@ -1,10 +1,10 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{OutputExt, PrintExt, ResultToOption, StrExt, VecExt};
+use crate::core::ext::{OutputExt, PathBufExt, PrintExt, ResultToOption, StrExt, VecExt};
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::strings::{ADD_INTERPRETER, DESTINATION, MEDIAS_NOT_FOUND};
+use crate::core::strings::{ADD_INTERPRETER, MEDIAS_NOT_FOUND, SAVED};
 use crate::core::util::{ensure_parent_exists, null, string};
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
@@ -125,12 +125,11 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         items.reverse();
         let hook = hook_or_none(hook, cmd, dst.clone(), &items);
         pull_args.args.append(&mut items);
-        pull_args.args.push(dst.to_str().unwrap().to_string());
+        pull_args.args.push(dst.to_string());
         let output = run_adb_with(&device, pull_args);
         output.print_out_and_err();
         if output.status.success() {
-            DESTINATION.print();
-            println!("{:?}", dst);
+            SAVED.println_formatted(&[&dst.to_string()]);
         }
         hook.ok_or(ExitCode::SUCCESS)
             .and_then(|mut cmd| {

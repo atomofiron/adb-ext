@@ -70,10 +70,6 @@ pub static NO_PACKAGE_NAME: Label = Label::new(
     "no package name passed",
     "не указано имя пакета",
 );
-pub static DESTINATION: Label = Label::new(
-    "destination: ",
-    "место назначения: ",
-);
 pub static PRESS_ENTER_TO_STOP_REC: Label = Label::new(
     "press Enter to stop recording",
     "нажмите Enter, чтобы остановить запись",

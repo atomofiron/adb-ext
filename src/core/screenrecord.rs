@@ -4,7 +4,7 @@ use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, PathBufExt};
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{adb_args_with, resolve_device, run_adb_with};
-use crate::core::strings::{DESTINATION, PRESS_ENTER_TO_STOP_REC};
+use crate::core::strings::{PRESS_ENTER_TO_STOP_REC, SAVED};
 use crate::core::system::kill;
 use crate::core::taps::{is_taps_on, turn_taps};
 use crate::core::util::{ensure_parent_exists, eprintln, format_file_name, try_run_hook_and_exit};
@@ -56,8 +56,7 @@ pub fn make_screencast(cmd: String, dst: String, config: &Config) -> ExitCode {
     output.print_out_and_err();
     let mut code = output.exit_code();
     if output.status.success() {
-        DESTINATION.print();
-        println!("{}", dst.to_string());
+        SAVED.println_formatted(&[&dst.to_string()]);
         code = config.screencast_hook()
             .map(|hook| try_run_hook_and_exit(hook, cmd, dst))
             .unwrap_or(code)
