@@ -7,79 +7,79 @@ pub const PLACEHOLDER: &str = "{}";
 
 #[cfg(target_os = "linux")]
 pub static NO_DEVICES_FOUND: Label = Label::new(
-    "No devices without permissions found, try again",
-    "Устройств без разрешений не обнаружено, попробуйте снова",
+    "no devices without permissions found, try again",
+    "устройств без разрешений не обнаружено, попробуйте снова",
 );
 #[cfg(target_os = "linux")]
 pub static SUDO_EXPLANATION: Label = Label::new(
-    "To fix the ADB permissions superuser is required",
-    "Чтобы получить доступ к ADB устройства(м), необходимы права суперпользователя",
+    "to fix the ADB permissions superuser is required",
+    "чтобы получить доступ к ADB устройства(м), необходимы права суперпользователя",
 );
 #[cfg(target_os = "linux")]
 pub static RECONNECT_DEVICES: Label = Label::new(
-    "Reconnect device(s) and enjoy!",
-    "Готово, переподключите устройство(а)!",
+    "reconnect device(s) and enjoy!",
+    "готово, переподключите устройство(а)!",
 );
 #[cfg(target_os = "linux")]
 pub static WELL_DONE: Label = Label::new(
-    "Well done, enjoy!",
-    "Готово!",
+    "well done, enjoy!",
+    "готово!",
 );
 #[cfg(not(target_os = "linux"))]
 pub static LINUX_ONLY: Label = Label::new(
-    "Permission resolving is only applicable for Linux",
-    "Исправление разрешений ADB применимо только для Linux",
+    "permission resolving is only applicable for Linux",
+    "исправление разрешений ADB применимо только для Linux",
 );
 pub static INSTALLATION_SUCCEED: Label = Label::new(
-    "Installation succeed, run",
-    "Установка завершена, можете запустить",
+    "installation succeed, run",
+    "установка завершена, можете запустить",
 );
 pub static UPDATE_SUCCEED: Label = Label::new(
-    "Update succeed, run",
-    "Обновление завершена, можете запустить",
+    "update succeed, run",
+    "обновление завершена, можете запустить",
 );
 pub static SYMLINK_FAIL: Label = Label::new(
-    "Symlink creation failed: ",
-    "Ошибка при создании симлинка: ",
+    "symlink creation failed: ",
+    "ошибка при создании симлинка: ",
 );
 pub static NO_ADB: Label = Label::new(
-    "ADB wasn't recognized",
-    "ADB не обнаружен",
+    "aDB wasn't recognized",
+    "aDB не обнаружен",
 );
 pub static NO_BUILD_TOOLS: Label = Label::new(
-    "Specify a path to the Android SDK or Build Tools in ",
-    "Укажите путь до Android SDK или Build Tools в ",
+    "specify a path to the Android SDK or Build Tools in ",
+    "укажите путь до Android SDK или Build Tools в ",
 );
 pub static NO_FILE: Label = Label::new(
-    "No such file",
-    "Такого файла нет",
+    "no such file",
+    "такого файла нет",
 );
 pub static NO_PATH: Label = Label::new(
-    "No path specified",
-    "Путь не указан",
+    "no path specified",
+    "путь не указан",
 );
 pub static SELECT_DEVICE: Label = Label::new(
-    "Select a device",
-    "Выберите устройство",
+    "select a device",
+    "выберите устройство",
 );
 pub static MEDIAS_NOT_FOUND: Label = Label::new(
-    "Screenshots/casts were not found",
-    "Скриншоты/записи не найдены",
+    "screenshots/casts were not found",
+    "скриншоты/записи не найдены",
 );
 pub static NO_PACKAGE_NAME: Label = Label::new(
-    "No package name passed",
-    "Не указано имя пакета",
+    "no package name passed",
+    "не указано имя пакета",
 );
 pub static DESTINATION: Label = Label::new(
-    "Destination: ",
-    "Место назначения: ",
+    "destination: ",
+    "место назначения: ",
 );
 pub static PRESS_ENTER_TO_STOP_REC: Label = Label::new(
-    "Press Enter to stop recording",
-    "Нажмите Enter, чтобы остановить запись",
+    "press Enter to stop recording",
+    "нажмите Enter, чтобы остановить запись",
 );
 pub static UNAUTHORIZED_BY_DEVICE: Label = Label::new(
-    "Unauthorized by the device",
+    "unauthorized by the device",
     "на устройстве не дано разрешение",
 );
 #[cfg(unix)]
@@ -93,7 +93,7 @@ pub static HOWEVER_CONFIGURE: Label = Label::new(
     "... однако, для начала добавьте {} в самый верх PATH и перезапустить коммандрую строку",
 );
 pub static ADD_INTERPRETER: Label = Label::new(
-    "Add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
+    "add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
     "добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
 );
 pub static INPUT_PARAMETERS_OR_EXIT: Label = Label::new(
@@ -101,7 +101,7 @@ pub static INPUT_PARAMETERS_OR_EXIT: Label = Label::new(
     "введите параметры или 'exit', чтобы выйти",
 );
 pub static UNKNOWN: Label = Label::new(
-    "Unknown",
+    "unknown",
     "неизвестно",
 );
 pub static SAVED: Label = Label::new(
@@ -110,21 +110,21 @@ pub static SAVED: Label = Label::new(
 );
 #[cfg(target_os = "linux")]
 pub static UNKNOWN_ERROR: Label = Label::new(
-    "Unknown error",
-    "Неизвестная ошибка",
+    "unknown error",
+    "неизвестная ошибка",
 );
 #[cfg(target_os = "linux")]
 pub static SOMETHING_WRONG: Label = Label::new(
-    "Something went wrong(",
-    "Что-то пошло не так(",
+    "something went wrong(",
+    "что-то пошло не так(",
 );
 pub static CANCEL: Label = Label::new(
-    "Cancel",
-    "Отмена",
+    "cancel",
+    "отмена",
 );
 pub static ERROR: Label = Label::new(
-    "Error",
-    "Ошибка",
+    "error",
+    "ошибка",
 );
 
 pub enum Language {
