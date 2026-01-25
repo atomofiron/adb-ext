@@ -3,7 +3,7 @@ use crate::core::ext::OutputExt;
 use crate::core::r#const::SHELL;
 use crate::core::selector::{resolve_device, run_adb_with};
 use std::fmt::{Display, Formatter};
-use std::process::exit;
+use std::process::ExitCode;
 
 const ACCELEROMETER: &str = "settings put system accelerometer_rotation";
 const LOCKED: u8 = 0;
@@ -51,17 +51,20 @@ impl Display for Orientation {
     }
 }
 
-pub fn orientation(orientation: Orientation) {
+pub fn orientation(orientation: Orientation) -> ExitCode {
     let command = match orientation {
         Orientation::Accelerometer(_) => format!("{orientation}"),
         _ => format!("{} && {orientation}", Orientation::accelerometer(false)),
     };
     let args = &[SHELL, command.as_str()];
-    let device = resolve_device();
+    let device = match resolve_device() {
+        Ok(device) => device,
+        Err(code) => return code,
+    };
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if !output.status.success() {
         output.print_err();
-        exit(output.code());
     }
+    return output.exit_code()
 }

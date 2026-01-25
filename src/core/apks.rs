@@ -1,27 +1,29 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;
 use crate::core::config::Config;
+use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, PathBufExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH};
-use crate::core::util::string;
+use crate::core::system::config_path;
+use crate::core::util::{eprintln, string};
 use regex::Regex;
 use std::fs;
-use std::ops::Add;
-use std::path::Path;
-use std::process::{exit, Command, Output};
-use crate::core::destination::Destination;
-use crate::core::system::config_path;
+use std::path::{Path, PathBuf};
+use std::process::{Command, ExitCode, Output};
 
-pub fn steal_apk(package: String, dst: Option<String>) {
+pub fn steal_apk(package: String, dst: Option<String>) -> ExitCode {
     let pm_command = format!("pm path {package}");
     let args = AdbArgs::run(&[SHELL, pm_command.as_str()]);
-    let device = resolve_device();
+    let device = match resolve_device() {
+        Ok(device) => device,
+        Err(code) => return code,
+    };
     let output = run_adb_with(&device, args);
     if !output.status.success() {
         output.print_err();
-        exit(output.code());
+        return output.exit_code()
     }
     let destination = dst
         .unwrap_or(string(""))
@@ -31,45 +33,51 @@ pub fn steal_apk(package: String, dst: Option<String>) {
     let path = &output.stdout().clone()[8..];
     let args = AdbArgs::spawn(&[PULL, path, destination.to_str().unwrap()]);
     let output = run_adb_with(&device, args);
-    exit(output.code());
+    return output.exit_code()
 }
 
-pub fn run_apk(apk: String, config: &Config) {
+pub fn run_apk(apk: String, config: &Config)-> ExitCode {
     if apk.is_empty() {
-        NO_PATH.exit_err();
+        NO_PATH.eprintln();
+        return ExitCode::FAILURE;
     }
     if !Path::new(&apk).exists() {
-        NO_FILE.exit_err();
+        NO_FILE.eprintln();
+        return ExitCode::FAILURE;
     }
-    let aapt = get_aapt(&config);
-    let device = resolve_device();
+    let aapt = match get_aapt(&config) {
+        Ok(path) => path,
+        Err(err) => {
+            eprintln(&err);
+            return ExitCode::FAILURE
+        },
+    };
+    let device = match resolve_device() {
+        Ok(device) => device,
+        Err(code) => return code,
+    };
     let output = install(&device, &apk);
     if !output.status.success() {
-        exit(output.code());
+        return output.exit_code()
     }
     let (package, activity) = get_package_activity(aapt, &apk);
     let output = launch(&device, package, activity);
-    exit(output.code());
+    return output.exit_code()
 }
 
-fn get_aapt(config: &Config) -> String {
+fn get_aapt(config: &Config) -> Result<PathBuf, String> {
     let path = match config.build_tools() {
-        None => {
-            println!("{NO_BUILD_TOOLS} {}", config_path().to_string());
-            exit(0);
-        },
+        None => return Err(format!("{NO_BUILD_TOOLS} {}", config_path().to_string())),
         Some(path) => path,
     };
     let pattern = Regex::new(r"/\d+\.\d\.\d$").unwrap();
     return fs::read_dir(&path).unwrap()
-        .map(|it| it.unwrap().path().display().to_string())
-        .filter(|it| pattern.is_match(it))
-        .collect::<Vec<String>>()
-        .first()
-        .unwrap_or_else(|| {
-            println!("{NO_BUILD_TOOLS} {}", config_path().to_string());
-            exit(0);
-        }).clone().add("/aapt");
+        .map(|it| it.unwrap().path())
+        .filter(|it| pattern.is_match(&it.to_string()))
+        .collect::<Vec<PathBuf>>()
+        .first_mut()
+        .ok_or_else(|| format!("{NO_BUILD_TOOLS} {}", config_path().to_string()))
+        .map(|it| it.join("/aapt"));
 }
 
 fn install(device: &AdbDevice, apk: &String) -> Output {
@@ -77,7 +85,7 @@ fn install(device: &AdbDevice, apk: &String) -> Output {
     return run_adb_with(&device, args);
 }
 
-fn get_package_activity(aapt: String, apk: &String) -> (String, String) {
+fn get_package_activity(aapt: PathBuf, apk: &String) -> (String, String) {
     let text = Command::new(aapt)
         .arg("d").arg("xmltree").arg(apk).arg("AndroidManifest.xml")
         .output().unwrap()

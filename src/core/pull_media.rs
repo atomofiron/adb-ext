@@ -1,16 +1,16 @@
-use std::cmp::Ordering;
-use std::fmt::{Display, Formatter};
-use std::{fs, io};
-use std::path::{Path, PathBuf};
 use crate::core::adb_command::AdbArgs;
-use crate::core::ext::{OutputExt, ResultToOption, StrExt, VecExt};
-use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::r#const::{PULL, SHELL};
-use std::process::{Child, Command, exit};
 use crate::core::config::Config;
 use crate::core::destination::Destination;
+use crate::core::ext::{OutputExt, PrintExt, ResultToOption, StrExt, VecExt};
+use crate::core::r#const::{PULL, SHELL};
+use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::{ADD_INTERPRETER, DESTINATION, MEDIAS_NOT_FOUND};
 use crate::core::util::{ensure_parent_exists, null, string};
+use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
+use std::path::{Path, PathBuf};
+use std::process::{Child, Command, ExitCode};
+use std::{fs, io};
 
 const TOYBOX_LS_LLCD: &str = "toybox ls -llcd";
 const PICS: &[&str; 3] = &[".png", ".jpg", ".jpeg"];
@@ -51,14 +51,14 @@ impl Display for Params {
     }
 }
 
-pub fn pull_screenshots(params: Params, config: &Config) {
+pub fn pull_screenshots(params: Params, config: &Config) -> ExitCode {
     let command = get_ls_command(&config.screenshots.sources);
-    pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), &config.screenshots.destination);
+    return pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), &config.screenshots.destination)
 }
 
-pub fn pull_screencasts(params: Params, config: &Config) {
+pub fn pull_screencasts(params: Params, config: &Config) -> ExitCode {
     let command = get_ls_command(&config.screencasts.sources);
-    pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), &config.screencasts.destination);
+    return pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), &config.screencasts.destination)
 }
 
 fn get_ls_command(sources: &Vec<String>) -> String {
@@ -71,28 +71,32 @@ fn get_ls_command(sources: &Vec<String>) -> String {
     return command;
 }
 
-fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: &String) {
+fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: &String) -> ExitCode {
     let count = match params {
         Params::Count(_, count) => count,
         Params::Single(..) => 1,
     };
     if count <= 0 {
-        return
+        return ExitCode::FAILURE;
     }
-    let device = resolve_device();
+    let device = match resolve_device() {
+        Ok(device) => device,
+        Err(code) => return code,
+    };
     let output = run_adb_with(&device, AdbArgs::run(args));
     let mut items = output.stdout().split('\n')
         .into_iter()
         .map(|it| splitn_by(it, PART_MIN_COUNT, ' '))
         .filter_map(|it| as_item_or_none(exts, it))
         .collect::<Vec<Item>>();
-    if items.is_empty() {
+    return if items.is_empty() {
         let err = output.stderr();
         if err.is_empty() {
             MEDIAS_NOT_FOUND.println();
+            ExitCode::FAILURE
         } else {
             output.print_err();
-            exit(output.code());
+            output.exit_code()
         }
     } else {
         items.sort();
@@ -128,10 +132,15 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
             DESTINATION.print();
             println!("{:?}", dst);
         }
-        let status = hook
-            .map(|mut it| check_exec_error(it.spawn()).wait().unwrap())
-            .unwrap_or(output.status);
-        exit(status.code().unwrap());
+        hook.ok_or(ExitCode::SUCCESS)
+            .and_then(|mut cmd| {
+                check_exec_error(cmd.spawn()).and_then(|child| child.wait_with_output()).map_err(|e| { 
+                    e.eprintln();
+                    ExitCode::FAILURE
+                })
+            })
+            .unwrap_or(output)
+            .exit_code()
     }
 }
 
@@ -198,11 +207,13 @@ fn splitn_by(str: &str, limit: usize, sep: char) -> Vec<String> {
     return parts;
 }
 
-fn check_exec_error(child: io::Result<Child>) -> Child {
-    child.unwrap_or_else(|err| match () {
-        _ if format!("{err}").starts_with(EXEC_ERROR) => ADD_INTERPRETER.exit_err(),
-        _ => panic!("{err}"),
-    })
+fn check_exec_error(child: io::Result<Child>) -> io::Result<Child> {
+    if let Err(err) = &child {
+        if err.to_string().starts_with(EXEC_ERROR) {
+            ADD_INTERPRETER.value().to_string();
+        }
+    }
+    return child
 }
 
 struct Item {

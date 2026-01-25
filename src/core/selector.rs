@@ -1,22 +1,20 @@
+use std::os::unix::prelude::ExitStatusExt;
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{print_no_one, OutputExt, StringExt, VecExt};
 use crate::core::fix::sudo_fix_on_linux;
-use crate::core::r#const::{ERROR_CODE, SHELL, SUCCESS_CODE};
+use crate::core::r#const::{ERROR_CODE, SHELL};
 use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
-use crate::core::util::string;
+use crate::core::util::{failure, string};
 use dialoguer::FuzzySelect;
 use itertools::Itertools;
-use std::env;
-use std::process::{exit, Output};
-use crate::core::system::bin_name;
+use std::process::{ExitCode, ExitStatus, Output};
 
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
 const ARG_S: &str = "-s";
-const VERSION: &str = "--version";
 const GETPROPS: &str = "
 getprop ro.build.version.sdk;
 
@@ -86,24 +84,22 @@ const DEVICE_COMMANDS: [&str; 19] = [
     "detach",
 ];
 
-
-pub fn resolve_device_and_run_args() {
-    let mut all_args = env::args().collect::<Vec<String>>();
-    let program = all_args.remove(0);
-    let args = AdbArgs::spawn(all_args.as_slice());
+pub fn resolve_device_and_run_args(args: &[String]) -> ExitCode {
+    let args = AdbArgs::spawn(args);
     let first = match args.args.first() {
-        None => exit(run_adb(args).code()),
+        None => return run_adb(args).exit_code(),
         Some(first) => first,
     };
-    if first == VERSION && program.ends_with(&bin_name()) {
-        println!("{} v{}", bin_name(), env!("CARGO_PKG_VERSION"));
-        return;
-    }
-    let output = match DEVICE_COMMANDS.contains(&first.as_str()) {
-        true => run_adb_with(&resolve_device(), args),
-        false => run_adb(args),
+    let output = if DEVICE_COMMANDS.contains(&first.as_str()) {
+        let device = match resolve_device() {
+            Ok(device) => device,
+            Err(code) => return code,
+        };
+        run_adb_with(&device, args)
+    } else {
+        run_adb(args)
     };
-    exit(output.code());
+    return output.exit_code()
 }
 
 pub fn adb_args_with(device: &AdbDevice, mut args: AdbArgs) -> AdbArgs {
@@ -133,21 +129,21 @@ pub fn fetch_adb_devices() -> Vec<AdbDevice> {
         }).collect::<Vec<AdbDevice>>();
 }
 
-pub fn resolve_device() -> AdbDevice {
+pub fn resolve_device() -> Result<AdbDevice, ExitCode> {
     let mut devices = fetch_adb_devices();
     let device = match () {
         _ if devices.is_empty() => {
             print_no_one();
-            exit(ERROR_CODE);
+            return failure();
         },
         _ if devices.len() == 1 => devices.remove(0),
         _ => ask_for_device(devices),
     };
-    if device.no_permissions && sudo_fix_on_linux(Some(device.serial.clone())) != SUCCESS_CODE {
+    if device.no_permissions && !sudo_fix_on_linux(Some(device.serial.clone())) {
         ERROR.println();
-        exit(ERROR_CODE);
+        return failure();
     }
-    return device;
+    return Ok(device);
 }
 
 fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
@@ -167,7 +163,7 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
         .interact()
         .unwrap();
     if selection >= devices.len() {
-        exit(SUCCESS_CODE);
+        panic!("wtf");
     }
     return devices.remove(selection);
 }
@@ -235,13 +231,22 @@ fn get_description(serial: &String) -> String {
 }
 
 fn run_adb(args: AdbArgs) -> Output {
-    if args.interactive {
+    let interactive = args.interactive;
+    let mut command = match args.command() {
+        Ok(v) => v,
+        Err(e) => return Output {
+            status: ExitStatus::from_raw(ERROR_CODE),
+            stdout: vec![],
+            stderr: e.to_string().into_bytes(),
+        }
+    };
+    if interactive {
         Output {
-            status: args.command().spawn().unwrap().wait().unwrap(),
+            status: command.spawn().unwrap().wait().unwrap(),
             stdout: vec![],
             stderr: vec![],
         }
     } else {
-        args.command().output().unwrap()
+        command.output().unwrap()
     }
 }

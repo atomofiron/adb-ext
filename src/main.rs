@@ -8,7 +8,7 @@ use crate::core::r#const::*;
 use crate::core::screencap::make_screenshot;
 use crate::core::screenrecord::make_screencast;
 use crate::core::selector::resolve_device_and_run_args;
-use crate::core::strings::{Language, DONE_ANOTHER_ONE, INPUT_PARAMETERS_OR_PRESS_ENTER, NO_PACKAGE_NAME};
+use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT, NO_PACKAGE_NAME};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
 use crate::core::updater::{deploy, update};
@@ -17,6 +17,7 @@ use std::env;
 use std::env::args;
 use std::io::stdin;
 use std::path::Path;
+use std::process::ExitCode;
 use crate::core::pointer::toggle_pointer;
 use crate::core::system::{adb_name, bin_name, ADB_EXT};
 use crate::core::taps::toggle_taps;
@@ -50,7 +51,7 @@ enum Feature {
     Sdk(Option<String>),
 }
 
-fn main() {
+fn main() -> ExitCode {
     if let Ok(true) = env::var("LANG").map(|lang| lang.starts_with("ru")) {
         Language::set_language(Language::Ru);
     }
@@ -64,37 +65,53 @@ fn main() {
     }
     if args.is_empty() && matches!(name, StartName::AdbExt) {
         println(&get_help(None));
-        INPUT_PARAMETERS_OR_PRESS_ENTER.println();
-        looped_work(&mut config);
-    } else {
-        work(args, &mut config);
-    }
-}
-
-fn looped_work(config: &mut Config) {
-    print!("{ADB_EXT}> ");
-    print_the_fuck_out();
-    let mut line = String::new();
-    stdin().read_line(&mut line).unwrap();
-    let trimmed = line.trim();
-    if !trimmed.is_empty() {
-        let args = shell_words::split(trimmed)
-            .unwrap();
-        if work(args, config) {
-            DONE_ANOTHER_ONE.println();
+        INPUT_PARAMETERS_OR_EXIT.println();
+        let mut code: Option<ExitCode> = None;
+        loop {
+            let previous = code.map(|code| code == ExitCode::SUCCESS);
+            match ask_for_input(previous, &mut config) {
+                Some(c) => code = Some(c),
+                None => break code.unwrap_or(ExitCode::SUCCESS),
+            }
         }
-        looped_work(config);
+    } else {
+        return work(args, &mut config)
     }
 }
 
-fn work(args: Vec<String>, config: &mut Config) -> bool {
-    let feature = match match_arg(args) {
+fn ask_for_input(previous: Option<bool>, config: &mut Config) -> Option<ExitCode> {
+    let mut line = String::new();
+    let mut trimmed = "";
+    while trimmed.is_empty() {
+        match previous {
+            None => print!("{ADB_EXT}> "),
+            Some(true) => print!("✔ {ADB_EXT}> "),
+            Some(false) => print!("✘ {ADB_EXT}> "),
+        }
+        print_the_fuck_out();
+        line.clear();
+        stdin().read_line(&mut line).unwrap();
+        trimmed = line.trim();
+    }
+    match trimmed {
+        "exit" | "quit" => None,
+        _ => {
+            let args = shell_words::split(trimmed)
+                .unwrap();
+            let code = work(args, config);
+            return Some(code)
+        }
+    }
+}
+
+fn work(args: Vec<String>, config: &mut Config) -> ExitCode {
+    let feature = match match_arg(&args) {
         Some(feature) => feature,
-        None => return false,
+        None => return ExitCode::SUCCESS,
     };
-    match feature {
+    return match feature {
         Feature::FixPermission(serial) => fix_on_linux(serial),
-        Feature::RunAdbWithArgs => resolve_device_and_run_args(),
+        Feature::RunAdbWithArgs => resolve_device_and_run_args(args.as_slice()),
         Feature::RunApk(apk) => run_apk(apk, config),
         Feature::LastScreenShots(params) => pull_screenshots(params, config),
         Feature::LastScreenCasts(params) => pull_screencasts(params, config),
@@ -109,7 +126,6 @@ fn work(args: Vec<String>, config: &mut Config) -> bool {
         Feature::Pointer => toggle_pointer(),
         Feature::Sdk(path) => set_sdk(path, config),
     }
-    return true;
 }
 
 fn start_name(value: Option<&String>) -> StartName {
@@ -134,7 +150,7 @@ fn start_name(value: Option<&String>) -> StartName {
     }
 }
 
-fn match_arg(args: Vec<String>) -> Option<Feature> {
+fn match_arg(args: &Vec<String>) -> Option<Feature> {
     let first = args.get(0)
         .unwrap_or(&string(""))
         .to_ascii_lowercase();
@@ -163,9 +179,13 @@ fn match_arg(args: Vec<String>) -> Option<Feature> {
         POINTER => Feature::Pointer,
         SDK => Feature::Sdk(args.get(1).cloned()),
         "shit" => {
-            println!("💩");
+            println("💩");
             return None
         },
+        "--version" => {
+            println!("{} v{}", bin_name(), env!("CARGO_PKG_VERSION"));
+            return None
+        }
         _ => Feature::RunAdbWithArgs,
     };
     return Some(feature)

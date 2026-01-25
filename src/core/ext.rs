@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::{Command, ExitCode, Output};
 use crate::core::r#const::ERROR_CODE;
 
 const NO_TARGETS: &str = "adb: no devices/emulators found";
@@ -10,7 +10,7 @@ const BF: u8 = 0xBF;
 const C2: u8 = 0xC2;
 
 pub trait OutputExt {
-    fn code(&self) -> i32;
+    fn exit_code(&self) -> ExitCode;
     fn stdout(&self) -> String;
     fn stderr(&self) -> String;
     fn print_out(&self);
@@ -19,8 +19,9 @@ pub trait OutputExt {
 }
 
 impl OutputExt for Output {
-    fn code(&self) -> i32 {
-        self.status.code().unwrap_or(ERROR_CODE)
+    fn exit_code(&self) -> ExitCode {
+        let code = self.status.code().unwrap_or(ERROR_CODE) & 255;
+        ExitCode::from(code as u8)
     }
     fn stdout(&self) -> String {
         self.stdout.fix_nbsp_and_trim()
@@ -61,6 +62,17 @@ impl Trim for Vec<u8> {
             0 => String::from_utf8_lossy(self).trim().to_string(),
             count => String::from_utf8_lossy(&fix_nbsp(self, count)).trim().to_string(),
         }
+    }
+}
+
+pub trait PrintExt {
+    fn eprintln(&self);
+}
+
+impl PrintExt for std::io::Error {
+
+    fn eprintln(&self) {
+        eprintln!("{}", self);
     }
 }
 
@@ -214,7 +226,8 @@ impl OptionArg for Command {
 
 pub trait OptionExt<T> {
     fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
-    fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T>;
+    fn if_some<F>(self, f: F) -> Option<T> where F: FnOnce(&T);
+    fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce();
 }
 
 impl<T> OptionExt<T> for Option<T> {
@@ -225,11 +238,19 @@ impl<T> OptionExt<T> for Option<T> {
             _ => None,
         }
     }
-    fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T> {
-        match self {
-            None => f(),
-            Some(_) => self,
+    fn if_some<F>(self, f: F) -> Option<T> where F: FnOnce(&T) {
+        match &self {
+            Some(value) => f(value),
+            None => (),
         }
+        return self
+    }
+    fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce() {
+        match &self {
+            None => f(),
+            Some(_) => (),
+        }
+        return self
     }
 }
 

@@ -1,7 +1,5 @@
-use crate::core::r#const::ERROR_CODE;
 use crate::core::util::print_the_fuck_out;
 use std::fmt::{Display, Formatter};
-use std::process::exit;
 
 static mut LANGUAGE: Language = Language::En;
 
@@ -82,7 +80,7 @@ pub static PRESS_ENTER_TO_STOP_REC: Label = Label::new(
 );
 pub static UNAUTHORIZED_BY_DEVICE: Label = Label::new(
     "Unauthorized by the device",
-    "На устройстве не дано разрешение",
+    "на устройстве не дано разрешение",
 );
 #[cfg(unix)]
 pub static HOWEVER_CONFIGURE: Label = Label::new(
@@ -96,23 +94,19 @@ pub static HOWEVER_CONFIGURE: Label = Label::new(
 );
 pub static ADD_INTERPRETER: Label = Label::new(
     "Add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
-    "Добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
+    "добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
 );
-pub static INPUT_PARAMETERS_OR_PRESS_ENTER: Label = Label::new(
-    "input parameters or press Enter to exit",
-    "введите параметры или нажмите Enter чтобы выйти",
-);
-pub static DONE_ANOTHER_ONE: Label = Label::new(
-    "it's done! another one?",
-    "готово! ещё что-то?",
+pub static INPUT_PARAMETERS_OR_EXIT: Label = Label::new(
+    "input parameters or 'exit' to exit",
+    "введите параметры или 'exit', чтобы выйти",
 );
 pub static UNKNOWN: Label = Label::new(
     "Unknown",
-    "Неизвестно",
+    "неизвестно",
 );
 pub static SAVED: Label = Label::new(
-    "Saved",
-    "Сохранено",
+    "saved",
+    "сохранено",
 );
 #[cfg(target_os = "linux")]
 pub static UNKNOWN_ERROR: Label = Label::new(
@@ -184,9 +178,8 @@ impl Label<'_> {
         }
         println!("{value}");
     }
-    pub fn exit_err(&self) -> ! {
-        println!("{}", self);
-        exit(ERROR_CODE);
+    pub fn eprintln(&self) {
+        eprintln!("{}", self);
     }
 }
 

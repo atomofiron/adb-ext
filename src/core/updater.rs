@@ -1,4 +1,4 @@
-use crate::core::ext::PathBufExt;
+use crate::core::ext::{OutputExt, PathBufExt};
 #[cfg(windows)]
 use crate::core::ext::StringExt;
 use crate::core::r#const::*;
@@ -14,7 +14,7 @@ use crate::core::util::string;
 use std::io::Write;
 #[cfg(windows)]
 use std::path::PathBuf;
-use std::process::{exit, Command};
+use std::process::{Command, ExitCode};
 use std::{env, fs};
 
 #[cfg(unix)]
@@ -41,7 +41,7 @@ const SHELL: &str = "sh";
 #[cfg(windows)]
 const SHELL: &str = "cmd";
 
-pub fn update() {
+pub fn update() -> ExitCode {
     let bytes = reqwest::blocking::get(SCRIPT_URL).unwrap()
         .bytes().unwrap();
     let mut file = fs::OpenOptions::new()
@@ -50,15 +50,14 @@ pub fn update() {
         .append(false)
         .open(SCRIPT_NAME).unwrap();
     file.write(&bytes).unwrap();
-    let code = Command::new(SHELL)
+    return Command::new(SHELL)
         .args(SCRIPT_ARGS)
         .spawn().unwrap()
-        .wait().unwrap()
-        .code().unwrap();
-    exit(code);
+        .wait_with_output().unwrap()
+        .exit_code()
 }
 
-pub fn deploy() {
+pub fn deploy() -> ExitCode {
     let bin_dir = bin_dir();
     let bin_path = bin_path();
 
@@ -87,6 +86,7 @@ pub fn deploy() {
         );
     }
     init_env(action);
+    return ExitCode::SUCCESS
 }
 
 #[cfg(unix)]

@@ -117,7 +117,7 @@ impl Config {
             ADB_PATH = self.platform_tools()
                 .map(|it| it.join(ADB))
                 .take_some_if(|it| it.is_file())
-                .if_none(|| {
+                .or_else(|| {
                     let adb_name = adb_name();
                     let platform_adb = PLATFORM_TOOLS.path().join(&adb_name);
                     let paths = which::which_all(&adb_name)

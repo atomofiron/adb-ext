@@ -7,18 +7,22 @@ use crate::core::selector::{resolve_device, run_adb_with};
 use crate::core::strings::SAVED;
 use crate::core::util::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
 use std::fs;
-use std::process::exit;
+use std::process::ExitCode;
 
 const SCREENCAP_P: &str = "screencap -p";
 const OD: u8 = 0x0D;
 const OA: u8 = 0x0A;
 
-pub fn make_screenshot(cmd: String, dst: String, config: &Config) {
-    let device = resolve_device();
+pub fn make_screenshot(cmd: String, dst: String, config: &Config) -> ExitCode {
+    let device = match resolve_device() {
+        Ok(device) => device,
+        Err(code) => return code,
+    };
     let args = &[SHELL, SCREENCAP_P];
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if output.status.success() {
+        let code = output.exit_code();
         let dst = dst
             .dst_with_parent(&config.screenshots.destination)
             .join(format_file_name(&config.screenshots.name));
@@ -30,11 +34,12 @@ pub fn make_screenshot(cmd: String, dst: String, config: &Config) {
         };
         fs::write(&dst, bytes).unwrap();
         println!("{SAVED}: {}", dst.to_string());
-        let hook = config.screenshot_hook();
-        try_run_hook_and_exit(hook, cmd, dst);
+        config.screenshot_hook()
+            .map(|hook| try_run_hook_and_exit(hook, cmd, dst))
+            .unwrap_or(code)
     } else {
         output.print_err();
-        exit(output.code());
+        return output.exit_code()
     }
 }
 

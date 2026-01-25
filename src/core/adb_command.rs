@@ -18,13 +18,13 @@ impl AdbArgs {
         let args = args.iter().map(ToString::to_string).collect::<Vec<String>>();
         AdbArgs { args, interactive }
     }
-    pub fn command(self) -> Command {
+    pub fn command(self) -> Result<Command, String> {
         let mut adb = match Config::get_adb_path() {
-            None => NO_ADB.exit_err(),
+            None => return Err(NO_ADB.value().to_string()),
             Some(path) => Command::new(path),
         };
         adb.args(self.args);
-        return adb
+        return Ok(adb)
     }
 }
 

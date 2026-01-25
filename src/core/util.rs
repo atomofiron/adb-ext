@@ -2,11 +2,12 @@ use std::fs::create_dir_all;
 use std::io;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Command, exit};
+use std::process::{Command, ExitCode};
 use chrono::Local;
 use itertools::Itertools;
 use crate::core::config::Config;
-use crate::core::r#const::{ERROR_CODE, NULL};
+use crate::core::ext::OutputExt;
+use crate::core::r#const::NULL;
 
 const EXAMPLES: &[&str] = &["lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]", "bounds", "taps", "pointer", "[f]port|[f]land|[no]accel", "adb run app.apk", "adb steal app.package.name", "adb-ext update"];
 
@@ -23,8 +24,16 @@ pub fn null() -> String {
     string(NULL)
 }
 
+pub fn failure<T>() -> Result<T, ExitCode> {
+    Err(ExitCode::FAILURE)
+}
+
 pub fn println(message: &str) {
     println!("{}", message)
+}
+
+pub fn eprintln(message: &str) {
+    eprintln!("{}", message)
 }
 
 pub fn print_the_fuck_out() {
@@ -36,19 +45,14 @@ pub fn ensure_parent_exists(path: &PathBuf) {
     create_dir_all(parent).unwrap();
 }
 
-pub fn try_run_hook_and_exit(hook: Option<PathBuf>, cmd: String, arg: PathBuf) {
-    if let Some(hook) = hook {
-        Command::new(hook).arg(cmd).arg(arg)
-            .spawn().unwrap()
-            .wait()
-            .map_or_else(
-                |_| exit(ERROR_CODE),
-                |it| exit(it.code().unwrap_or(ERROR_CODE))
-            )
-    }
+pub fn try_run_hook_and_exit(hook: PathBuf, cmd: String, arg: PathBuf) -> ExitCode {
+    Command::new(hook).arg(cmd).arg(arg)
+        .spawn().unwrap()
+        .wait_with_output().unwrap()
+        .exit_code()
 }
 
-pub fn set_sdk(path: Option<String>, config: &mut Config) {
+pub fn set_sdk(path: Option<String>, config: &mut Config) -> ExitCode {
     if let Some(_) = path {
         config.environment.sdk = path;
         config.write();
@@ -58,6 +62,7 @@ pub fn set_sdk(path: Option<String>, config: &mut Config) {
             .unwrap_or(NULL);
         println(path);
     }
+    return ExitCode::SUCCESS
 }
 
 pub fn format_file_name(name: &String) -> String {
