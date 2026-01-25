@@ -3,16 +3,32 @@ extern crate dirs;
 use crate::core::ext::PathBufExt;
 #[cfg(windows)]
 use crate::core::ext::StrExt;
-use crate::core::r#const::ADB;
+use crate::core::r#const::{ADB, ERROR_CODE};
 #[cfg(unix)]
 use crate::core::util::string;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
+#[cfg(windows)]
+use std::os::windows::process::ExitStatusExt;
 use std::path::PathBuf;
+use std::process::ExitStatus;
 use std::{fs, io};
 
 pub const ADB_EXT: &str = "adb-ext";
+#[cfg(unix)]
 const ADB_EXT_YAML: &str = "adb-ext.yaml";
+#[cfg(unix)]
+const DOT_CONFIG: &str = ".config";
+#[cfg(unix)]
+const DOT_LOCAL: &str = ".local";
+#[cfg(unix)]
+const ADB_EXT_HISTORY_TXT: &str = "adb-ext-history.txt";
+#[cfg(windows)]
+const CONFIG_YAML: &str = "config.yaml";
+#[cfg(windows)]
+const HISTORY_TXT: &str = "history.txt";
 #[cfg(windows)]
 pub const DOT_EXE: &str = ".exe";
 #[cfg(windows)]
@@ -69,7 +85,7 @@ pub fn make_executable(path: PathBuf) -> io::Result<PathBuf> {
 #[cfg(unix)]
 pub fn bin_dir() -> PathBuf {
     home_dir()
-        .join(".local")
+        .join(DOT_LOCAL)
         .join("bin")
 }
 
@@ -110,24 +126,41 @@ pub fn bin_path() -> PathBuf {
     bin_dir().join(bin_name())
 }
 
+#[cfg(windows)]
+fn data_path() -> PathBuf {
+    dirs::config_dir()
+        .expect("no AppData/Roaming")
+        .join(ADB_EXT)
+}
+
 #[cfg(unix)]
 pub fn config_path() -> PathBuf {
     home_dir()
-        .join(".config")
+        .join(DOT_CONFIG)
         .join(ADB_EXT_YAML)
 }
 
 #[cfg(windows)]
 pub fn config_path() -> PathBuf {
-    dirs::config_dir()
-        .expect("no AppData/Roaming")
-        .join(ADB_EXT_YAML)
+    data_path().join(CONFIG_YAML)
+}
+
+#[cfg(unix)]
+pub fn history_path() -> PathBuf {
+    home_dir()
+        .join(DOT_CONFIG)
+        .join(ADB_EXT_HISTORY_TXT)
+}
+
+#[cfg(windows)]
+pub fn history_path() -> PathBuf {
+    data_path().join(HISTORY_TXT)
 }
 
 #[cfg(unix)]
 pub fn env_path() -> PathBuf {
     home_dir()
-        .join(".local")
+        .join(DOT_LOCAL)
         .join("env")
 }
 
@@ -161,5 +194,16 @@ pub fn env_adb_ext_path() -> String {
         .join(PROGRAMS)
         .join(ADB_EXT)
         .to_string()
+}
+
+
+#[cfg(unix)]
+pub fn error_exit_status() -> ExitStatus {
+    ExitStatus::from_raw(ERROR_CODE << 8)
+}
+
+#[cfg(windows)]
+pub fn error_exit_status() -> ExitStatus {
+    ExitStatus::from_raw(ERROR_CODE as u32)
 }
 

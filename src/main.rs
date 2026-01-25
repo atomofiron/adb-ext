@@ -1,8 +1,10 @@
 use crate::core::apks::{run_apk, steal_apk};
 use crate::core::config::Config;
+use crate::core::ext::PrintExt;
 use crate::core::fix::fix_on_linux;
 use crate::core::layout_bounds::debug_layout_bounds;
 use crate::core::orientation::{orientation, Orientation};
+use crate::core::pointer::toggle_pointer;
 use crate::core::pull_media::{pull_screencasts, pull_screenshots, Params};
 use crate::core::r#const::*;
 use crate::core::screencap::make_screenshot;
@@ -11,21 +13,18 @@ use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT, NO_PACKAGE_NAME};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
+use crate::core::system::{adb_name, bin_name, history_path, ADB_EXT};
+use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
-use crate::core::util::{get_help, print_the_fuck_out, println, set_sdk, string};
+use crate::core::util::{get_help, println, set_sdk, string};
+use rustyline::{error::ReadlineError, DefaultEditor};
 use std::env;
 use std::env::args;
-use std::io::stdin;
 use std::path::Path;
 use std::process::ExitCode;
-use crate::core::pointer::toggle_pointer;
-use crate::core::system::{adb_name, bin_name, ADB_EXT};
-use crate::core::taps::toggle_taps;
 
 mod core;
 mod tests;
-
-pub const ARG_FIX: &str = "fix";
 
 enum StartName {
     Adb,
@@ -63,45 +62,58 @@ fn main() -> ExitCode {
     if !matches!(name, StartName::None) {
         args.remove(0);
     }
-    if args.is_empty() && matches!(name, StartName::AdbExt) {
+    return if args.is_empty() && matches!(name, StartName::AdbExt) {
         println(&get_help(None));
         INPUT_PARAMETERS_OR_EXIT.println();
-        let mut code: Option<ExitCode> = None;
-        loop {
-            let previous = code.map(|code| code == ExitCode::SUCCESS);
-            match ask_for_input(previous, &mut config) {
-                Some(c) => code = Some(c),
-                None => break code.unwrap_or(ExitCode::SUCCESS),
-            }
+        let mut input = DefaultEditor::new().unwrap();
+        let history_path = history_path();
+        if history_path.exists() {
+            input.load_history(&history_path).unwrap();
         }
+        let code = looper_work(&mut input, &mut config);
+        input.save_history(&history_path).unwrap();
+        code
     } else {
-        return work(args, &mut config)
+        work(args, &mut config)
     }
 }
 
-fn ask_for_input(previous: Option<bool>, config: &mut Config) -> Option<ExitCode> {
-    let mut line = String::new();
-    let mut trimmed = "";
-    while trimmed.is_empty() {
-        match previous {
-            None => print!("{ADB_EXT}> "),
-            Some(true) => print!("✔ {ADB_EXT}> "),
-            Some(false) => print!("✘ {ADB_EXT}> "),
+fn looper_work(input: &mut DefaultEditor, config: &mut Config) -> ExitCode {
+    let mut code: Option<ExitCode> = None;
+    loop {
+        let previous = code.map(|code| code == ExitCode::SUCCESS);
+        let status = match previous {
+            None => "",
+            Some(true) => "✔ ",
+            Some(false) => "✘ ",
+        };
+        let prompt = format!("{status}{ADB_EXT}> ");
+        match input.readline(&prompt) {
+            Ok(line) => {
+                let trimmed = line.trim();
+                match trimmed {
+                    _ if trimmed.is_empty() => {
+                        code = None;
+                        continue
+                    },
+                    "exit" | "quit" => break,
+                    _ => (),
+                }
+                input.add_history_entry(trimmed).ok();
+                match shell_words::split(trimmed) {
+                    Ok(args) => code = Some(work(args, config)),
+                    Err(e) => e.eprintln(),
+                };
+            }
+            Err(ReadlineError::Interrupted) => break, // Ctrl-C
+            Err(ReadlineError::Eof) => break, // Ctrl-D
+            Err(e) => {
+                e.eprintln();
+                break;
+            }
         }
-        print_the_fuck_out();
-        line.clear();
-        stdin().read_line(&mut line).unwrap();
-        trimmed = line.trim();
     }
-    match trimmed {
-        "exit" | "quit" => None,
-        _ => {
-            let args = shell_words::split(trimmed)
-                .unwrap();
-            let code = work(args, config);
-            return Some(code)
-        }
-    }
+    return code.unwrap_or(ExitCode::SUCCESS);
 }
 
 fn work(args: Vec<String>, config: &mut Config) -> ExitCode {
@@ -160,7 +172,7 @@ fn match_arg(args: &Vec<String>) -> Option<Feature> {
         LSC => Feature::LastScreenCasts(Params::from(first, args.get(1).cloned())),
         MSS | SHOT => Feature::MakeScreenShot(first, args.get(1).cloned().unwrap_or(String::new())),
         MSC | REC | RECORD => Feature::MakeScreenCast(first, args.get(1).cloned().unwrap_or(String::new())),
-        ARG_FIX => Feature::FixPermission(args.get(1).cloned()),
+        FIX => Feature::FixPermission(args.get(1).cloned()),
         RUN => Feature::RunApk(args.get(1).cloned().unwrap_or(String::new())),
         STEAL => Feature::StealApk(
             args.get(1).expect(NO_PACKAGE_NAME.value()).clone(),

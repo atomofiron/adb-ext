@@ -23,6 +23,7 @@ pub const BOUNDS: &str = "bounds";
 pub const TAPS: &str = "taps";
 pub const POINTER: &str = "pointer";
 pub const SDK: &str = "sdk";
+pub const FIX: &str = "fix";
 
 pub const ADB: &str = "adb";
 pub const PLATFORM_TOOLS: &str = "platform-tools";

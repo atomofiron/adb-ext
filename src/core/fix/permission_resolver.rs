@@ -1,14 +1,14 @@
 use crate::core::ext::{OptionArg, OutputExt};
 use crate::core::fix::usb_device::UsbDevice;
 use crate::core::selector::fetch_adb_devices;
-use crate::ARG_FIX;
+use crate::FIX;
 use itertools::Itertools;
 use nix::unistd::Uid;
 use rusb::UsbContext;
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
 use std::path::Path;
-use std::process::{exit, Command, ExitCode};
+use std::process::{Command, ExitCode};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -25,7 +25,7 @@ pub fn sudo_fix_permission(serial: Option<String>) -> ExitCode {
     let path = std::env::current_exe().unwrap();
     return Command::new(SUDO)
         .arg(path)
-        .arg(ARG_FIX)
+        .arg(FIX)
         .some_arg(serial)
         .output()
         .map(|output| output.exit_code())

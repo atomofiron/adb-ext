@@ -1,14 +1,16 @@
-use std::os::unix::prelude::ExitStatusExt;
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{print_no_one, OutputExt, StringExt, VecExt};
 use crate::core::fix::sudo_fix_on_linux;
-use crate::core::r#const::{ERROR_CODE, SHELL};
+use crate::core::r#const::SHELL;
 use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::system::error_exit_status;
 use crate::core::util::{failure, string};
 use dialoguer::FuzzySelect;
 use itertools::Itertools;
-use std::process::{ExitCode, ExitStatus, Output};
+#[cfg(windows)]
+use std::os::windows::process::ExitStatusExt;
+use std::process::{ExitCode, Output};
 
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
@@ -162,9 +164,6 @@ fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
         .items(&items)
         .interact()
         .unwrap();
-    if selection >= devices.len() {
-        panic!("wtf");
-    }
     return devices.remove(selection);
 }
 
@@ -233,9 +232,9 @@ fn get_description(serial: &String) -> String {
 fn run_adb(args: AdbArgs) -> Output {
     let interactive = args.interactive;
     let mut command = match args.command() {
-        Ok(v) => v,
+        Ok(c) => c,
         Err(e) => return Output {
-            status: ExitStatus::from_raw(ERROR_CODE),
+            status: error_exit_status(),
             stdout: vec![],
             stderr: e.to_string().into_bytes(),
         }

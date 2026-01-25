@@ -69,10 +69,9 @@ pub trait PrintExt {
     fn eprintln(&self);
 }
 
-impl PrintExt for std::io::Error {
-
+impl<E: std::error::Error> PrintExt for E {
     fn eprintln(&self) {
-        eprintln!("{}", self);
+        eprintln!("{self}");
     }
 }
 

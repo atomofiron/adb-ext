@@ -97,8 +97,8 @@ pub static ADD_INTERPRETER: Label = Label::new(
     "добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
 );
 pub static INPUT_PARAMETERS_OR_EXIT: Label = Label::new(
-    "input parameters or 'exit' to exit",
-    "введите параметры или 'exit', чтобы выйти",
+    "input parameters or 'exit', 'quit', Ctrl-C to exit",
+    "введите параметры или 'exit', 'quit', Ctrl-C, чтобы выйти",
 );
 pub static UNKNOWN: Label = Label::new(
     "unknown",
