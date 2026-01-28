@@ -1,6 +1,6 @@
 use crate::core::destination::Destination;
 use crate::core::ext::{OptionExt, PathBufExt, ResultExt, ResultToOption, Rslt, StrExt};
-use crate::core::r#const::{ADB, PLATFORM_TOOLS};
+use crate::core::r#const::{ADB, BUILD_TOOLS, PLATFORM_TOOLS};
 use crate::core::system::{adb_name, config_path, make_executable};
 use itertools::Itertools;
 use serde_derive::{Deserialize, Serialize};
@@ -137,7 +137,7 @@ impl Config {
         existing_or_none(
             dir_checker,
             self.environment.build_tools.clone().map(|it| it.dst()),
-            self.environment.sdk.clone().map(|it| it.dst().join("build-tools")),
+            self.environment.sdk.clone().map(|it| it.dst().join(BUILD_TOOLS)),
         )
     }
 
@@ -145,7 +145,7 @@ impl Config {
         existing_or_none(
             dir_checker,
             self.environment.platform_tools.clone().map(|it| it.dst()),
-            self.environment.sdk.clone().map(|it| it.dst().join("platform-tools")),
+            self.environment.sdk.clone().map(|it| it.dst().join(PLATFORM_TOOLS)),
         )
     }
 
