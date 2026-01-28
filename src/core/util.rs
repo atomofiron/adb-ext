@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 use std::io;
-use std::io::{Error, Write};
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
 use chrono::Local;
@@ -29,10 +29,6 @@ pub fn failure<T>() -> Result<T, ExitCode> {
 
 pub fn println(message: &str) {
     println!("{}", message)
-}
-
-pub fn eprintln(message: &str) {
-    eprintln!("{}", message)
 }
 
 pub fn print_the_fuck_out() {

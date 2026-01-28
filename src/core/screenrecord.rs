@@ -1,13 +1,13 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{OutputExt, PathBufExt};
+use crate::core::ext::{OutputExt, PathBufExt, PrintExt};
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{adb_args_with, resolve_device, run_adb_with};
 use crate::core::strings::{PRESS_ENTER_TO_STOP_REC, SAVED};
 use crate::core::system::kill;
 use crate::core::taps::{is_taps_on, turn_taps};
-use crate::core::util::{ensure_parent_exists, eprintln, format_file_name, try_run_hook_and_exit};
+use crate::core::util::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
 use std::io;
 use std::process::ExitCode;
 use std::thread::sleep;
@@ -31,7 +31,7 @@ pub fn make_screencast(cmd: String, dst: String, config: &Config) -> ExitCode {
     let mut command = match args.command() {
         Ok(c) => c,
         Err(e) => {
-            eprintln(&e);
+            e.eprintln();
             return ExitCode::FAILURE;
         }
     };

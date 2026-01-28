@@ -1,9 +1,11 @@
+use crate::core::r#const::ERROR_CODE;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Output};
-use crate::core::r#const::ERROR_CODE;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 const NO_TARGETS: &str = "adb: no devices/emulators found";
 
@@ -42,7 +44,7 @@ impl OutputExt for Output {
     fn print_err(&self) {
         let stderr = self.stderr();
         if !stderr.is_empty() {
-            println!("{stderr}");
+            stderr.eprintln();
         }
     }
     fn print_out_and_err(&self) {
@@ -91,8 +93,20 @@ pub trait PrintExt {
 
 impl<E: Display> PrintExt for E {
     fn eprintln(&self) {
-        eprintln!("{self}");
+        if let Err(_) = try_eprintln(self) {
+            #[cfg(unix)]
+            eprintln!("\x1b[31m{self}\x1b[0m");
+            #[cfg(windows)]
+            eprintln!("{self}");
+        }
     }
+}
+
+fn try_eprintln<E: Display>(e: &E) -> Rslt<()> {
+    let mut stream = StandardStream::stderr(ColorChoice::Auto);
+    stream.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+    writeln!(&mut stream, "{e}")?;
+    return stream.reset().boxed()
 }
 
 fn count_nbsp(bytes: &Vec<u8>) -> usize {

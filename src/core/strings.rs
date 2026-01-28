@@ -185,9 +185,6 @@ impl Label<'_> {
     pub fn println_formatted(&self, parts: &[&str]) {
         println!("{}", self.formatted(parts));
     }
-    pub fn eprintln(&self) {
-        eprintln!("{}", self);
-    }
 }
 
 impl Display for Label<'_> {
