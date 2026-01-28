@@ -49,7 +49,6 @@ pub struct Screencasts {
     pub args: String,
 }
 
-// NOTE: replace the '~' with home dir path for the Windows in the future
 fn default_hook() -> Option<String> { Some(string("~/Android/hook")) }
 
 impl Default for Config {
