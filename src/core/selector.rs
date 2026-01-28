@@ -1,6 +1,6 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
-use crate::core::ext::{print_no_one, OutputExt, StringExt, VecExt};
+use crate::core::ext::{print_no_one, OutputExt, PrintExt, StringExt, VecExt};
 use crate::core::fix::sudo_fix_on_linux;
 use crate::core::r#const::SHELL;
 use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
@@ -142,7 +142,7 @@ pub fn resolve_device() -> Result<AdbDevice, ExitCode> {
         _ => ask_for_device(devices),
     };
     if device.no_permissions && !sudo_fix_on_linux(Some(device.serial.clone())) {
-        ERROR.println();
+        ERROR.eprintln();
         return failure();
     }
     return Ok(device);
