@@ -5,7 +5,7 @@ use std::fmt::Display;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Output};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 const NO_TARGETS: &str = "adb: no devices/emulators found";
 
@@ -93,7 +93,7 @@ pub trait PrintExt {
 
 impl<E: Display> PrintExt for E {
     fn eprintln(&self) {
-        if let Err(_) = try_eprintln(self) {
+        if let Err(_) = eprintln(self) {
             #[cfg(unix)]
             eprintln!("\x1b[31m{self}\x1b[0m");
             #[cfg(windows)]
@@ -102,11 +102,27 @@ impl<E: Display> PrintExt for E {
     }
 }
 
-fn try_eprintln<E: Display>(e: &E) -> Rslt<()> {
+fn eprintln<E: Display>(e: &E) -> Rslt<()> {
     let mut stream = StandardStream::stderr(ColorChoice::Auto);
     stream.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
     writeln!(&mut stream, "{e}")?;
     return stream.reset().boxed()
+}
+
+pub fn try_make_colored<'l, D: Display>(value: D, color: Color) -> String {
+    match make_colored(&value, color) {
+        Ok(colored) => colored,
+        Err(_) => value.to_string(),
+    }
+}
+
+fn make_colored<'l, D: Display>(value: &D, color: Color) -> Rslt<String> {
+    let bw = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
+    let mut buf = bw.buffer();
+    buf.set_color(ColorSpec::new().set_fg(Some(color)))?;
+    write!(&mut buf, "{value}")?;
+    buf.reset()?;
+    return Ok(String::from_utf8_lossy(buf.as_slice()).into_owned())
 }
 
 fn count_nbsp(bytes: &Vec<u8>) -> usize {

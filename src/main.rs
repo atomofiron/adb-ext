@@ -1,7 +1,7 @@
 use crate::core::apks::{run_apk, steal_apk};
 use crate::core::completer::CmdHelper;
 use crate::core::config::Config;
-use crate::core::ext::PrintExt;
+use crate::core::ext::{try_make_colored, PrintExt};
 use crate::core::fix::fix_on_linux;
 use crate::core::layout_bounds::debug_layout_bounds;
 use crate::core::orientation::{orientation, Orientation};
@@ -24,6 +24,7 @@ use std::env;
 use std::env::args;
 use std::path::Path;
 use std::process::ExitCode;
+use termcolor::Color;
 
 mod core;
 mod tests;
@@ -88,9 +89,9 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
     loop {
         let previous = code.map(|code| code == ExitCode::SUCCESS);
         let status = match previous {
-            None => "",
-            Some(true) => "✔ ",
-            Some(false) => "✘ ",
+            None => string(""),
+            Some(true) => try_make_colored("✔ ", Color::Green),
+            Some(false) => try_make_colored("✘ ", Color::Red),
         };
         let prompt = format!("{status}{ADB_EXT}> ");
         match input.readline(&prompt) {
