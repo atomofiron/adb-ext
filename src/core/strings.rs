@@ -122,6 +122,10 @@ pub static CANCEL: Label = Label::new(
     "cancel",
     "отмена",
 );
+pub static DONE: Label = Label::new(
+    "done",
+    "готово",
+);
 pub static ERROR: Label = Label::new(
     "error",
     "ошибка",

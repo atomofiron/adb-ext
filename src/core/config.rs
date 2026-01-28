@@ -1,5 +1,5 @@
 use crate::core::destination::Destination;
-use crate::core::ext::{OptionExt, PathBufExt, ResultToOption, StrExt};
+use crate::core::ext::{OptionExt, PathBufExt, ResultExt, ResultToOption, Rslt, StrExt};
 use crate::core::r#const::{ADB, PLATFORM_TOOLS};
 use crate::core::system::{adb_name, config_path, make_executable};
 use itertools::Itertools;
@@ -102,14 +102,14 @@ impl Config {
             .unwrap_or_default();
     }
 
-    pub fn write(&self) {
+    pub fn write(&self) -> Rslt<()> {
         let config_path = config_path();
         if !config_path.exists() {
-            fs::create_dir_all(config_path.parent().unwrap()).unwrap();
-            File::create(&config_path).unwrap();
+            fs::create_dir_all(config_path.parent().unwrap())?;
+            File::create(&config_path)?;
         }
-        let config_text = serde_yaml::to_string(self).unwrap();
-        fs::write(config_path, config_text).unwrap();
+        let config_text = serde_yaml::to_string(self)?;
+        return fs::write(config_path, config_text).boxed()
     }
 
     pub fn update_adb_path(&self) {

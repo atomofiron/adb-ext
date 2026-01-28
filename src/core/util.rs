@@ -1,13 +1,14 @@
 use std::fs::create_dir_all;
 use std::io;
-use std::io::Write;
+use std::io::{Error, Write};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
 use chrono::Local;
 use itertools::Itertools;
 use crate::core::config::Config;
-use crate::core::ext::OutputExt;
+use crate::core::ext::{OutputExt, PrintExt};
 use crate::core::r#const::{HELP, NULL};
+use crate::core::strings::DONE;
 
 pub fn get_help(separator: Option<&str>) -> String {
     let sep = separator.unwrap_or(", ");
@@ -53,7 +54,10 @@ pub fn try_run_hook_and_exit(hook: PathBuf, cmd: String, arg: PathBuf) -> ExitCo
 pub fn set_sdk(path: Option<String>, config: &mut Config) -> ExitCode {
     if let Some(_) = path {
         config.environment.sdk = path;
-        config.write();
+        match config.write() {
+            Ok(_) => DONE.println(),
+            Err(e) => e.eprintln(),
+        }
     } else {
         let path = config.environment.sdk
             .as_deref()

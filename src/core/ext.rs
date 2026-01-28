@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
 use std::path::PathBuf;
@@ -9,6 +10,8 @@ const NO_TARGETS: &str = "adb: no devices/emulators found";
 const NBSP: u8 = 0xA0;
 const BF: u8 = 0xBF;
 const C2: u8 = 0xC2;
+
+pub type Rslt<T> = Result<T, Box<dyn Error>>;
 
 pub trait OutputExt {
     fn exit_code(&self) -> ExitCode;
@@ -48,13 +51,19 @@ impl OutputExt for Output {
     }
 }
 
-pub trait ResultExt<R, T> {
+pub trait ResultExt<R, E> {
     fn string_err(self) -> Result<R, String>;
+    fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static;
 }
 
 impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
+
     fn string_err(self) -> Result<R, String> {
         self.map_err(|e| e.to_string())
+    }
+
+    fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static {
+        self.map_err(Into::into)
     }
 }
 
@@ -80,7 +89,7 @@ pub trait PrintExt {
     fn eprintln(&self);
 }
 
-impl<E: std::error::Error> PrintExt for E {
+impl<E: Display> PrintExt for E {
     fn eprintln(&self) {
         eprintln!("{self}");
     }

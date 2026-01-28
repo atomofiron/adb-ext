@@ -59,7 +59,7 @@ fn main() -> ExitCode {
         Language::set_language(Language::Ru);
     }
     let mut config = Config::read();
-    config.write();
+    config.write().unwrap();
     config.update_adb_path();
     let mut args = args().collect::<Vec<String>>();
     let name = start_name(args.get(0));
