@@ -37,13 +37,13 @@ pub const PROGRAMS: &str = "Programs";
 pub const PATH: &str = "PATH";
 
 #[cfg(unix)]
-pub fn kill(id: u32) {
+pub fn interrupt(id: u32) {
     let pid = nix::unistd::Pid::from_raw(id as nix::libc::pid_t);
     nix::sys::signal::kill(pid, nix::sys::signal::Signal::SIGINT).unwrap();
 }
 
 #[cfg(windows)]
-pub fn kill(id: u32) {
+pub fn interrupt(id: u32) {
     use windows_sys::Win32::System::Console::{
         GenerateConsoleCtrlEvent, SetConsoleCtrlHandler, CTRL_BREAK_EVENT,
     };
