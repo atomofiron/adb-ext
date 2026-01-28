@@ -8,8 +8,6 @@ use crate::core::system::error_exit_status;
 use crate::core::util::{failure, string};
 use dialoguer::FuzzySelect;
 use itertools::Itertools;
-#[cfg(windows)]
-use std::os::windows::process::ExitStatusExt;
 use std::process::{ExitCode, Output};
 
 const ARG_DEVICES: &str = "devices";

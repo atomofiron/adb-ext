@@ -11,7 +11,7 @@ use crate::core::r#const::*;
 use crate::core::screencap::make_screenshot;
 use crate::core::screenrecord::make_screencast;
 use crate::core::selector::resolve_device_and_run_args;
-use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT, NO_PACKAGE_NAME};
+use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
 use crate::core::system::{adb_name, bin_name, history_path, ADB_EXT};
