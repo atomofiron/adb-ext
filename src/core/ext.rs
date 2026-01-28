@@ -1,4 +1,5 @@
 use std::ffi::OsStr;
+use std::fmt::Display;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Output};
 use crate::core::r#const::ERROR_CODE;
@@ -44,6 +45,16 @@ impl OutputExt for Output {
     fn print_out_and_err(&self) {
         self.print_out();
         self.print_err();
+    }
+}
+
+pub trait ResultExt<R, T> {
+    fn string_err(self) -> Result<R, String>;
+}
+
+impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
+    fn string_err(self) -> Result<R, String> {
+        self.map_err(|e| e.to_string())
     }
 }
 

@@ -46,9 +46,13 @@ pub static NO_ADB: Label = Label::new(
     "aDB wasn't recognized",
     "aDB не обнаружен",
 );
+pub static NO_ANDROID_SDK: Label = Label::new(
+    "specify a path to the Android SDK or Build Tools in {}",
+    "укажите путь до Android SDK или Build Tools в {}",
+);
 pub static NO_BUILD_TOOLS: Label = Label::new(
-    "specify a path to the Android SDK or Build Tools in ",
-    "укажите путь до Android SDK или Build Tools в ",
+    "no build tools found in {}",
+    "build tools не найдены в {}",
 );
 pub static NO_FILE: Label = Label::new(
     "no such file",
@@ -161,7 +165,7 @@ impl Label<'_> {
     pub fn println(&self) {
         println!("{}", self);
     }
-    pub fn println_formatted(&self, parts: &[&str]) {
+    pub fn formatted(&self, parts: &[&str]) -> String {
         let mut value = self.value().to_string();
         let mut i = 0;
         while i < parts.len() {
@@ -172,7 +176,10 @@ impl Label<'_> {
                 break;
             }
         }
-        println!("{value}");
+        return format!("{value}")
+    }
+    pub fn println_formatted(&self, parts: &[&str]) {
+        println!("{}", self.formatted(parts));
     }
     pub fn eprintln(&self) {
         eprintln!("{}", self);

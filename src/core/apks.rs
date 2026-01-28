@@ -2,10 +2,10 @@ use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::AdbDevice;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{OutputExt, PathBufExt, StrExt};
+use crate::core::ext::{OutputExt, PathBufExt, ResultExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::strings::{NO_BUILD_TOOLS, NO_FILE, NO_PATH, SAVED};
+use crate::core::strings::{NO_ANDROID_SDK, NO_BUILD_TOOLS, NO_FILE, NO_PATH, SAVED};
 use crate::core::system::config_path;
 use crate::core::util::{eprintln, string};
 use regex::Regex;
@@ -70,17 +70,18 @@ pub fn run_apk(apk: String, config: &Config)-> ExitCode {
 
 fn get_aapt(config: &Config) -> Result<PathBuf, String> {
     let path = match config.build_tools() {
-        None => return Err(format!("{NO_BUILD_TOOLS} {}", config_path().to_string())),
+        None => return Err(NO_ANDROID_SDK.formatted(&[&config_path().to_string()])),
         Some(path) => path,
     };
-    let pattern = Regex::new(r"/\d+\.\d\.\d$").unwrap();
-    return fs::read_dir(&path).unwrap()
-        .map(|it| it.unwrap().path())
-        .filter(|it| pattern.is_match(&it.to_string()))
-        .collect::<Vec<PathBuf>>()
-        .first_mut()
-        .ok_or_else(|| format!("{NO_BUILD_TOOLS} {}", config_path().to_string()))
-        .map(|it| it.join("/aapt"));
+    let pattern = Regex::new(r"^\d+\.\d+\.\d+$").unwrap();
+    return fs::read_dir(&path)
+        .string_err()?
+        .filter_map(Result::ok)
+        .filter(|it| pattern.is_match(&it.file_name().to_string_lossy()))
+        .map(|it| it.path())
+        .max()
+        .map(|it| it.join("aapt"))
+        .ok_or_else(|| NO_BUILD_TOOLS.formatted(&[&path.to_string()]));
 }
 
 fn install(device: &AdbDevice, apk: &String) -> Output {
