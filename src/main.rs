@@ -111,7 +111,7 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
                     EXIT | QUIT => break,
                     _ => (),
                 }
-                input.add_history_entry(trimmed).ok();
+                input.add_history_entry(trimmed).soft_unwrap();
                 match shell_words::split(trimmed) {
                     Ok(args) => code = Some(work(args, config)),
                     Err(e) => e.eprintln(),
