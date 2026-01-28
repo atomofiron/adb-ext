@@ -5,7 +5,7 @@ use crate::core::destination::Destination;
 use crate::core::ext::{OutputExt, PathBufExt, PrintExt, ResultExt, StrExt};
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_with};
-use crate::core::strings::{NO_ANDROID_SDK, NO_BUILD_TOOLS, NO_FILE, NO_PATH, SAVED};
+use crate::core::strings::{NO_ANDROID_SDK, NO_BUILD_TOOLS, NO_FILE, NO_PACKAGE_NAME, NO_PATH, SAVED};
 use crate::core::system::config_path;
 use crate::core::util::string;
 use regex::Regex;
@@ -13,7 +13,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Output};
 
-pub fn steal_apk(package: String, dst: Option<String>) -> ExitCode {
+pub fn steal_apk(package: Option<String>, dst: Option<String>) -> ExitCode {
+    let package = match package {
+        Some(package) => package,
+        None => {
+            NO_PACKAGE_NAME.eprintln();
+            return ExitCode::FAILURE
+        }
+    };
     let pm_command = format!("pm path {package}");
     let args = AdbArgs::run(&[SHELL, pm_command.as_str()]);
     let device = match resolve_device() {
