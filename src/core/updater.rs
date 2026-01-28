@@ -1,6 +1,8 @@
-use crate::core::ext::{OutputExt, PathBufExt, PrintExt};
+#[cfg(unix)]
+use crate::core::ext::PrintExt;
 #[cfg(windows)]
 use crate::core::ext::StringExt;
+use crate::core::ext::{OutputExt, PathBufExt};
 use crate::core::r#const::*;
 use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
 use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
@@ -144,7 +146,7 @@ pub fn path_contains(dir: &str) -> bool {
     };
     let path = norm(&dir);
     return env::split_paths(&path_os)
-        .any(|p| norm(p.to_str().unwrap()) == path)
+        .any(|p| norm(p.to_str()) == path)
 }
 
 #[cfg(windows)]
