@@ -10,6 +10,7 @@ use crate::core::pull_media::{pull_screencasts, pull_screenshots, Params};
 use crate::core::r#const::*;
 use crate::core::screencap::make_screenshot;
 use crate::core::screenrecord::make_screencast;
+use crate::core::sdk::set_sdk;
 use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT};
 #[cfg(windows)]
@@ -17,7 +18,7 @@ use crate::core::system::DOT_EXE;
 use crate::core::system::{adb_name, bin_name, history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
-use crate::core::util::{get_help, println, set_sdk, string};
+use crate::core::util::{get_help, string};
 use rustyline::history::DefaultHistory;
 use rustyline::{error::ReadlineError, Editor};
 use std::env;
@@ -68,7 +69,7 @@ fn main() -> ExitCode {
         args.remove(0);
     }
     return if args.is_empty() && matches!(name, StartName::AdbExt) {
-        println(&get_help(None));
+        get_help(None).println();
         INPUT_PARAMETERS_OR_EXIT.println();
         let mut input = CmdEditor::new().unwrap();
         input.set_helper(Some(CmdHelper::from(SUGGESTIONS)));
@@ -202,7 +203,7 @@ fn match_arg(args: &Vec<String>) -> Option<Feature> {
         POINTER => Feature::Pointer,
         SDK => Feature::Sdk(args.get(1).cloned()),
         "shit" => {
-            println("💩");
+            "💩".println();
             return None
         },
         "--version" => {

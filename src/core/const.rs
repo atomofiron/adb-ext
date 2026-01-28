@@ -52,6 +52,7 @@ pub const PLATFORM_TOOLS: &str = "platform-tools";
 
 pub const ERROR_CODE: i32 = 1;
 pub const NULL: &str = "null";
+pub const HOME: &str = "~";
 
 pub const ON: &str = "1";
 pub const OFF: &str = "0";

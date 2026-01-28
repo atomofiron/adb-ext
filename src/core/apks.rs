@@ -38,7 +38,7 @@ pub fn steal_apk(package: Option<String>, dst: Option<String>) -> ExitCode {
         .join(format!("{package}.apk"));
     // the output line is "package:/data/data/[…]/base.apk"
     let path = &output.stdout().clone()[8..];
-    let args = AdbArgs::spawn(&[PULL, path, destination.to_str().unwrap()]);
+    let args = AdbArgs::spawn(&[PULL, path, destination.to_str()]);
     let output = run_adb_with(&device, args);
     if output.status.success() {
         SAVED.println_formatted(&[&destination.to_string()]);
@@ -84,7 +84,7 @@ fn get_aapt(config: &Config) -> Result<PathBuf, String> {
     return fs::read_dir(&path)
         .string_err()?
         .filter_map(Result::ok)
-        .filter(|it| pattern.is_match(&it.file_name().to_string_lossy()))
+        .filter(|it| it.metadata().map(|m| m.is_dir()).unwrap_or(false) && pattern.is_match(&it.file_name().to_string_lossy()))
         .map(|it| it.path())
         .max()
         .map(|it| it.join("aapt"))

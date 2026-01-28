@@ -1,4 +1,4 @@
-use crate::core::ext::{OutputExt, PathBufExt};
+use crate::core::ext::{OutputExt, PathBufExt, PrintExt};
 #[cfg(windows)]
 use crate::core::ext::StringExt;
 use crate::core::r#const::*;

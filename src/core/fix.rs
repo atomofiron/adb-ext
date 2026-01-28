@@ -4,7 +4,7 @@ pub mod usb_device;
 pub mod permission_resolver;
 
 use std::process::ExitCode;
-
+use crate::core::ext::PrintExt;
 #[cfg(not(target_os = "linux"))]
 use crate::core::strings::LINUX_ONLY;
 

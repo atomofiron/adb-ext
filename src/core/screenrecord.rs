@@ -52,7 +52,7 @@ pub fn make_screencast(cmd: String, dst: String, config: &Config) -> ExitCode {
         .dst_with_parent(&config.screencasts.destination)
         .join(format_file_name(&config.screencasts.name));
     ensure_parent_exists(&dst);
-    let output = run_adb_with(&device, AdbArgs::run(&[PULL, TMP, dst.to_str().unwrap()]));
+    let output = run_adb_with(&device, AdbArgs::run(&[PULL, TMP, dst.to_str()]));
     output.print_out_and_err();
     let mut code = output.exit_code();
     if output.status.success() {

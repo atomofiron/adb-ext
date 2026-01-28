@@ -2,8 +2,9 @@ use crate::core::r#const::ERROR_CODE;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
+use std::io;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Output};
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -55,7 +56,7 @@ impl OutputExt for Output {
 
 pub trait ResultExt<R, E> {
     fn string_err(self) -> Result<R, String>;
-    fn soft_unwrap(self);
+    fn soft_unwrap(self) -> Option<R>;
     fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static;
 }
 
@@ -65,10 +66,11 @@ impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
         self.map_err(|e| e.to_string())
     }
 
-    fn soft_unwrap(self) {
-        if let Err(e) = self {
-            e.eprintln()
+    fn soft_unwrap(self) -> Option<R> {
+        if let Err(e) = &self {
+            e.eprintln();
         }
+        self.ok()
     }
 
     fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static {
@@ -77,7 +79,7 @@ impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
 }
 
 pub fn print_no_one() {
-    println!("{NO_TARGETS}");
+    NO_TARGETS.println();
 }
 
 trait Trim {
@@ -95,11 +97,17 @@ impl Trim for Vec<u8> {
 }
 
 pub trait PrintExt {
+    fn print(&self);
     fn println(&self);
     fn eprintln(&self);
 }
 
 impl<E: Display> PrintExt for E {
+
+    fn print(&self) {
+        print!("{self}");
+        io::stdout().flush().unwrap();
+    }
 
     fn println(&self) {
         println!("{self}");
@@ -264,11 +272,15 @@ impl StringExt for String {
 
 pub trait PathBufExt {
     fn to_string(&self) -> String;
+    fn to_str(&self) -> &str;
 }
 
 impl PathBufExt for PathBuf {
     fn to_string(&self) -> String {
         self.to_string_lossy().to_string()
+    }
+    fn to_str(&self) -> &str {
+        Path::to_str(&self).unwrap()
     }
 }
 

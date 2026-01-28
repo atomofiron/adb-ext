@@ -1,4 +1,4 @@
-use crate::core::util::print_the_fuck_out;
+use crate::core::ext::PrintExt;
 use std::fmt::{Display, Formatter};
 
 static mut LANGUAGE: Language = Language::En;
@@ -49,6 +49,10 @@ pub static NO_ADB: Label = Label::new(
 pub static NO_ANDROID_SDK: Label = Label::new(
     "specify a path to the Android SDK or Build Tools in {}",
     "укажите путь до Android SDK или Build Tools в {}",
+);
+pub static NO_SUCH_DIRECTORY: Label = Label::new(
+    "no such directory",
+    "такой папки не существует",
 );
 pub static NO_BUILD_TOOLS: Label = Label::new(
     "no build tools found in {}",
@@ -162,13 +166,6 @@ impl Label<'_> {
         };
         return self.variants[index];
     }
-    pub fn print(&self) {
-        print!("{}", self);
-        print_the_fuck_out();
-    }
-    pub fn println(&self) {
-        println!("{}", self);
-    }
     pub fn formatted(&self, parts: &[&str]) -> String {
         let mut value = self.value().to_string();
         let mut i = 0;
@@ -183,7 +180,7 @@ impl Label<'_> {
         return format!("{value}")
     }
     pub fn println_formatted(&self, parts: &[&str]) {
-        println!("{}", self.formatted(parts));
+        self.formatted(parts).println();
     }
 }
 
