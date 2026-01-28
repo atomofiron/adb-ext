@@ -110,7 +110,7 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
                     Err(e) => e.eprintln(),
                 };
             }
-            Err(ReadlineError::Interrupted) => break, // Ctrl-C
+            Err(ReadlineError::Interrupted) => continue, // Ctrl-C
             Err(ReadlineError::Eof) => break, // Ctrl-D
             Err(e) => {
                 e.eprintln();
