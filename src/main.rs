@@ -1,7 +1,7 @@
 use crate::core::apks::{run_apk, steal_apk};
 use crate::core::completer::CmdHelper;
 use crate::core::config::Config;
-use crate::core::ext::{try_make_colored, PrintExt};
+use crate::core::ext::{try_make_colored, PrintExt, ResultExt};
 use crate::core::fix::fix_on_linux;
 use crate::core::layout_bounds::debug_layout_bounds;
 use crate::core::orientation::{orientation, Orientation};
@@ -41,11 +41,11 @@ enum Feature {
     FixPermission(Option<String>),
     RunAdbWithArgs,
     RunApk(String),
-    StealApk(String,Option<String>),
+    StealApk(Option<String>, Option<String>),
     LastScreenShots(Params),
     LastScreenCasts(Params),
-    MakeScreenShot(String,String),
-    MakeScreenCast(String,String),
+    MakeScreenShot(String, String),
+    MakeScreenCast(String, String),
     Deploy,
     Update,
     Orientation(Orientation),
@@ -98,11 +98,16 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
             Ok(line) => {
                 let trimmed = line.trim();
                 match trimmed {
-                    _ if trimmed.is_empty() => {
+                    "" => {
                         code = None;
                         continue
                     },
-                    "exit" | "quit" => break,
+                    CLEAR => {
+                        code = None;
+                        input.clear_screen().soft_unwrap();
+                        continue
+                    },
+                    EXIT | QUIT => break,
                     _ => (),
                 }
                 input.add_history_entry(trimmed).ok();
@@ -181,7 +186,7 @@ fn match_arg(args: &Vec<String>) -> Option<Feature> {
         FIX => Feature::FixPermission(args.get(1).cloned()),
         RUN => Feature::RunApk(args.get(1).cloned().unwrap_or(String::new())),
         STEAL => Feature::StealApk(
-            args.get(1).expect(NO_PACKAGE_NAME.value()).clone(),
+            args.get(1).cloned(),
             args.get(2).cloned(),
         ),
         DEPLOY => Feature::Deploy,

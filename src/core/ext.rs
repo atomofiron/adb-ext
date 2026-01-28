@@ -38,7 +38,7 @@ impl OutputExt for Output {
     fn print_out(&self) {
         let stdout = self.stdout();
         if !stdout.is_empty() {
-            println!("{stdout}");
+            stdout.println()
         }
     }
     fn print_err(&self) {
@@ -55,6 +55,7 @@ impl OutputExt for Output {
 
 pub trait ResultExt<R, E> {
     fn string_err(self) -> Result<R, String>;
+    fn soft_unwrap(self);
     fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static;
 }
 
@@ -62,6 +63,12 @@ impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
 
     fn string_err(self) -> Result<R, String> {
         self.map_err(|e| e.to_string())
+    }
+
+    fn soft_unwrap(self) {
+        if let Err(e) = self {
+            e.eprintln()
+        }
     }
 
     fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static {
@@ -88,10 +95,16 @@ impl Trim for Vec<u8> {
 }
 
 pub trait PrintExt {
+    fn println(&self);
     fn eprintln(&self);
 }
 
 impl<E: Display> PrintExt for E {
+
+    fn println(&self) {
+        println!("{self}");
+    }
+
     fn eprintln(&self) {
         if let Err(_) = eprintln(self) {
             #[cfg(unix)]
