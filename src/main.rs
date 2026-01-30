@@ -15,7 +15,7 @@ use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
-use crate::core::system::{adb_name, bin_name, history_path, ADB_EXT};
+use crate::core::system::{bin_name, history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
 use crate::core::util::{get_help, string};
@@ -89,10 +89,17 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
     let mut code: Option<ExitCode> = None;
     loop {
         let previous = code.map(|code| code == ExitCode::SUCCESS);
+        #[cfg(unix)]
         let status = match previous {
             None => string(""),
             Some(true) => try_make_colored("✔ ", Color::Green),
             Some(false) => try_make_colored("✘ ", Color::Red),
+        };
+        #[cfg(windows)] // has some bug
+        let status = match previous {
+            None => string(""),
+            Some(true) => string("✔ "),
+            Some(false) => string("✘ "),
         };
         let prompt = format!("{status}{ADB_EXT}> ");
         match input.readline(&prompt) {
@@ -173,8 +180,8 @@ fn start_name(value: Option<&String>) -> StartName {
     #[cfg(windows)]
     let base = name.strip_suffix(DOT_EXE).unwrap_or(&name);
     return match () {
-        _ if base == adb_name() => StartName::Adb,
-        _ if base == bin_name() => StartName::AdbExt,
+        _ if base == ADB => StartName::Adb,
+        _ if base == ADB_EXT => StartName::AdbExt,
         _ => StartName::None,
     }
 }

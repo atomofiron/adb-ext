@@ -20,3 +20,7 @@ pub mod taps;
 pub mod pointer;
 pub mod completer;
 pub mod sdk;
+#[cfg(windows)]
+pub mod updater_win;
+#[cfg(unix)]
+pub mod updater_unix;

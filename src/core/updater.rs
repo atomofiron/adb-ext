@@ -1,8 +1,8 @@
+use crate::core::ext::PathBufExt;
 #[cfg(unix)]
 use crate::core::ext::PrintExt;
 #[cfg(windows)]
 use crate::core::ext::StringExt;
-use crate::core::ext::{OutputExt, PathBufExt};
 use crate::core::r#const::*;
 use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
 use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
@@ -10,27 +10,20 @@ use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 use crate::core::system::{env_adb_ext_path, PATH};
 #[cfg(unix)]
 use crate::core::system::{env_path, home_dir};
+#[cfg(unix)]
+use crate::core::updater_unix::update_unix;
+#[cfg(windows)]
+use crate::core::updater_win::update_win;
 use crate::core::util::get_help;
 #[cfg(unix)]
 use crate::core::util::string;
+#[cfg(unix)]
 use std::io::Write;
 #[cfg(windows)]
 use std::path::PathBuf;
-use std::process::{Command, ExitCode};
+use std::process::ExitCode;
 use std::{env, fs};
 
-#[cfg(unix)]
-const SCRIPT_URL: &str = "https://github.com/atomofiron/adb-ext/raw/main/stuff/install.sh";
-#[cfg(windows)]
-const SCRIPT_URL: &str = "https://github.com/atomofiron/adb-ext/raw/main/stuff/install.bat";
-#[cfg(unix)]
-const SCRIPT_NAME: &str = "install-adb-ext.sh";
-#[cfg(windows)]
-const SCRIPT_NAME: &str = "install-adb-ext.bat";
-#[cfg(unix)]
-const SCRIPT_ARGS: [&str; 1] = [SCRIPT_NAME];
-#[cfg(windows)]
-const SCRIPT_ARGS: [&str; 2] = ["/c", SCRIPT_NAME];
 #[cfg(unix)]
 const ENV_VERSION: &str = "5";
 #[cfg(unix)]
@@ -38,25 +31,11 @@ const BOLD: &str = "\x1b[1m";
 #[cfg(unix)]
 const CLEAR: &str = "\x1b[0m";
 
-#[cfg(unix)]
-const SHELL: &str = "sh";
-#[cfg(windows)]
-const SHELL: &str = "cmd";
-
 pub fn update() -> ExitCode {
-    let bytes = reqwest::blocking::get(SCRIPT_URL).unwrap()
-        .bytes().unwrap();
-    let mut file = fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .append(false)
-        .open(SCRIPT_NAME).unwrap();
-    file.write(&bytes).unwrap();
-    return Command::new(SHELL)
-        .args(SCRIPT_ARGS)
-        .spawn().unwrap()
-        .wait_with_output().unwrap()
-        .exit_code()
+    #[cfg(unix)]
+    return update_unix();
+    #[cfg(windows)]
+    return update_win();
 }
 
 pub fn deploy() -> ExitCode {
