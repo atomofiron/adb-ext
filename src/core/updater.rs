@@ -1,28 +1,28 @@
 use crate::core::ext::PathBufExt;
-#[cfg(unix)]
-use crate::core::ext::PrintExt;
 #[cfg(windows)]
 use crate::core::ext::StringExt;
+use crate::core::ext::{OutputExt, PrintExt, ResultExt, Rslt};
+use crate::core::r#const::DEPLOY;
 use crate::core::r#const::*;
+use crate::core::strings::DONE;
 use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
 use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
+use crate::core::system::{bin_name, make_executable};
 #[cfg(windows)]
 use crate::core::system::{env_adb_ext_path, PATH};
 #[cfg(unix)]
 use crate::core::system::{env_path, home_dir};
-#[cfg(unix)]
-use crate::core::updater_unix::update_unix;
-#[cfg(windows)]
-use crate::core::updater_win::update_win;
 use crate::core::util::get_help;
 #[cfg(unix)]
 use crate::core::util::string;
+use indicatif::{ProgressBar, ProgressStyle};
+use std::fs::remove_file;
 #[cfg(unix)]
 use std::io::Write;
-#[cfg(windows)]
 use std::path::PathBuf;
-use std::process::ExitCode;
+use std::process::{Command, ExitCode};
 use std::{env, fs};
+use std::{fs::File, io};
 
 #[cfg(unix)]
 const ENV_VERSION: &str = "5";
@@ -31,11 +31,55 @@ const BOLD: &str = "\x1b[1m";
 #[cfg(unix)]
 const CLEAR: &str = "\x1b[0m";
 
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-apple-arm";
+#[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-apple-x86_64";
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-linux-x86_64";
+#[cfg(windows)]
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext.exe";
+
 pub fn update() -> ExitCode {
-    #[cfg(unix)]
-    return update_unix();
-    #[cfg(windows)]
-    return update_win();
+    let mut path = env::temp_dir().join(bin_name());
+    match download_with_progress(URL, &path) {
+        Ok(_) => (),
+        Err(e) => {
+            e.eprintln();
+            return ExitCode::FAILURE;
+        }
+    };
+    path = make_executable(path).unwrap();
+    let exit_code = Command::new(&path)
+        .arg(DEPLOY)
+        .spawn().unwrap()
+        .wait_with_output().unwrap()
+        .exit_code();
+    if exit_code == ExitCode::SUCCESS {
+        remove_file(path).soft_unwrap();
+    }
+    return exit_code;
+}
+
+fn download_with_progress(url: &str, dst: &PathBuf) -> Rslt<()> {
+    let res = ureq::get(url).call()?;
+    let total = res.body().content_length();
+    let bar = match total {
+        Some(n) => ProgressBar::new(n),
+        None => ProgressBar::no_length(),
+    };
+    let style = ProgressStyle::with_template("{spinner} {bytes}/{total_bytes} ({bytes_per_sec}) {bar:40} {eta}")
+        .unwrap();
+    bar.set_style(style);
+
+    let mut out = File::create(dst)?;
+    let (_, body) = res.into_parts();
+    let mut reader = bar.wrap_read(body.into_reader());
+
+    io::copy(&mut reader, &mut out)?;
+    bar.finish_with_message(DONE.value());
+
+    Ok(())
 }
 
 pub fn deploy() -> ExitCode {
