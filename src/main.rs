@@ -111,13 +111,18 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
                     EXIT | QUIT => break,
                     _ => (),
                 }
-                input.add_history_entry(trimmed).soft_unwrap();
+                if !line.starts_with("  ") {
+                    input.add_history_entry(trimmed).soft_unwrap();
+                }
                 match shell_words::split(trimmed) {
                     Ok(args) => code = Some(work(args, config)),
                     Err(e) => e.eprintln(),
                 };
             }
-            Err(ReadlineError::Interrupted) => continue, // Ctrl-C
+            Err(ReadlineError::Interrupted) => { // Ctrl-C
+                code = None;
+                continue
+            },
             Err(ReadlineError::Eof) => break, // Ctrl-D
             Err(e) => {
                 e.eprintln();
