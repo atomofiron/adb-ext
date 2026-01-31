@@ -4,6 +4,7 @@ use std::ffi::OsStr;
 use std::fmt::Display;
 use std::io;
 use std::io::Write;
+use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Output};
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -130,20 +131,28 @@ fn eprintln<E: Display>(e: &E) -> Rslt<()> {
     return stream.reset().boxed()
 }
 
-pub fn try_make_colored<'l, D: Display>(value: D, color: Color) -> String {
-    match make_colored(&value, color) {
+pub fn try_make_colored<'l,>(value: &str, color: Color, range: Range<usize>) -> String {
+    match make_colored(&value, color, range) {
         Ok(colored) => colored,
         Err(_) => value.to_string(),
     }
 }
 
-fn make_colored<'l, D: Display>(value: &D, color: Color) -> Rslt<String> {
+fn make_colored<'l>(value: &str, color: Color, range: Range<usize>) -> Rslt<String> {
     let bw = BufferWriter::stderr(ColorChoice::AlwaysAnsi);
     let mut buf = bw.buffer();
     buf.set_color(ColorSpec::new().set_fg(Some(color)))?;
-    write!(&mut buf, "{value}")?;
+
+    let mut result = String::new();
+    result.push_str(&value[..range.start]);
+
+    write!(&mut buf, "{}", &value[range.clone()])?;
     buf.reset()?;
-    return Ok(String::from_utf8_lossy(buf.as_slice()).into_owned())
+    let colored = String::from_utf8_lossy(buf.as_slice()).into_owned();
+    result.push_str(&colored);
+
+    result.push_str(&value[range.end..]);
+    return Ok(result)
 }
 
 fn count_nbsp(bytes: &Vec<u8>) -> usize {

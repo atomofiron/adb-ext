@@ -1,8 +1,8 @@
 use crate::core::anim_scale::change_anim_scale;
 use crate::core::apks::{run_apk, steal_apk};
-use crate::core::completer::CmdHelper;
+use crate::core::completer::{CmdEditor, CmdHelper, CmdHighlight};
 use crate::core::config::Config;
-use crate::core::ext::{try_make_colored, PrintExt, ResultExt};
+use crate::core::ext::{PrintExt, ResultExt};
 use crate::core::fix::fix_on_linux;
 use crate::core::layout_bounds::debug_layout_bounds;
 use crate::core::orientation::{orientation, Orientation};
@@ -20,18 +20,16 @@ use crate::core::system::{bin_name, history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
 use crate::core::util::{get_help, string};
-use rustyline::history::DefaultHistory;
-use rustyline::{error::ReadlineError, Editor};
+use rustyline::error::ReadlineError;
+use std::cell::RefCell;
 use std::env;
 use std::env::args;
 use std::path::Path;
 use std::process::ExitCode;
-use termcolor::Color;
+use std::rc::Rc;
 
 mod core;
 mod tests;
-
-type CmdEditor = Editor<CmdHelper, DefaultHistory>;
 
 enum StartName {
     Adb,
@@ -74,12 +72,14 @@ fn main() -> ExitCode {
         get_help(None).println();
         INPUT_PARAMETERS_OR_EXIT.println();
         let mut input = CmdEditor::new().unwrap();
-        input.set_helper(Some(CmdHelper::from(SUGGESTIONS)));
+        let success = Rc::new(RefCell::new(None));
+        let helper = CmdHelper::from(SUGGESTIONS, success.clone());
+        input.set_helper(Some(helper));
         let history_path = history_path();
         if history_path.exists() {
             input.load_history(&history_path).unwrap();
         }
-        let code = looper_work(&mut input, &mut config);
+        let code = looper_work(&mut input, &mut config, success);
         input.save_history(&history_path).unwrap();
         code
     } else {
@@ -87,22 +87,17 @@ fn main() -> ExitCode {
     }
 }
 
-fn looper_work(input: &mut CmdEditor, config: &mut Config) -> ExitCode {
+fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight) -> ExitCode {
     let mut code: Option<ExitCode> = None;
     loop {
         let previous = code.map(|code| code == ExitCode::SUCCESS);
-        #[cfg(unix)]
-        let status = match previous {
-            None => string(""),
-            Some(true) => try_make_colored("✔ ", Color::Green),
-            Some(false) => try_make_colored("✘ ", Color::Red),
-        };
-        #[cfg(windows)] // has some bug
         let status = match previous {
             None => string(""),
             Some(true) => string("✔ "),
             Some(false) => string("✘ "),
         };
+        let status_range = 0..status.as_bytes().len();
+        *success.borrow_mut() = previous.map(|success| (success, status_range));
         let prompt = format!("{status}{ADB_EXT}> ");
         match input.readline(&prompt) {
             Ok(line) => {
