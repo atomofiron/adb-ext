@@ -8,14 +8,14 @@ edition = "2021"
 [dependencies]
 nix = { version = "0.31", features = ["user", "signal"] }
 dialoguer = { version = "0.12", features = ["fuzzy-select"] }
-chrono = "0.4.31"
+chrono = "0.4"
 dirs = "6.0"
 which = "8.0"
 itertools = "0.14"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_derive = "1.0.193"
 serde_yaml = "0.9.27"
-regex = "1.10.2"
+regex = "1.12"
 windows-sys = "0.61"
 shell-words = "1.1"
 rustyline = "17.0"
