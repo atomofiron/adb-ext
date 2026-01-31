@@ -121,11 +121,6 @@ pub static UNKNOWN_ERROR: Label = Label::new(
     "unknown error",
     "неизвестная ошибка",
 );
-#[cfg(target_os = "linux")]
-pub static SOMETHING_WRONG: Label = Label::new(
-    "something went wrong(",
-    "что-то пошло не так(",
-);
 pub static CANCEL: Label = Label::new(
     "cancel",
     "отмена",

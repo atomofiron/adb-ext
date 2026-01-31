@@ -1,6 +1,7 @@
-use crate::core::ext::{OptionArg, OutputExt};
+use crate::core::ext::{OptionArg, OutputExt, PrintExt};
 use crate::core::fix::usb_device::UsbDevice;
 use crate::core::selector::fetch_adb_devices;
+use crate::core::strings::{NO_DEVICES_FOUND, RECONNECT_DEVICES, SUDO_EXPLANATION, UNKNOWN_ERROR, WELL_DONE};
 use crate::FIX;
 use itertools::Itertools;
 use nix::unistd::Uid;
@@ -46,19 +47,24 @@ pub fn fix_permission(serial: Option<String>) -> ExitCode {
         .unique()
         .collect::<Vec<String>>();
     if ids.is_empty() {
-        return NO_DEVICES_FOUND.println();
+        NO_DEVICES_FOUND.println();
+        return ExitCode::FAILURE;
     }
-    match apply(&ids) {
+    return match apply(&ids) {
         Err(cause) => {
             println!("{}", cause);
-            return ExitCode::FAILURE;
+            ExitCode::FAILURE
         },
         _ => match serial {
-            None => RECONNECT_DEVICES.println(),
+            None => {
+                RECONNECT_DEVICES.println();
+                ExitCode::SUCCESS
+            },
             Some(serial) => {
                 RECONNECT_DEVICES.println();
                 wait_for_the_fixed_adb_device(serial);
                 WELL_DONE.println();
+                ExitCode::SUCCESS
             },
         }
     }

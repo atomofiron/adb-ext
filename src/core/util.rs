@@ -57,6 +57,6 @@ pub fn interactive_select<T, F: Fn(&T, &Vec<T>) -> String>(prompt: &str, mut ite
         Some(None) => return Err(ExitCode::SUCCESS), // cancel
         None => return Err(ExitCode::FAILURE),
     };
-    return items.try_remove(selection)
+    return VecExt::try_remove(&mut items, selection)
         .ok_or_else(|| ExitCode::SUCCESS) // cancel
 }
