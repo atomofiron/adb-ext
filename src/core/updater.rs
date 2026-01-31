@@ -104,7 +104,7 @@ pub fn deploy() -> ExitCode {
     let src = env::args().nth(0).unwrap();
     fs::copy(src, &bin_path).unwrap();
     env::set_current_dir(&bin_dir).unwrap();
-    for link in [ADB, LSS, MSS, SHOT, LSC, MSC, REC, RECORD, BOUNDS, TAPS, POINTER, PORT, LAND, FPORT, FLAND, ACCEL, NOACCEL, STEAL, RUN] {
+    for link in [ADB, LSS, MSS, SHOT, LSC, MSC, REC, RECORD, BOUNDS, TAPS, POINTER, PORT, LAND, FPORT, FLAND, ACCEL, NO_ACCEL, ANI_SCALE, STEAL, RUN] {
         let _ = remove_link(link);
         make_link(link).unwrap_or_else(|e|
             println!("{SYMLINK_FAIL}{link} ({e})")

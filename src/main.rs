@@ -1,3 +1,4 @@
+use crate::core::anim_scale::change_anim_scale;
 use crate::core::apks::{run_apk, steal_apk};
 use crate::core::completer::CmdHelper;
 use crate::core::config::Config;
@@ -53,6 +54,7 @@ enum Feature {
     LayoutBounds,
     Touches,
     Pointer,
+    AnimScale(String),
     Sdk(Option<String>),
 }
 
@@ -160,6 +162,7 @@ fn work(args: Vec<String>, config: &mut Config) -> ExitCode {
         Feature::LayoutBounds => debug_layout_bounds(),
         Feature::Touches => toggle_taps(),
         Feature::Pointer => toggle_pointer(),
+        Feature::AnimScale(scale) => change_anim_scale(scale),
         Feature::Sdk(path) => set_sdk(path, config),
     }
 }
@@ -194,10 +197,10 @@ fn match_arg(args: &Vec<String>) -> Option<Feature> {
         "" => Feature::RunAdbWithArgs,
         LSS => Feature::LastScreenShots(Params::from(first, args.get(1).cloned())),
         LSC => Feature::LastScreenCasts(Params::from(first, args.get(1).cloned())),
-        MSS | SHOT => Feature::MakeScreenShot(first, args.get(1).cloned().unwrap_or(String::new())),
-        MSC | REC | RECORD => Feature::MakeScreenCast(first, args.get(1).cloned().unwrap_or(String::new())),
+        MSS | SHOT => Feature::MakeScreenShot(first, args.get(1).cloned().unwrap_or_default()),
+        MSC | REC | RECORD => Feature::MakeScreenCast(first, args.get(1).cloned().unwrap_or_default()),
         FIX => Feature::FixPermission(args.get(1).cloned()),
-        RUN => Feature::RunApk(args.get(1).cloned().unwrap_or(String::new())),
+        RUN => Feature::RunApk(args.get(1).cloned().unwrap_or_default()),
         STEAL => Feature::StealApk(
             args.get(1).cloned(),
             args.get(2).cloned(),
@@ -209,10 +212,11 @@ fn match_arg(args: &Vec<String>) -> Option<Feature> {
         FPORT => Feature::Orientation(Orientation::portrait(true)),
         FLAND => Feature::Orientation(Orientation::landscape(true)),
         ACCEL => Feature::Orientation(Orientation::accelerometer(true)),
-        NOACCEL => Feature::Orientation(Orientation::accelerometer(false)),
+        NO_ACCEL => Feature::Orientation(Orientation::accelerometer(false)),
         BOUNDS => Feature::LayoutBounds,
         TAPS => Feature::Touches,
         POINTER => Feature::Pointer,
+        ANI_SCALE => Feature::AnimScale(args.get(1).cloned().unwrap_or_default()),
         SDK => Feature::Sdk(args.get(1).cloned()),
         "shit" => {
             "💩".println();

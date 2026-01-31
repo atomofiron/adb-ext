@@ -20,7 +20,6 @@ pub fn debug_layout_bounds() -> ExitCode {
         Err(code) => return code,
     };
     let output = run_adb_with(&device, AdbArgs::run(args));
-
     if !output.status.success() {
         output.print_err();
     }

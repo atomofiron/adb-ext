@@ -20,3 +20,4 @@ pub mod taps;
 pub mod pointer;
 pub mod completer;
 pub mod sdk;
+pub mod anim_scale;

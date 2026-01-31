@@ -3,10 +3,9 @@ use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::{print_no_one, OutputExt, PrintExt, StringExt, VecExt};
 use crate::core::fix::sudo_fix_on_linux;
 use crate::core::r#const::SHELL;
-use crate::core::strings::{CANCEL, ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::strings::{ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
 use crate::core::system::error_exit_status;
-use crate::core::util::{failure, string};
-use dialoguer::FuzzySelect;
+use crate::core::util::{failure, interactive_select, string};
 use itertools::Itertools;
 use std::process::{ExitCode, Output};
 
@@ -137,7 +136,7 @@ pub fn resolve_device() -> Result<AdbDevice, ExitCode> {
             return failure();
         },
         _ if devices.len() == 1 => devices.remove(0),
-        _ => ask_for_device(devices),
+        _ => ask_for_device(devices)?,
     };
     if device.no_permissions && !sudo_fix_on_linux(Some(device.serial.clone())) {
         ERROR.eprintln();
@@ -146,23 +145,15 @@ pub fn resolve_device() -> Result<AdbDevice, ExitCode> {
     return Ok(device);
 }
 
-fn ask_for_device(mut devices: Vec<AdbDevice>) -> AdbDevice {
-    let mut items = devices.iter().map(|device| {
+fn ask_for_device(devices: Vec<AdbDevice>) -> Result<AdbDevice, ExitCode> {
+    interactive_select(SELECT_DEVICE.value(), devices, |device, devices| {
         let status = match () {
             _ if device.ok => String::new(),
             _ if device.unauthorized => format!(" ({UNAUTHORIZED_BY_DEVICE})").to_lowercase(),
             _ => format!(" ({UNKNOWN})").to_lowercase(),
         };
         format!("{}{status}", devices.get_unique_model_name(device))
-    }).collect::<Vec<String>>();
-    items.push(CANCEL.value().to_string());
-    let selection = FuzzySelect::new()
-        .with_prompt(SELECT_DEVICE.value())
-        .default(0)
-        .items(&items)
-        .interact()
-        .unwrap();
-    return devices.remove(selection);
+    })
 }
 
 fn get_description(serial: &String) -> String {
@@ -178,7 +169,7 @@ fn get_description(serial: &String) -> String {
     let version = VERSIONS.get(sdk.clone().unwrap_or(VERSIONS.len())).unwrap_or(&"n/a");
     let version = format!("{version} [{}]", sdk.unwrap_or(0));
 
-    let index = match properties.index_of(&string("anime")) {
+    let index = match properties.index_of(|it| it == "anime") {
         None => return serial.clone(),
         Some(index) => index,
     };

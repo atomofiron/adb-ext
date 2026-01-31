@@ -70,6 +70,10 @@ pub static SELECT_DEVICE: Label = Label::new(
     "select a device",
     "выберите устройство",
 );
+pub static SELECT_ANIM_SCALE: Label = Label::new(
+    "select the scale",
+    "выберите множитель",
+);
 pub static MEDIAS_NOT_FOUND: Label = Label::new(
     "screenshots/casts were not found",
     "скриншоты/записи не найдены",
