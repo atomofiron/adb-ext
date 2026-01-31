@@ -1,6 +1,6 @@
 use crate::core::anim_scale::change_anim_scale;
 use crate::core::apks::{run_apk, steal_apk};
-use crate::core::completer::{CmdEditor, CmdHelper, CmdHighlight};
+use crate::core::cmd_editor::{CmdEditor, CmdHelper, CmdHighlight};
 use crate::core::config::Config;
 use crate::core::ext::{PrintExt, ResultExt};
 use crate::core::fix::fix_on_linux;

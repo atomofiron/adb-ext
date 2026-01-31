@@ -18,6 +18,6 @@ pub mod layout_bounds;
 pub mod system;
 pub mod taps;
 pub mod pointer;
-pub mod completer;
+pub mod cmd_editor;
 pub mod sdk;
 pub mod anim_scale;
