@@ -1,4 +1,4 @@
-use crate::core::r#const::ERROR_CODE;
+use crate::core::r#const::{ERROR_CODE, NULL};
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
@@ -263,6 +263,7 @@ impl StrExt for str {
 pub trait StringExt {
     fn contains_ci(&self, other: &String) -> bool;
     fn path(&self) -> PathBuf;
+    fn is_null_or_empty(&self) -> bool;
 }
 
 impl StringExt for String {
@@ -274,19 +275,33 @@ impl StringExt for String {
     fn path(&self) -> PathBuf {
         PathBuf::from(self)
     }
+
+    fn is_null_or_empty(&self) -> bool {
+        self.is_empty() || self == NULL
+    }
 }
 
 pub trait PathBufExt {
     fn to_string(&self) -> String;
     fn to_str(&self) -> &str;
+    fn is_null_or_empty(&self) -> bool;
 }
 
 impl PathBufExt for PathBuf {
+
     fn to_string(&self) -> String {
         self.to_string_lossy().to_string()
     }
+
     fn to_str(&self) -> &str {
         Path::to_str(&self).unwrap()
+    }
+
+    fn is_null_or_empty(&self) -> bool {
+        match Path::to_str(self) {
+            None => false, // it's not empty
+            Some(s) => s.is_empty() || s == NULL
+        }
     }
 }
 
@@ -331,6 +346,13 @@ impl<T> OptionExt<T> for Option<T> {
             Some(_) => (),
         }
         return self
+    }
+}
+
+pub fn take_if<T, F: Fn(&T) -> bool>(value: T, predicate: F) -> Option<T> {
+    match predicate(&value) {
+        true => Some(value),
+        false => None,
     }
 }
 
