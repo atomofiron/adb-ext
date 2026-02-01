@@ -119,7 +119,7 @@ impl<E: Display> PrintExt for E {
             #[cfg(unix)]
             eprintln!("\x1b[31m{self}\x1b[0m");
             #[cfg(windows)]
-            eprintln!("{self}");
+            self.eprintln();
         }
     }
 }

@@ -52,7 +52,7 @@ pub fn fix_permission(serial: Option<String>) -> ExitCode {
     }
     return match apply(&ids) {
         Err(cause) => {
-            println!("{}", cause);
+            cause.println();
             ExitCode::FAILURE
         },
         _ => match serial {

@@ -1,5 +1,5 @@
 use crate::core::ext::{OutputExt, ResultExt, VecExt};
-use crate::core::r#const::{HELP, NULL};
+use crate::core::r#const::{HELP_TEXT, NULL};
 use crate::core::strings::CANCEL;
 use chrono::Local;
 use dialoguer::FuzzySelect;
@@ -10,7 +10,7 @@ use std::process::{Command, ExitCode};
 
 pub fn get_help(separator: Option<&str>) -> String {
     let sep = separator.unwrap_or(", ");
-    HELP.iter().join(sep)
+    HELP_TEXT.iter().join(sep)
 }
 
 pub fn string(value: &str) -> String {

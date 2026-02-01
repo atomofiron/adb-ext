@@ -69,7 +69,6 @@ fn main() -> ExitCode {
         args.remove(0);
     }
     return if args.is_empty() && matches!(name, StartName::AdbExt) {
-        get_help(None).println();
         INPUT_PARAMETERS_OR_EXIT.println();
         let mut input = CmdEditor::new().unwrap();
         let success = Rc::new(RefCell::new(None));
@@ -107,6 +106,10 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight
                         code = None;
                         continue
                     },
+                    HELP => {
+                        get_help(None).println();
+                        continue
+                    }
                     CLEAR => {
                         code = None;
                         input.clear_screen().soft_unwrap();

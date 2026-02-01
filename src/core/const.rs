@@ -1,4 +1,5 @@
 
+pub const HELP: &str = "help";
 pub const LSS: &str = "lss";
 pub const LSC: &str = "lsc";
 pub const MSS: &str = "mss";
@@ -31,9 +32,9 @@ pub const UPDATE: &str = "update";
 pub const SDK: &str = "sdk";
 pub const FIX: &str = "fix";
 
-pub const HELP: &[&str] = &[
+pub const HELP_TEXT: &[&str] = &[
     "lss [count]", "mss|shot [destination]", "lsc [count]", "msc|rec|record [destination]",
-    "bounds", "taps", "pointer", "animscale [scale]", "[f]port|[f]land|[no]accel", "sdk",
+    "bounds", "taps", "pointer", "animscale [scale]", "[f]port|[f]land|[no]accel", "sdk [path]",
     "run app.apk", "steal app.package.name", "adb-ext update"
 ];
 // todo parse adb help
