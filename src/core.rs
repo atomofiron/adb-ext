@@ -1,3 +1,4 @@
+pub mod start_mode;
 pub mod adb_device;
 pub mod ext;
 pub mod pull_media;
