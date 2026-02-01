@@ -9,11 +9,14 @@ ensure() {
     if ! "$@"; then err "command failed: $*"; fi
 }
 
+tryDequarantine=false
 system=$(ensure uname -sm)
 if [ "$system" = "Darwin arm64" ]; then
   variant="adb-ext-apple-arm"
+  tryDequarantine=true
 elif [ "$system" = "Darwin x86_64" ]; then
   variant="adb-ext-apple-x86_64"
+  tryDequarantine=true
 elif [ "$system" = "Linux x86_64" ]; then
   variant="adb-ext-linux-x86_64"
 else
@@ -22,5 +25,8 @@ fi
 
 ensure curl -X GET -fL --progress-bar https://github.com/atomofiron/adb-ext/releases/latest/download/$variant -o adb-ext
 ensure chmod u+x adb-ext
-ensure ./adb-ext deploy
-rm $0
+if [ tryDequarantine ]; then
+  xattr -d com.apple.quarantine ./adb-ext 2&>/dev/null
+fi
+#ensure ./adb-ext deploy
+#rm $0
