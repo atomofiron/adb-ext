@@ -104,9 +104,9 @@ pub static ADD_INTERPRETER: Label = Label::new(
     "add the interpreter into the hook file, for example #!/bin/bash or #!/bin/zsh",
     "добавьте интерпретатор в файл хука, например #!/bin/bash или #!/bin/zsh",
 );
-pub static INPUT_PARAMETERS_OR_EXIT: Label = Label::new(
-    "input parameters or 'exit', 'quit', Ctrl-D to exit",
-    "введите параметры или 'exit', 'quit', Ctrl-D, чтобы выйти",
+pub static INPUT_OR_EXIT: Label = Label::new(
+    "input command or 'exit', 'quit', Ctrl-D to exit",
+    "введите команду или 'exit', 'quit', Ctrl-D, чтобы выйти",
 );
 pub static UNKNOWN: Label = Label::new(
     "unknown",

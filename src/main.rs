@@ -13,7 +13,7 @@ use crate::core::screencap::make_screenshot;
 use crate::core::screenrecord::make_screencast;
 use crate::core::sdk::set_sdk;
 use crate::core::selector::resolve_device_and_run_args;
-use crate::core::strings::{Language, INPUT_PARAMETERS_OR_EXIT};
+use crate::core::strings::{Language, INPUT_OR_EXIT};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
 use crate::core::system::{bin_name, history_path, ADB_EXT};
@@ -69,7 +69,7 @@ fn main() -> ExitCode {
         args.remove(0);
     }
     return if args.is_empty() && matches!(name, StartName::AdbExt) {
-        INPUT_PARAMETERS_OR_EXIT.println();
+        INPUT_OR_EXIT.println();
         let mut input = CmdEditor::new().unwrap();
         let success = Rc::new(RefCell::new(None));
         let helper = CmdHelper::from(SUGGESTIONS, success.clone());
