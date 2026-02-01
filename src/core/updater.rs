@@ -20,7 +20,9 @@ use std::fs::remove_file;
 #[cfg(unix)]
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Command, ExitCode, Stdio};
+#[cfg(target_os = "macos")]
+use std::process::Stdio;
+use std::process::{Command, ExitCode};
 use std::{env, fs};
 use std::{fs::File, io};
 
@@ -50,7 +52,7 @@ pub fn update() -> ExitCode {
         }
     };
     path = make_executable(path).unwrap();
-    #[cfg(macos)]
+    #[cfg(target_os = "macos")]
     Command::new("xattr")
         .arg("-d")
         .arg("com.apple.quarantine")
