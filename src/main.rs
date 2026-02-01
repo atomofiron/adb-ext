@@ -16,10 +16,10 @@ use crate::core::selector::resolve_device_and_run_args;
 use crate::core::strings::{Language, INPUT_OR_EXIT};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
-use crate::core::system::{bin_name, history_path, ADB_EXT};
+use crate::core::system::{history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
-use crate::core::util::{get_help, string};
+use crate::core::util::{get_help, print_version, string};
 use rustyline::error::ReadlineError;
 use std::cell::RefCell;
 use std::env;
@@ -31,10 +31,10 @@ use std::rc::Rc;
 mod core;
 mod tests;
 
-enum StartName {
+enum StartMode {
     Adb,
     AdbExt,
-    None,
+    Unknown,
 }
 
 enum Feature {
@@ -64,11 +64,11 @@ fn main() -> ExitCode {
     config.write().unwrap();
     config.update_adb_path();
     let mut args = args().collect::<Vec<String>>();
-    let name = start_name(args.get(0));
-    if !matches!(name, StartName::None) {
+    let mode = start_name(args.get(0));
+    if !matches!(mode, StartMode::Unknown) {
         args.remove(0);
     }
-    return if args.is_empty() && matches!(name, StartName::AdbExt) {
+    return if args.is_empty() && matches!(mode, StartMode::AdbExt) {
         INPUT_OR_EXIT.println();
         let mut input = CmdEditor::new().unwrap();
         let success = Rc::new(RefCell::new(None));
@@ -82,7 +82,7 @@ fn main() -> ExitCode {
         input.save_history(&history_path).unwrap();
         code
     } else {
-        work(args, &mut config)
+        work(mode, args, &mut config)
     }
 }
 
@@ -106,10 +106,6 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight
                         code = None;
                         continue
                     },
-                    HELP => {
-                        get_help(None).println();
-                        continue
-                    }
                     CLEAR => {
                         code = None;
                         input.clear_screen().soft_unwrap();
@@ -122,7 +118,7 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight
                     input.add_history_entry(trimmed).soft_unwrap();
                 }
                 match shell_words::split(trimmed) {
-                    Ok(args) => code = Some(work(args, config)),
+                    Ok(args) => code = Some(work(StartMode::AdbExt, args, config)),
                     Err(e) => e.eprintln(),
                 };
             }
@@ -140,8 +136,8 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight
     return code.unwrap_or(ExitCode::SUCCESS);
 }
 
-fn work(args: Vec<String>, config: &mut Config) -> ExitCode {
-    let feature = match match_arg(&args) {
+fn work(mode: StartMode, args: Vec<String>, config: &mut Config) -> ExitCode {
+    let feature = match match_arg(mode, &args) {
         Some(feature) => feature,
         None => return ExitCode::SUCCESS,
     };
@@ -165,9 +161,9 @@ fn work(args: Vec<String>, config: &mut Config) -> ExitCode {
     }
 }
 
-fn start_name(value: Option<&String>) -> StartName {
+fn start_name(value: Option<&String>) -> StartMode {
     let value = match value {
-        None => return StartName::None,
+        None => return StartMode::Unknown,
         Some(value) => value,
     };
     let trimmed = value.trim_matches(['"', '\'']);
@@ -181,13 +177,13 @@ fn start_name(value: Option<&String>) -> StartName {
     #[cfg(windows)]
     let base = name.strip_suffix(DOT_EXE).unwrap_or(&name);
     return match () {
-        _ if base == ADB => StartName::Adb,
-        _ if base == ADB_EXT => StartName::AdbExt,
-        _ => StartName::None,
+        _ if base == ADB => StartMode::Adb,
+        _ if base == ADB_EXT => StartMode::AdbExt,
+        _ => StartMode::Unknown,
     }
 }
 
-fn match_arg(args: &Vec<String>) -> Option<Feature> {
+fn match_arg(mode: StartMode, args: &Vec<String>) -> Option<Feature> {
     let first = args.get(0)
         .unwrap_or(&string(""))
         .to_ascii_lowercase();
@@ -220,11 +216,18 @@ fn match_arg(args: &Vec<String>) -> Option<Feature> {
             "💩".println();
             return None
         },
-        "--version" => {
-            println!("{} v{}", bin_name(), env!("CARGO_PKG_VERSION"));
-            return None
-        }
+        VERSION => return adb_or(mode, || print_version()),
+        HELP => return adb_or(mode, || get_help(None).println()),
         _ => Feature::RunAdbWithArgs,
     };
     return Some(feature)
+}
+
+fn adb_or<F: Fn()>(mode: StartMode, action: F) -> Option<Feature> {
+    match mode {
+        StartMode::Adb => return Some(Feature::RunAdbWithArgs),
+        StartMode::Unknown |
+        StartMode::AdbExt => action()
+    }
+    return None
 }

@@ -7,10 +7,15 @@ use itertools::Itertools;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
+use crate::core::system::bin_name;
 
 pub fn get_help(separator: Option<&str>) -> String {
     let sep = separator.unwrap_or(", ");
     HELP_TEXT.iter().join(sep)
+}
+
+pub fn print_version() {
+    println!("{} v{}", bin_name(), env!("CARGO_PKG_VERSION"))
 }
 
 pub fn string(value: &str) -> String {

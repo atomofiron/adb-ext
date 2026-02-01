@@ -1,5 +1,6 @@
 
 pub const HELP: &str = "help";
+pub const VERSION: &str = "version";
 pub const LSS: &str = "lss";
 pub const LSC: &str = "lsc";
 pub const MSS: &str = "mss";
