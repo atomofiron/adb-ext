@@ -332,6 +332,7 @@ pub trait OptionExt<T> {
     fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
     fn if_some<F>(self, f: F) -> Option<T> where F: FnOnce(&T);
     fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce();
+    fn or_err<E>(self, e: E) -> Result<T, E>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
@@ -355,6 +356,12 @@ impl<T> OptionExt<T> for Option<T> {
             Some(_) => (),
         }
         return self
+    }
+    fn or_err<E>(self, e: E) -> Result<T, E> {
+        match self {
+            Some(t) => Ok(t),
+            None => Err(e),
+        }
     }
 }
 

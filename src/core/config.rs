@@ -93,22 +93,24 @@ impl Default for Screencasts {
 }
 
 impl Config {
+
     pub fn read() -> Config {
-        let config_path = config_path();
-        let text = fs::read_to_string(&config_path)
-            .unwrap_or_default();
-        return serde_yaml::from_str::<Config>(&text)
-            .unwrap_or_default();
+        File::open(&config_path())
+            .ok()
+            .and_then(|file| serde_yaml::from_reader(file).ok())
+            .unwrap_or_default()
     }
 
     pub fn write(&self) -> Rslt<()> {
         let config_path = config_path();
         if !config_path.exists() {
-            fs::create_dir_all(config_path.parent().unwrap())?;
-            File::create(&config_path)?;
+            let parent = config_path.parent()
+                .or_err("Config file does not have a parent directory")?;
+            fs::create_dir_all(parent)?;
         }
-        let config_text = serde_yaml::to_string(self)?;
-        return fs::write(config_path, config_text).boxed()
+        let file = File::create(&config_path)?;
+        return serde_yaml::to_writer(file, self)
+            .boxed()
     }
 
     pub fn update_adb_path(&self) {
