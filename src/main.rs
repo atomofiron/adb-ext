@@ -42,10 +42,10 @@ fn main() -> ExitCode {
     config.update_adb_path();
     let mut args = args().collect::<Vec<String>>();
     let mode = start_name(args.get(0));
-    if !matches!(mode, StartMode::Unknown) {
+    if !mode.is_unknown() {
         args.remove(0);
     }
-    return if args.is_empty() && matches!(mode, StartMode::AdbExt) {
+    return if args.is_empty() && mode.is_adb_ext() {
         INPUT_OR_EXIT.println();
         let mut input = CmdEditor::new().unwrap();
         let success = Rc::new(RefCell::new(None));
@@ -138,8 +138,8 @@ fn work(mode: StartMode, args: Vec<String>, config: &mut Config) -> ExitCode {
         POINTER => return toggle_pointer(),
         ANI_SCALE => return change_anim_scale(args.get(1).cloned().unwrap_or_default()),
         SDK => return set_sdk(args.get(1).cloned(), config),
-        VERSION if !mode.adb() => print_version(),
-        HELP if !mode.adb() => get_help(None).println(),
+        VERSION if !mode.is_adb() => print_version(),
+        HELP if !mode.is_adb() => get_help(None).println(),
         "shit" => "💩".println(),
         _ => return resolve_device_and_run_args(args.as_slice()),
     };
