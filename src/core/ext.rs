@@ -1,4 +1,4 @@
-use crate::core::r#const::{ERROR_CODE, NULL};
+use crate::core::r#const::{ERROR_CODE, HOME, NULL};
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
@@ -294,6 +294,7 @@ pub trait PathBufExt {
     fn to_string(&self) -> String;
     fn to_str(&self) -> &str;
     fn is_null_or_empty(&self) -> bool;
+    fn replace_home_with_tilda(self) -> Self;
 }
 
 impl PathBufExt for PathBuf {
@@ -310,6 +311,18 @@ impl PathBufExt for PathBuf {
         match Path::to_str(self) {
             None => false, // it's not empty
             Some(s) => s.is_empty() || s == NULL
+        }
+    }
+
+    fn replace_home_with_tilda(self) -> Self {
+        match dirs::home_dir() {
+            None => return self,
+            Some(home) => {
+                self.strip_prefix(home) // check starts_with inside
+                    .ok()
+                    .map(|it| Path::new(HOME).join(it))
+                    .unwrap_or(self)
+            },
         }
     }
 }
@@ -333,6 +346,7 @@ pub trait OptionExt<T> {
     fn if_some<F>(self, f: F) -> Option<T> where F: FnOnce(&T);
     fn if_none<F>(self, f: F) -> Option<T> where F: FnOnce();
     fn or_err<E>(self, e: E) -> Result<T, E>;
+    fn or_else_try<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T>;
 }
 
 impl<T> OptionExt<T> for Option<T> {
@@ -361,6 +375,12 @@ impl<T> OptionExt<T> for Option<T> {
         match self {
             Some(t) => Ok(t),
             None => Err(e),
+        }
+    }
+    fn or_else_try<F>(self, f: F) -> Option<T> where F: FnOnce() -> Option<T> {
+        match self {
+            None => f(),
+            s => s,
         }
     }
 }

@@ -37,6 +37,7 @@ fn main() -> ExitCode {
         Language::set_language(Language::Ru);
     }
     let mut config = Config::read();
+    config.resolve_sdk();
     config.write().unwrap();
     config.update_adb_path();
     let mut args = args().collect::<Vec<String>>();

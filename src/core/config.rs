@@ -1,12 +1,12 @@
 use crate::core::destination::Destination;
 use crate::core::ext::{OptionExt, PathBufExt, ResultExt, ResultToOption, Rslt, StrExt};
 use crate::core::r#const::{ADB, BUILD_TOOLS, PLATFORM_TOOLS};
-use crate::core::system::{adb_name, config_path, make_executable, ADB_EXT};
+use crate::core::system::{adb_name, config_path, default_sdk_dir, make_executable, ADB_EXT};
 use itertools::Itertools;
 use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use crate::core::util::string;
 
 pub static mut ADB_PATH: Option<String> = None;
@@ -136,6 +136,19 @@ impl Config {
                 p.to_string()
             });
         }
+    }
+
+    pub fn resolve_sdk(&mut self) {
+        self.environment.sdk = self.environment.sdk
+            .clone()
+            .or_else_try(|| {
+                let default = default_sdk_dir();
+                match default.is_dir() {
+                    true => Path::to_str(&default.replace_home_with_tilda())
+                        .map(String::from),
+                    false => None,
+                }
+            });
     }
 
     pub fn get_adb_path() -> Option<String> {

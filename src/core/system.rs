@@ -89,6 +89,23 @@ pub fn bin_dir() -> PathBuf {
         .join("bin")
 }
 
+#[cfg(target_os = "macos")]
+pub fn default_sdk_dir() -> PathBuf {
+    home_dir().join("Library/Android/sdk")
+}
+
+#[cfg(target_os = "linux")]
+pub fn default_sdk_dir() -> PathBuf {
+    home_dir().join("Android/Sdk")
+}
+
+#[cfg(target_os = "windows")]
+pub fn default_sdk_dir() -> PathBuf {
+    dirs::data_local_dir()
+        .expect("no LocalAppData")
+        .join("Android/sdk")
+}
+
 #[cfg(windows)]
 pub fn bin_dir() -> PathBuf {
     dirs::data_local_dir()
