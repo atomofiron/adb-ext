@@ -11,14 +11,14 @@ const PUT_SETTING: &str = "settings put global debug_layout"; // settings get gl
 const CALL: &str = "service call activity 1599295570";
 
 pub fn debug_layout_bounds() -> ExitCode {
-    let invert_prop = invert(GET_PROP);
-    let invert_setting = invert(GET_SETTING);
-    let command = format!("{SET_PROP} $({invert_prop}); {PUT_SETTING} $({invert_setting}); {CALL}");
-    let args = &[SHELL, command.as_str()];
     let device = match resolve_device() {
         Ok(device) => device,
         Err(code) => return code,
     };
+    let invert_prop = invert(GET_PROP);
+    let invert_setting = invert(GET_SETTING);
+    let command = format!("{SET_PROP} $({invert_prop}); {PUT_SETTING} $({invert_setting}); {CALL}");
+    let args = &[SHELL, command.as_str()];
     let output = run_adb_with(&device, AdbArgs::run(args));
     if !output.status.success() {
         output.print_err();

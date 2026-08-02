@@ -52,15 +52,15 @@ impl Display for Orientation {
 }
 
 pub fn orientation(orientation: Orientation) -> ExitCode {
+    let device = match resolve_device() {
+        Ok(device) => device,
+        Err(code) => return code,
+    };
     let command = match orientation {
         Orientation::Accelerometer(_) => format!("{orientation}"),
         _ => format!("{} && {orientation}", Orientation::accelerometer(false)),
     };
     let args = &[SHELL, command.as_str()];
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
     let output = run_adb_with(&device, AdbArgs::run(args));
 
     if !output.status.success() {
