@@ -1,7 +1,7 @@
 use crate::core::destination::Destination;
 use crate::core::ext::{OptionExt, PathBufExt, ResultExt, ResultToOption, Rslt, StrExt};
 use crate::core::r#const::{ADB, BUILD_TOOLS, PLATFORM_TOOLS};
-use crate::core::system::{adb_name, config_path, make_executable};
+use crate::core::system::{adb_name, config_path, make_executable, ADB_EXT};
 use itertools::Itertools;
 use serde_derive::{Deserialize, Serialize};
 use std::fs;
@@ -119,15 +119,22 @@ impl Config {
                 .map(|it| it.join(ADB))
                 .take_some_if(|it| it.is_file())
                 .or_else(|| {
-                    let adb_name = adb_name();
-                    let platform_adb = PLATFORM_TOOLS.path().join(&adb_name);
-                    let paths = which::which_all(&adb_name)
+                    let paths = which::which_all(&adb_name())
                         .map(|it| it.collect::<Vec<_>>())
                         .unwrap_or(vec![]);
                     paths.iter()
-                        .find_or_first(|it| it.is_file() && it.ends_with(&platform_adb))
+                        .find_or_first(|it| {
+                            match () {
+                                _ if !it.is_file() => false,
+                                _ if !it.is_symlink() => true,
+                                _ if let Ok(path) = it.read_link() => path != ADB_EXT.path(),
+                                _ => false,
+                            }
+                        })
                         .cloned()
-                }).map(|p| p.to_string());
+                }).map(|p| {
+                p.to_string()
+            });
         }
     }
 

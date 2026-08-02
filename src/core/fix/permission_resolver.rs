@@ -12,6 +12,7 @@ use std::path::Path;
 use std::process::{Command, ExitCode};
 use std::thread::sleep;
 use std::time::Duration;
+use crate::core::r#const::ADB;
 
 const SUDO: &str = "sudo";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
@@ -94,7 +95,7 @@ fn find_usb_devices(serial: Option<String>) -> Vec<UsbDevice> {
         };
         match &serial {
             Some(serial) if number == *serial => return vec![device],
-            None if config == "adb" => devices.push(device),
+            None if config == ADB => devices.push(device),
             _ => (),
         }
     }
