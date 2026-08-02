@@ -28,5 +28,5 @@ ensure chmod u+x adb-ext
 if [ tryDequarantine ]; then
   xattr -d com.apple.quarantine ./adb-ext 2&>/dev/null
 fi
-#ensure ./adb-ext deploy
-#rm $0
+ensure ./adb-ext deploy
+rm $0
