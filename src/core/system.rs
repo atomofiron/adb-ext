@@ -11,18 +11,12 @@ use crate::core::ext::path_buf::PathBufExt;
 use std::path::PathBuf;
 use std::{fs, io};
 
-#[cfg(unix)]
-const ADB_EXT_YAML: &str = "adb-ext.yaml";
+const CONFIG_YAML: &str = "config.yaml";
+const HISTORY_TXT: &str = "history.txt";
 #[cfg(unix)]
 const DOT_CONFIG: &str = ".config";
 #[cfg(unix)]
 const DOT_LOCAL: &str = ".local";
-#[cfg(unix)]
-const ADB_EXT_HISTORY_TXT: &str = "adb-ext-history.txt";
-#[cfg(windows)]
-const CONFIG_YAML: &str = "config.yaml";
-#[cfg(windows)]
-const HISTORY_TXT: &str = "history.txt";
 #[cfg(windows)]
 pub const DOT_EXE: &str = ".exe";
 #[cfg(windows)]
@@ -148,7 +142,8 @@ fn data_path() -> PathBuf {
 pub fn config_path() -> PathBuf {
     home_dir()
         .join(DOT_CONFIG)
-        .join(ADB_EXT_YAML)
+        .join(ADB_EXT)
+        .join(CONFIG_YAML)
 }
 
 #[cfg(windows)]
@@ -160,7 +155,8 @@ pub fn config_path() -> PathBuf {
 pub fn history_path() -> PathBuf {
     home_dir()
         .join(DOT_CONFIG)
-        .join(ADB_EXT_HISTORY_TXT)
+        .join(ADB_EXT)
+        .join(HISTORY_TXT)
 }
 
 #[cfg(windows)]
