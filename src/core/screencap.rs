@@ -1,9 +1,9 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{OutputExt, PathBufExt, VecExt};
+use crate::core::ext::{PathBufExt, VecExt};
 use crate::core::r#const::SHELL;
-use crate::core::selector::{resolve_device, run_adb_with};
+use crate::core::selector::run_adb;
 use crate::core::strings::SAVED;
 use crate::core::util::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
 use std::fs;
@@ -14,15 +14,10 @@ const OD: u8 = 0x0D;
 const OA: u8 = 0x0A;
 
 pub fn make_screenshot(cmd: String, dst: String, config: &Config) -> ExitCode {
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
     let args = &[SHELL, SCREENCAP_P];
-    let output = run_adb_with(&device, AdbArgs::run(args));
+    let mut output = run_adb(AdbArgs::run(args));
 
-    if output.status.success() {
-        let code = output.exit_code();
+    return if output.success() {
         let dst = dst
             .dst_with_parent(&config.screenshots.destination)
             .join(format_file_name(&config.screenshots.name));
@@ -36,10 +31,10 @@ pub fn make_screenshot(cmd: String, dst: String, config: &Config) -> ExitCode {
         SAVED.println_formatted(&[&dst.to_string()]);
         config.screenshot_hook()
             .map(|hook| try_run_hook_and_exit(hook, cmd, dst))
-            .unwrap_or(code)
+            .unwrap_or(output.code)
     } else {
         output.print_err();
-        return output.exit_code()
+        output.code
     }
 }
 

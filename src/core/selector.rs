@@ -1,19 +1,23 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
-use crate::core::ext::{print_no_one, OutputExt, PrintExt, StringExt, VecExt};
+use crate::core::ext::{print_no_one, ExitStatusExt, PrintExt, StringExt, VecExt};
 use crate::core::fix::sudo_fix_on_linux;
+use crate::core::output::Output;
 use crate::core::r#const::SHELL;
 use crate::core::strings::{ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
-use crate::core::system::error_exit_status;
 use crate::core::util::{failure, interactive_select, string};
 use itertools::Itertools;
-use std::process::{ExitCode, Output};
+use std::io;
+use std::io::{BufRead, BufReader};
+use std::process::{Child, ExitCode, Stdio};
+
+const MANY_TARGETS: &str = "adb: more than one device/emulator";
 
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
-const ARG_S: &str = "-s";
+pub const ARG_S: &str = "-s";
 const GETPROPS: &str = "
 getprop ro.build.version.sdk;
 
@@ -52,67 +56,14 @@ getprop ro.product.system_ext.device;
 getprop ro.product.system_ext.name;
 ";
 
-const VERSIONS: [&str; 37] = ["Astro Boy or Bender", "1.0", "1.1", "1.5", "1.6", "2.0 ", "2.0.1", "2.1", "2.2", "2.3.0–2", "2.3.3–7", "3.0", "3.1", "3.2", "4.0.1–2", "4.0.3–4", "4.1", "4.2", "4.3", "4.4", "4.4W", "5.0", "5.1", "6", "7.0", "7.1", "8.0", "8.1", "9", "10", "11", "12", "12L", "13", "14", "15", "16"];
-
-const DEVICE_COMMANDS: [&str; 19] = [
-    // file transfer
-    "push",
-    "pull",
-    "sync",
-    // shell
-    "shell",
-    //"emu",
-    // app (un)installation
-    "install",
-    "install-multiple",
-    "install-multi-package",
-    "uninstall",
-    // debugging
-    "bugreport",
-    "jdwp",
-    "logcat",
-    // scripting
-    "get-state",
-    "get-serialno",
-    "get-devpath",
-    "remount",
-    "reboot",
-    "sideload",
-    // usb
-    "attach",
-    "detach",
+const VERSIONS: [&str; 38] = [
+    "Astro Boy or Bender", "1.0", "1.1", "1.5", "1.6", "2.0 ", "2.0.1", "2.1", "2.2", "2.3.0–2", "2.3.3–7", "3.0",
+    "3.1", "3.2", "4.0.1–2", "4.0.3–4", "4.1", "4.2", "4.3", "4.4", "4.4W", "5.0", "5.1", "6", "7.0", "7.1", "8.0",
+    "8.1", "9", "10", "11", "12", "12L", "13", "14", "15", "16", "17"
 ];
 
-pub fn resolve_device_and_run_args(args: &[String]) -> ExitCode {
-    let args = AdbArgs::spawn(args);
-    let first = match args.args.first() {
-        None => return run_adb(args).exit_code(),
-        Some(first) => first,
-    };
-    let output = if DEVICE_COMMANDS.contains(&first.as_str()) {
-        let device = match resolve_device() {
-            Ok(device) => device,
-            Err(code) => return code,
-        };
-        run_adb_with(&device, args)
-    } else {
-        run_adb(args)
-    };
-    return output.exit_code()
-}
-
-pub fn adb_args_with(device: &AdbDevice, mut args: AdbArgs) -> AdbArgs {
-    args.args.insert(0, string(ARG_S));
-    args.args.insert(1, device.serial.clone());
-    return args;
-}
-
-pub fn run_adb_with(device: &AdbDevice, args: AdbArgs) -> Output {
-    run_adb(adb_args_with(device, args))
-}
-
 pub fn fetch_adb_devices() -> Vec<AdbDevice> {
-    let output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
+    let mut output = run_adb(AdbArgs::run(&[ARG_DEVICES]));
     return output.stdout().split('\n')
         .enumerate()
         // the first line is "List of devices attached"
@@ -157,8 +108,8 @@ fn ask_for_device(devices: Vec<AdbDevice>) -> Result<AdbDevice, ExitCode> {
 }
 
 fn get_description(serial: &String) -> String {
-    let output = run_adb(AdbArgs::run(&[ARG_S, serial.as_str(), SHELL, GETPROPS]));
-    if !output.status.success() {
+    let mut output = run_adb_for(AdbArgs::run(&[SHELL, GETPROPS]), serial.clone());
+    if output.failure() {
         return serial.clone();
     }
     let stdout = output.stdout();
@@ -218,23 +169,51 @@ fn get_description(serial: &String) -> String {
     return format!("{prefix}{}, serial: {serial}, Android {version}", suitable.join(", "))
 }
 
-fn run_adb(args: AdbArgs) -> Output {
-    let interactive = args.interactive;
-    let mut command = match args.command() {
+pub fn run_adb(args: AdbArgs) -> Output {
+    run_adb_impl(args, None)
+}
+
+pub fn run_adb_for(args: AdbArgs, device: String) -> Output {
+    run_adb_impl(args, Some(device))
+}
+
+fn run_adb_impl(args: AdbArgs, device: Option<String>) -> Output {
+    let device_specified = device.is_some();
+    let mut command = match args.clone().to_command(device) {
         Ok(c) => c,
-        Err(e) => return Output {
-            status: error_exit_status(),
-            stdout: vec![],
-            stderr: e.to_string().into_bytes(),
-        }
+        Err(e) => return Output::from_error(e)
     };
-    if interactive {
-        Output {
-            status: command.spawn().unwrap().wait().unwrap(),
-            stdout: vec![],
-            stderr: vec![],
+    return if args.interactive {
+        if !device_specified {
+            command.stderr(Stdio::piped());
         }
+        let mut child = command.spawn().unwrap();
+        if !device_specified {
+            if let Some(output) = resolve_and_restart_if_many_devices(&mut child, args) {
+                return output
+            }
+        }
+        Output::from(child.wait().unwrap().exit_code())
     } else {
-        command.output().unwrap()
+        Output::from(command.output().unwrap())
     }
+}
+
+fn resolve_and_restart_if_many_devices(child: &mut Child, args: AdbArgs) -> Option<Output> {
+    if let Some(stderr_pipe) = child.stderr.take() {
+        let mut reader = BufReader::new(stderr_pipe);
+        let mut line = String::new();
+        if reader.read_line(&mut line).unwrap_or(0) > 0 {
+            if line.as_str() == MANY_TARGETS {
+                return match resolve_device() {
+                    Ok(device) => Some(run_adb_for(args, device.serial)),
+                    Err(code) => Some(Output::from(code)),
+                }
+            } else {
+                line.eprintln();
+            }
+        }
+        io::copy(&mut reader, &mut io::stderr()).unwrap();
+    }
+    return None
 }

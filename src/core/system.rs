@@ -3,17 +3,14 @@ extern crate dirs;
 use crate::core::ext::PathBufExt;
 #[cfg(windows)]
 use crate::core::ext::StrExt;
-use crate::core::r#const::{ADB, ERROR_CODE};
+use crate::core::r#const::ADB;
 #[cfg(unix)]
 use crate::core::util::string;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-#[cfg(unix)]
-use std::os::unix::process::ExitStatusExt;
 #[cfg(windows)]
 use std::os::windows::process::ExitStatusExt;
 use std::path::PathBuf;
-use std::process::ExitStatus;
 use std::{fs, io};
 
 pub const ADB_EXT: &str = "adb-ext";
@@ -212,15 +209,3 @@ pub fn env_adb_ext_path() -> String {
         .join(ADB_EXT)
         .to_string()
 }
-
-
-#[cfg(unix)]
-pub fn error_exit_status() -> ExitStatus {
-    ExitStatus::from_raw(ERROR_CODE << 8)
-}
-
-#[cfg(windows)]
-pub fn error_exit_status() -> ExitStatus {
-    ExitStatus::from_raw(ERROR_CODE as u32)
-}
-

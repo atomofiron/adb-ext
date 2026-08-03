@@ -12,11 +12,12 @@ use crate::core::r#const::*;
 use crate::core::screencap::make_screenshot;
 use crate::core::screenrecord::make_screencast;
 use crate::core::sdk::set_sdk;
-use crate::core::selector::resolve_device_and_run_args;
+use crate::core::selector::run_adb;
 use crate::core::start_mode::StartMode;
 use crate::core::strings::{Language, INPUT_OR_EXIT};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
+use crate::core::adb_command::AdbArgs;
 use crate::core::system::{history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};
@@ -141,7 +142,7 @@ fn work(mode: StartMode, args: Vec<String>, config: &mut Config) -> ExitCode {
         VERSION if !mode.is_adb() => print_version(),
         HELP if !mode.is_adb() => get_help(None).println(),
         "shit" => "💩".println(),
-        _ => return resolve_device_and_run_args(args.as_slice()),
+        _ => return run_adb(AdbArgs::spawn(args.as_slice())).code,
     };
     return ExitCode::SUCCESS
 }

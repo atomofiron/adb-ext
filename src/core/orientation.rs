@@ -1,7 +1,6 @@
 use crate::core::adb_command::AdbArgs;
-use crate::core::ext::OutputExt;
 use crate::core::r#const::SHELL;
-use crate::core::selector::{resolve_device, run_adb_with};
+use crate::core::selector::run_adb;
 use std::fmt::{Display, Formatter};
 use std::process::ExitCode;
 
@@ -52,19 +51,15 @@ impl Display for Orientation {
 }
 
 pub fn orientation(orientation: Orientation) -> ExitCode {
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
     let command = match orientation {
         Orientation::Accelerometer(_) => format!("{orientation}"),
         _ => format!("{} && {orientation}", Orientation::accelerometer(false)),
     };
     let args = &[SHELL, command.as_str()];
-    let output = run_adb_with(&device, AdbArgs::run(args));
+    let mut output = run_adb(AdbArgs::run(args));
 
-    if !output.status.success() {
+    if !output.success() {
         output.print_err();
     }
-    return output.exit_code()
+    return output.code
 }

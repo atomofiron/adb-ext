@@ -1,13 +1,13 @@
-use crate::core::ext::{OutputExt, ResultExt, VecExt};
+use crate::core::ext::{ExitStatusExt, ResultExt, VecExt};
 use crate::core::r#const::{HELP_TEXT, NULL};
 use crate::core::strings::CANCEL;
+use crate::core::system::bin_name;
 use chrono::Local;
 use dialoguer::FuzzySelect;
 use itertools::Itertools;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
-use crate::core::system::bin_name;
 
 pub fn get_help(separator: Option<&str>) -> String {
     let sep = separator.unwrap_or(", ");
@@ -39,6 +39,7 @@ pub fn try_run_hook_and_exit(hook: PathBuf, cmd: String, arg: PathBuf) -> ExitCo
     Command::new(hook).arg(cmd).arg(arg)
         .spawn().unwrap()
         .wait_with_output().unwrap()
+        .status
         .exit_code()
 }
 

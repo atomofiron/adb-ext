@@ -22,3 +22,4 @@ pub mod pointer;
 pub mod cmd_editor;
 pub mod sdk;
 pub mod anim_scale;
+mod output;

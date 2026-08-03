@@ -1,7 +1,6 @@
 use crate::core::adb_command::AdbArgs;
-use crate::core::ext::OutputExt;
 use crate::core::r#const::SHELL;
-use crate::core::selector::{resolve_device, run_adb_with};
+use crate::core::selector::run_adb;
 use std::process::ExitCode;
 
 const GET_PROP: &str = "getprop debug.layout"; // getprop debug.layout
@@ -11,19 +10,15 @@ const PUT_SETTING: &str = "settings put global debug_layout"; // settings get gl
 const CALL: &str = "service call activity 1599295570";
 
 pub fn debug_layout_bounds() -> ExitCode {
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
     let invert_prop = invert(GET_PROP);
     let invert_setting = invert(GET_SETTING);
     let command = format!("{SET_PROP} $({invert_prop}); {PUT_SETTING} $({invert_setting}); {CALL}");
     let args = &[SHELL, command.as_str()];
-    let output = run_adb_with(&device, AdbArgs::run(args));
-    if !output.status.success() {
+    let mut output = run_adb(AdbArgs::run(args));
+    if !output.success() {
         output.print_err();
     }
-    return output.exit_code()
+    return output.code
 }
 
 fn invert(get_cmd: &str) -> String {

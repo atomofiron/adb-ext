@@ -1,9 +1,9 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{OutputExt, PathBufExt, PrintExt, ResultToOption, StrExt, VecExt};
+use crate::core::ext::{ExitStatusExt, PathBufExt, PrintExt, ResultToOption, StrExt, VecExt};
 use crate::core::r#const::{PULL, SHELL};
-use crate::core::selector::{resolve_device, run_adb_with};
+use crate::core::selector::{resolve_device, run_adb_for};
 use crate::core::strings::{ADD_INTERPRETER, MEDIAS_NOT_FOUND, SAVED};
 use crate::core::util::{ensure_parent_exists, null, string};
 use std::cmp::Ordering;
@@ -83,7 +83,7 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         Ok(device) => device,
         Err(code) => return code,
     };
-    let output = run_adb_with(&device, AdbArgs::run(args));
+    let mut output = run_adb_for(AdbArgs::run(args), device.serial.clone());
     let mut items = output.stdout().split('\n')
         .into_iter()
         .map(|it| splitn_by(it, PART_MIN_COUNT, ' '))
@@ -96,7 +96,7 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
             ExitCode::FAILURE
         } else {
             output.print_err();
-            output.exit_code()
+            output.code
         }
     } else {
         items.sort();
@@ -126,9 +126,9 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         let hook = hook_or_none(hook, cmd, dst.clone(), &items);
         pull_args.args.append(&mut items);
         pull_args.args.push(dst.to_string());
-        let output = run_adb_with(&device, pull_args);
+        let mut output = run_adb_for(pull_args, device.serial);
         output.print_out_and_err();
-        if output.status.success() {
+        if output.success() {
             SAVED.println_formatted(&[&dst.to_string()]);
         }
         hook.ok_or(ExitCode::SUCCESS)
@@ -138,8 +138,8 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
                     ExitCode::FAILURE
                 })
             })
-            .unwrap_or(output)
-            .exit_code()
+            .map(|o| o.status.exit_code())
+            .unwrap_or(output.code)
     }
 }
 

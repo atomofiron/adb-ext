@@ -1,7 +1,7 @@
-use crate::core::ext::PathBufExt;
+use crate::core::ext::{ExitStatusExt, PathBufExt};
 #[cfg(windows)]
 use crate::core::ext::StringExt;
-use crate::core::ext::{OutputExt, PrintExt, ResultExt, Rslt};
+use crate::core::ext::{PrintExt, ResultExt, Rslt};
 use crate::core::r#const::DEPLOY;
 use crate::core::r#const::*;
 use crate::core::strings::DONE;
@@ -64,6 +64,7 @@ pub fn update() -> ExitCode {
         .arg(DEPLOY)
         .spawn().unwrap()
         .wait_with_output().unwrap()
+        .status
         .exit_code();
     if exit_code == ExitCode::SUCCESS {
         remove_file(path).soft_unwrap();

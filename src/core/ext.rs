@@ -6,8 +6,9 @@ use std::io;
 use std::io::Write;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitCode, Output};
+use std::process::{Command, ExitCode, ExitStatus, Output};
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use crate::core::output::Output as ConvertedOutput;
 
 const NO_TARGETS: &str = "adb: no devices/emulators found";
 
@@ -18,40 +19,23 @@ const C2: u8 = 0xC2;
 pub type Rslt<T> = Result<T, Box<dyn Error>>;
 
 pub trait OutputExt {
-    fn exit_code(&self) -> ExitCode;
-    fn stdout(&self) -> String;
-    fn stderr(&self) -> String;
-    fn print_out(&self);
-    fn print_err(&self);
-    fn print_out_and_err(&self);
+    fn convert(self) -> ConvertedOutput;
 }
 
 impl OutputExt for Output {
+    fn convert(self) -> ConvertedOutput {
+        ConvertedOutput::from(self)
+    }
+}
+
+pub trait ExitStatusExt {
+    fn exit_code(&self) -> ExitCode;
+}
+
+impl ExitStatusExt for ExitStatus {
     fn exit_code(&self) -> ExitCode {
-        let code = self.status.code().unwrap_or(ERROR_CODE) & 255;
+        let code = self.code().unwrap_or(ERROR_CODE) & 255;
         ExitCode::from(code as u8)
-    }
-    fn stdout(&self) -> String {
-        self.stdout.fix_nbsp_and_trim()
-    }
-    fn stderr(&self) -> String {
-        self.stderr.fix_nbsp_and_trim()
-    }
-    fn print_out(&self) {
-        let stdout = self.stdout();
-        if !stdout.is_empty() {
-            stdout.println()
-        }
-    }
-    fn print_err(&self) {
-        let stderr = self.stderr();
-        if !stderr.is_empty() {
-            stderr.eprintln();
-        }
-    }
-    fn print_out_and_err(&self) {
-        self.print_out();
-        self.print_err();
     }
 }
 
@@ -83,7 +67,7 @@ pub fn print_no_one() {
     NO_TARGETS.println();
 }
 
-trait Trim {
+pub trait Trim {
     fn fix_nbsp_and_trim(&self) -> String;
 }
 
