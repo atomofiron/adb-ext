@@ -7,7 +7,7 @@ use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
 use crate::core::strings::{PRESS_ENTER_TO_STOP_REC, SAVED};
 use crate::core::system::interrupt;
-use crate::core::taps::{is_taps_on, turn_taps};
+use crate::core::tools::taps::{is_taps_on, turn_taps};
 use crate::core::util::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
 use std::io;
 use std::process::ExitCode;
