@@ -1,5 +1,8 @@
-use crate::core::ext::{CommandExt, PrintExt};
+use crate::core::ext::command::CommandExt;
+use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::print::PrintExt;
 use crate::core::fix::usb_device::UsbDevice;
+use crate::core::r#const::ADB;
 use crate::core::selector::fetch_adb_devices;
 use crate::core::strings::{NO_DEVICES_FOUND, RECONNECT_DEVICES, SUDO_EXPLANATION, UNKNOWN_ERROR, WELL_DONE};
 use crate::FIX;
@@ -12,7 +15,6 @@ use std::path::Path;
 use std::process::{Command, ExitCode};
 use std::thread::sleep;
 use std::time::Duration;
-use crate::core::r#const::ADB;
 
 const SUDO: &str = "sudo";
 const TARGET_FILE: &str = "/etc/udev/rules.d/51-android.rules";
@@ -30,7 +32,7 @@ pub fn sudo_fix_permission(serial: Option<String>) -> ExitCode {
         .arg(FIX)
         .some_arg(serial)
         .output()
-        .map(|output| output.exit_code())
+        .map(|output| output.status.exit_code())
         .unwrap_or(ExitCode::FAILURE);
 }
 

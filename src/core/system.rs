@@ -1,15 +1,13 @@
 extern crate dirs;
-#[cfg(windows)]
-use crate::core::ext::PathBufExt;
-#[cfg(windows)]
-use crate::core::ext::StrExt;
 use crate::core::r#const::{ADB, ADB_EXT};
 #[cfg(unix)]
 use crate::core::util::string;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(windows)]
-use std::os::windows::process::ExitStatusExt;
+use crate::core::ext::str::StrExt;
+#[cfg(windows)]
+use crate::core::ext::path_buf::PathBufExt;
 use std::path::PathBuf;
 use std::{fs, io};
 
@@ -95,7 +93,7 @@ pub fn default_sdk_dir() -> PathBuf {
     home_dir().join("Android/Sdk")
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 pub fn default_sdk_dir() -> PathBuf {
     dirs::data_local_dir()
         .expect("no LocalAppData")
