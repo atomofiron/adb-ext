@@ -1,8 +1,8 @@
-use crate::core::system::home_dir;
-use std::path::PathBuf;
-use crate::core::ext::StringExt;
+use crate::core::ext::string::StringExt;
 use crate::core::r#const::HOME;
+use crate::core::system::home_dir;
 use crate::core::util::string;
+use std::path::PathBuf;
 
 pub trait Destination {
     fn dst(&self) -> PathBuf;

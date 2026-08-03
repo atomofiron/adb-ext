@@ -1,6 +1,10 @@
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{take_if, PathBufExt, PrintExt, ResultExt, StringExt};
+use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::print::PrintExt;
+use crate::core::ext::result::ResultExt;
+use crate::core::ext::string::StringExt;
+use crate::core::ext::take_if;
 use crate::core::r#const::{HOME, NULL};
 use crate::core::strings::{DONE, NO_SUCH_DIRECTORY};
 use crate::core::system::home_dir;

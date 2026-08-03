@@ -1,4 +1,6 @@
-use crate::core::ext::{ExitStatusExt, PrintExt, Trim};
+use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::print::PrintExt;
+use crate::core::ext::trim::Trim;
 use std::process::ExitCode;
 
 pub struct Output {

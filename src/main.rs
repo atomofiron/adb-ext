@@ -2,7 +2,6 @@ use crate::core::anim_scale::change_anim_scale;
 use crate::core::apks::{run_apk, steal_apk};
 use crate::core::cmd_editor::{CmdEditor, CmdHelper, CmdHighlight};
 use crate::core::config::Config;
-use crate::core::ext::{PrintExt, ResultExt};
 use crate::core::fix::fix_on_linux;
 use crate::core::layout_bounds::debug_layout_bounds;
 use crate::core::orientation::{orientation, Orientation};
@@ -18,6 +17,8 @@ use crate::core::strings::{Language, INPUT_OR_EXIT};
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
 use crate::core::adb_command::AdbArgs;
+use crate::core::ext::print::PrintExt;
+use crate::core::ext::result::ResultExt;
 use crate::core::system::{history_path, ADB_EXT};
 use crate::core::taps::toggle_taps;
 use crate::core::updater::{deploy, update};

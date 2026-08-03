@@ -1,4 +1,4 @@
-use crate::core::ext::PrintExt;
+use crate::core::ext::print::PrintExt;
 use std::fmt::{Display, Formatter};
 
 static mut LANGUAGE: Language = Language::En;

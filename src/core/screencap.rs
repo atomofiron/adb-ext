@@ -1,7 +1,8 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{PathBufExt, VecExt};
+use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::vec::VecExt;
 use crate::core::r#const::SHELL;
 use crate::core::selector::run_adb;
 use crate::core::strings::SAVED;

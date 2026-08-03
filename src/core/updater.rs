@@ -1,7 +1,5 @@
-use crate::core::ext::{ExitStatusExt, PathBufExt};
 #[cfg(windows)]
 use crate::core::ext::StringExt;
-use crate::core::ext::{PrintExt, ResultExt, Rslt};
 use crate::core::r#const::DEPLOY;
 use crate::core::r#const::*;
 use crate::core::strings::DONE;
@@ -10,6 +8,11 @@ use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 use crate::core::system::{bin_name, make_executable};
 #[cfg(windows)]
 use crate::core::system::{env_adb_ext_path, PATH};
+use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::print::PrintExt;
+use crate::core::ext::result::ResultExt;
+use crate::core::ext::Rslt;
 #[cfg(unix)]
 use crate::core::system::{env_path, home_dir};
 use crate::core::util::get_help;

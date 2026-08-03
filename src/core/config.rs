@@ -1,13 +1,17 @@
 use crate::core::destination::Destination;
-use crate::core::ext::{OptionExt, PathBufExt, ResultExt, ResultToOption, Rslt, StrExt};
+use crate::core::ext::option::OptionExt;
+use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::result::ResultExt;
+use crate::core::ext::str::StrExt;
+use crate::core::ext::Rslt;
 use crate::core::r#const::{ADB, BUILD_TOOLS, PLATFORM_TOOLS};
 use crate::core::system::{adb_name, config_path, default_sdk_dir, make_executable, ADB_EXT};
+use crate::core::util::string;
 use itertools::Itertools;
 use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use crate::core::util::string;
 
 pub static mut ADB_PATH: Option<String> = None;
 
@@ -176,7 +180,7 @@ impl Config {
             file_checker,
             self.screenshots.hook.clone().map(|it| it.dst()),
             self.hook.clone().map(|it| it.dst()),
-        ).and_then(|it| make_executable(it).to_option())
+        ).and_then(|it| make_executable(it).ok())
     }
 
     pub fn screencast_hook(&self) -> Option<PathBuf> {
@@ -184,7 +188,7 @@ impl Config {
             file_checker,
             self.screencasts.hook.clone().map(|it| it.dst()),
             self.hook.clone().map(|it| it.dst()),
-        ).and_then(|it| make_executable(it).to_option())
+        ).and_then(|it| make_executable(it).ok())
     }
 }
 

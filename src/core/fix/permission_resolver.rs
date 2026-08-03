@@ -1,4 +1,4 @@
-use crate::core::ext::{OptionArg, OutputExt, PrintExt};
+use crate::core::ext::{CommandExt, PrintExt};
 use crate::core::fix::usb_device::UsbDevice;
 use crate::core::selector::fetch_adb_devices;
 use crate::core::strings::{NO_DEVICES_FOUND, RECONNECT_DEVICES, SUDO_EXPLANATION, UNKNOWN_ERROR, WELL_DONE};

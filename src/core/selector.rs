@@ -1,6 +1,9 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
-use crate::core::ext::{print_no_one, ExitStatusExt, PrintExt, StringExt, VecExt};
+use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::print::PrintExt;
+use crate::core::ext::string::StringExt;
+use crate::core::ext::vec::VecExt;
 use crate::core::fix::sudo_fix_on_linux;
 use crate::core::output::Output;
 use crate::core::r#const::SHELL;
@@ -83,7 +86,7 @@ pub fn resolve_device() -> Result<AdbDevice, ExitCode> {
     let mut devices = fetch_adb_devices();
     let device = match () {
         _ if devices.is_empty() => {
-            print_no_one();
+            "adb: no devices/emulators found".println();
             return failure();
         },
         _ if devices.len() == 1 => devices.remove(0),

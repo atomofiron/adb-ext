@@ -1,7 +1,8 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{PathBufExt, PrintExt};
+use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::print::PrintExt;
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
 use crate::core::strings::{PRESS_ENTER_TO_STOP_REC, SAVED};

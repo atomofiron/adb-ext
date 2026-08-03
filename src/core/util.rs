@@ -1,4 +1,6 @@
-use crate::core::ext::{ExitStatusExt, ResultExt, VecExt};
+use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::result::ResultExt;
+use crate::core::ext::vec::VecExt;
 use crate::core::r#const::{HELP_TEXT, NULL};
 use crate::core::strings::CANCEL;
 use crate::core::system::bin_name;

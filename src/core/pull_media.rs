@@ -1,7 +1,11 @@
 use crate::core::adb_command::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::{ExitStatusExt, PathBufExt, PrintExt, ResultToOption, StrExt, VecExt};
+use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::print::PrintExt;
+use crate::core::ext::str::StrExt;
+use crate::core::ext::vec::VecExt;
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
 use crate::core::strings::{ADD_INTERPRETER, MEDIAS_NOT_FOUND, SAVED};
@@ -30,7 +34,7 @@ pub enum Params {
 
 impl Params {
     pub fn from(cmd: String, arg: Option<String>) -> Params {
-        match arg.clone().and_then(|it| it.parse::<usize>().to_option()) {
+        match arg.clone().and_then(|it| it.parse::<usize>().ok()) {
             Some(count) => Params::Count(cmd, count),
             None => Params::Single(cmd, arg),
         }
