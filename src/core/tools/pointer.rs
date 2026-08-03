@@ -1,4 +1,4 @@
-use crate::core::adb_command::AdbArgs;
+use crate::core::adb_args::AdbArgs;
 use crate::core::adb_device::AdbDevice;
 use crate::core::r#const::{OFF, ON, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};

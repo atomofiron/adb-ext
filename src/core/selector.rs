@@ -1,4 +1,4 @@
-use crate::core::adb_command::AdbArgs;
+use crate::core::adb_args::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::print::PrintExt;

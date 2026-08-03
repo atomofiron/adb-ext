@@ -1,4 +1,4 @@
-use crate::core::adb_command::AdbArgs;
+use crate::core::adb_args::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
 use crate::core::ext::exit_status::ExitStatusExt;

@@ -17,7 +17,7 @@ use crate::core::tools::anim_scale::change_anim_scale;
 #[cfg(windows)]
 use crate::core::system::DOT_EXE;
 use self::core::tools::taps::toggle_taps;
-use crate::core::adb_command::AdbArgs;
+use crate::core::adb_args::AdbArgs;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::result::ResultExt;
 use crate::core::system::{history_path, ADB_EXT};

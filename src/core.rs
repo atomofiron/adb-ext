@@ -5,7 +5,7 @@ pub mod selector;
 pub mod strings;
 pub mod fix;
 pub mod util;
-pub mod adb_command;
+pub mod adb_args;
 pub mod r#const;
 pub mod destination;
 pub mod config;
