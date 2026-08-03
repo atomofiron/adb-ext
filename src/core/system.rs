@@ -3,7 +3,7 @@ extern crate dirs;
 use crate::core::ext::PathBufExt;
 #[cfg(windows)]
 use crate::core::ext::StrExt;
-use crate::core::r#const::ADB;
+use crate::core::r#const::{ADB, ADB_EXT};
 #[cfg(unix)]
 use crate::core::util::string;
 #[cfg(unix)]
@@ -13,7 +13,6 @@ use std::os::windows::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::{fs, io};
 
-pub const ADB_EXT: &str = "adb-ext";
 #[cfg(unix)]
 const ADB_EXT_YAML: &str = "adb-ext.yaml";
 #[cfg(unix)]
@@ -29,7 +28,7 @@ const HISTORY_TXT: &str = "history.txt";
 #[cfg(windows)]
 pub const DOT_EXE: &str = ".exe";
 #[cfg(windows)]
-pub const PROGRAMS: &str = "Programs";
+const PROGRAMS: &str = "Programs";
 #[cfg(windows)]
 pub const PATH: &str = "PATH";
 

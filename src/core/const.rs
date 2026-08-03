@@ -51,8 +51,10 @@ pub const SUGGESTIONS: &[&str] = &[
 ];
 
 pub const ADB: &str = "adb";
+pub const ADB_EXT: &str = "adb-ext";
 pub const BUILD_TOOLS: &str = "build-tools";
 pub const PLATFORM_TOOLS: &str = "platform-tools";
+pub const ARG_S: &str = "-s";
 
 pub const ERROR_CODE: i32 = 1;
 pub const NULL: &str = "null";

@@ -3,11 +3,11 @@ pub mod usb_device;
 #[cfg(target_os = "linux")]
 pub mod permission_resolver;
 
-use std::process::ExitCode;
 #[cfg(not(target_os = "linux"))]
 use crate::core::ext::print::PrintExt;
 #[cfg(not(target_os = "linux"))]
 use crate::core::strings::LINUX_ONLY;
+use std::process::ExitCode;
 
 #[cfg(not(target_os = "linux"))]
 pub fn fix_on_linux(_serial: Option<String>) -> ExitCode {

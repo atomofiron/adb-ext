@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 static mut LANGUAGE: Language = Language::En;
 
-pub const PLACEHOLDER: &str = "{}";
+const PLACEHOLDER: &str = "{}";
 
 #[cfg(target_os = "linux")]
 pub static NO_DEVICES_FOUND: Label = Label::new(

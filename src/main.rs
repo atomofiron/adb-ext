@@ -20,7 +20,7 @@ use self::core::tools::taps::toggle_taps;
 use crate::core::adb_args::AdbArgs;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::result::ResultExt;
-use crate::core::system::{history_path, ADB_EXT};
+use crate::core::system::history_path;
 use crate::core::updater::{deploy, update};
 use crate::core::util::{get_help, print_version, string};
 use rustyline::error::ReadlineError;

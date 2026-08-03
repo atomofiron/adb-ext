@@ -16,7 +16,7 @@ pub fn turn_taps(device: &AdbDevice, on: bool) -> ExitCode {
         true => ON,
         false => OFF,
     };
-    return run_adb_for( AdbArgs::run(&[SHELL, PUT_TOUCHES, value]), device.serial.clone())
+    return run_adb_for(AdbArgs::run(&[SHELL, PUT_TOUCHES, value]), device.serial.clone())
         .code
 }
 

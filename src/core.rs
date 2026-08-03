@@ -13,5 +13,5 @@ pub mod updater;
 pub mod system;
 pub mod cmd_editor;
 pub mod sdk;
-mod output;
 pub mod tools;
+mod output;

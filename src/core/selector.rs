@@ -20,7 +20,6 @@ const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
 const UNAUTHORIZED: &str = "unauthorized";
 const NO_PERMISSIONS: &str = "no permissions";
-pub const ARG_S: &str = "-s";
 const GETPROPS: &str = "
 getprop ro.build.version.sdk;
 
