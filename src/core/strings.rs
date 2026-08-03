@@ -30,6 +30,10 @@ pub static LINUX_ONLY: Label = Label::new(
     "permission resolving is only applicable for Linux",
     "исправление разрешений ADB применимо только для Linux",
 );
+pub static NO_DEVICES_FOUND: Label = Label::new(
+    "adb: no devices/emulators found",
+    "adb: устройств/эмуляторов не найдено",
+);
 pub static INSTALLATION_SUCCEED: Label = Label::new(
     "installation succeed, run",
     "установка завершена, можете запустить",

@@ -7,7 +7,7 @@ use crate::core::ext::vec::VecExt;
 use crate::core::fix::sudo_fix_on_linux;
 use crate::core::output::Output;
 use crate::core::r#const::SHELL;
-use crate::core::strings::{ERROR, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
+use crate::core::strings::{ERROR, NO_DEVICES_FOUND, SELECT_DEVICE, UNAUTHORIZED_BY_DEVICE, UNKNOWN};
 use crate::core::util::{failure, interactive_select, string};
 use itertools::Itertools;
 use std::io;
@@ -85,7 +85,7 @@ pub fn resolve_device() -> Result<AdbDevice, ExitCode> {
     let mut devices = fetch_adb_devices();
     let device = match () {
         _ if devices.is_empty() => {
-            "adb: no devices/emulators found".println();
+            NO_DEVICES_FOUND.println();
             return failure();
         },
         _ if devices.len() == 1 => devices.remove(0),
