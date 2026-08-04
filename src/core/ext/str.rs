@@ -8,21 +8,6 @@ pub trait StrExt {
     fn path(&self) -> PathBuf;
 }
 
-fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
-    let mut index = if rev { value.last_index() } else { 0 };
-    match rev {
-        true => for char in value.chars().rev() {
-            if char == c { return Some(index) }
-            index -= 1;
-        },
-        false => for char in value.chars() {
-            if char == c { return Some(index) }
-            index += 1;
-        },
-    }
-    return None
-}
-
 impl StrExt for str {
 
     fn last_index(&self) -> usize {
@@ -48,4 +33,19 @@ impl StrExt for str {
     fn path(&self) -> PathBuf {
         PathBuf::from(self)
     }
+}
+
+fn inner_index_of(value: &str, c: char, rev: bool) -> Option<usize> {
+    let mut index = if rev { value.last_index() } else { 0 };
+    match rev {
+        true => for char in value.chars().rev() {
+            if char == c { return Some(index) }
+            index -= 1;
+        },
+        false => for char in value.chars() {
+            if char == c { return Some(index) }
+            index += 1;
+        },
+    }
+    return None
 }
