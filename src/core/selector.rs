@@ -2,6 +2,7 @@ use crate::core::adb_args::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::print::PrintExt;
+use crate::core::ext::str::StrExt;
 use crate::core::ext::string::StringExt;
 use crate::core::ext::vec::VecExt;
 use crate::core::fix::sudo_fix_on_linux;
@@ -14,7 +15,7 @@ use std::io;
 use std::io::{BufRead, BufReader};
 use std::process::{Child, ExitCode, Stdio};
 
-const MANY_TARGETS: &str = "adb: more than one device/emulator";
+const MANY_TARGETS: &str = "more than one device/emulator";
 
 const ARG_DEVICES: &str = "devices";
 const DEVICE: &str = "device";
@@ -172,14 +173,14 @@ fn get_description(serial: &String) -> String {
 }
 
 pub fn run_adb(args: AdbArgs) -> Output {
-    run_adb_impl(args, None)
+    run(args, None)
 }
 
 pub fn run_adb_for(args: AdbArgs, device: String) -> Output {
-    run_adb_impl(args, Some(device))
+    run(args, Some(device))
 }
 
-fn run_adb_impl(args: AdbArgs, device: Option<String>) -> Output {
+fn run(args: AdbArgs, device: Option<String>) -> Output {
     let device_specified = device.is_some();
     let mut command = match args.clone().to_command(device) {
         Ok(c) => c,
@@ -197,7 +198,14 @@ fn run_adb_impl(args: AdbArgs, device: Option<String>) -> Output {
         }
         Output::from(child.wait().unwrap().exit_code())
     } else {
-        Output::from(command.output().unwrap())
+        let mut output = Output::from(command.output().unwrap());
+        let stderr = output.stderr();
+        let index = stderr.index_of('\n')
+            .unwrap_or(stderr.len());
+        if stderr[0..index].ends_with(MANY_TARGETS) {
+            return resolve_device_and_run(args)
+        }
+        output
     }
 }
 
@@ -206,16 +214,21 @@ fn resolve_and_restart_if_many_devices(child: &mut Child, args: AdbArgs) -> Opti
         let mut reader = BufReader::new(stderr_pipe);
         let mut line = String::new();
         if reader.read_line(&mut line).unwrap_or(0) > 0 {
-            if line.as_str() == MANY_TARGETS {
-                return match resolve_device() {
-                    Ok(device) => Some(run_adb_for(args, device.serial)),
-                    Err(code) => Some(Output::from(code)),
-                }
-            } else {
-                line.eprintln();
+            match line.trim() {
+                str if str.ends_with(MANY_TARGETS) => {
+                    return Some(resolve_device_and_run(args))
+                },
+                _ => line.eprintln(),
             }
         }
         io::copy(&mut reader, &mut io::stderr()).unwrap();
     }
     return None
+}
+
+fn resolve_device_and_run(args: AdbArgs) -> Output {
+    match resolve_device() {
+        Ok(device) => run_adb_for(args, device.serial),
+        Err(code) => Output::from(code),
+    }
 }
