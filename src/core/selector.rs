@@ -198,11 +198,11 @@ fn run(args: AdbArgs, device: Option<String>) -> Output {
         }
         Output::from(child.wait().unwrap().exit_code())
     } else {
-        let mut output = Output::from(command.output().unwrap());
-        let stderr = output.stderr();
-        let index = stderr.index_of('\n')
-            .unwrap_or(stderr.len());
-        if stderr[0..index].ends_with(MANY_TARGETS) {
+        let output = Output::from(command.output().unwrap());
+        let index = output.stderr.index_of(|a| *a == b'\n')
+            .unwrap_or(output.stderr.len());
+        let first = String::from_utf8_lossy(&output.stderr[0..index]);
+        if first[0..index].ends_with(MANY_TARGETS) {
             return resolve_device_and_run(args)
         }
         output

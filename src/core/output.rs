@@ -6,7 +6,7 @@ use std::process::ExitCode;
 pub struct Output {
     pub code: ExitCode,
     pub stdout: Vec<u8>,
-    stderr: Vec<u8>,
+    pub stderr: Vec<u8>,
     stdout_string: Option<String>,
     stderr_string: Option<String>,
 }

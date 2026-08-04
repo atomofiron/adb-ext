@@ -94,8 +94,7 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         .filter_map(|it| as_item_or_none(exts, it))
         .collect::<Vec<Item>>();
     return if items.is_empty() {
-        let err = output.stderr();
-        if err.is_empty() {
+        if output.stderr.is_empty() {
             MEDIAS_NOT_FOUND.println();
             ExitCode::FAILURE
         } else {
