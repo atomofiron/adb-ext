@@ -2,7 +2,6 @@ use crate::core::adb_args::AdbArgs;
 use crate::core::adb_device::{AdbDevice, AdbDeviceVec};
 use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::print::PrintExt;
-use crate::core::ext::str::StrExt;
 use crate::core::ext::string::StringExt;
 use crate::core::ext::vec::VecExt;
 use crate::core::fix::sudo_fix_on_linux;

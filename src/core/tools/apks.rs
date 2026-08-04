@@ -42,7 +42,7 @@ pub fn steal_apk(package: Option<String>, dst: Option<String>) -> ExitCode {
         .dst()
         .join(format!("{package}.apk"));
     // the output line is "package:/data/data/[…]/base.apk"
-    let path = &output.stdout().clone()[8..];
+    let path = &output.stdout()[8..];
     let args = AdbArgs::spawn(&[PULL, path, destination.to_str()]);
     let output = run_adb_for(args, device.serial);
     if output.success() {
