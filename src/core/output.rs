@@ -1,8 +1,11 @@
+use crate::core::ext::error_code::ErrorCode;
 use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::trim::Trim;
+use crate::core::ext::Rslt;
 use std::process::ExitCode;
 
+#[derive(Debug)]
 pub struct Output {
     pub code: ExitCode,
     pub stdout: Vec<u8>,
@@ -13,22 +16,8 @@ pub struct Output {
 
 impl Output {
 
-    pub fn from_error(error: String) -> Self {
-        Self {
-            code: ExitCode::FAILURE,
-            stdout: vec![],
-            stderr: vec![],
-            stdout_string: None,
-            stderr_string: Some(error),
-        }
-    }
-
     pub fn success(&self) -> bool {
         self.code == ExitCode::SUCCESS
-    }
-
-    pub fn failure(&self) -> bool {
-        self.code == ExitCode::FAILURE
     }
 
     pub fn stdout(&mut self) -> &str {
@@ -66,6 +55,13 @@ impl Output {
     pub fn print_out_and_err(&mut self) {
         self.print_out();
         self.print_err();
+    }
+
+    pub fn to_rslt(mut self) -> Rslt<()> {
+        match self.code {
+            ExitCode::SUCCESS => Ok(()),
+            _ => Err(ErrorCode(self.code, self.stdout().to_string()).into()),
+        }
     }
 }
 

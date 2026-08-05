@@ -11,6 +11,7 @@ dirs = "6.0"
 which = "8.0"
 itertools = "0.15"
 enum_is = "0.2"
+thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 serde_yaml = "0.9"

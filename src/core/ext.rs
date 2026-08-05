@@ -1,4 +1,5 @@
 pub mod command;
+pub mod error_code;
 pub mod exit_status;
 pub mod option;
 pub mod output;
@@ -8,6 +9,7 @@ pub mod result;
 pub mod str;
 pub mod string;
 pub mod trim;
+pub mod user_cancelled;
 pub mod vec;
 
 use crate::core::ext::result::ResultExt;

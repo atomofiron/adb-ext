@@ -1,6 +1,7 @@
-use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::result::ResultExt;
+use crate::core::ext::user_cancelled::UserCancelled;
 use crate::core::ext::vec::VecExt;
+use crate::core::ext::Rslt;
 use crate::core::r#const::{HELP_TEXT, NULL};
 use crate::core::strings::CANCEL;
 use crate::core::system::bin_name;
@@ -9,7 +10,7 @@ use dialoguer::FuzzySelect;
 use itertools::Itertools;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
-use std::process::{Command, ExitCode};
+use std::process::Command;
 
 pub fn get_help(separator: Option<&str>) -> String {
     let sep = separator.unwrap_or(", ");
@@ -28,28 +29,25 @@ pub fn null() -> String {
     string(NULL)
 }
 
-pub fn failure<T>() -> Result<T, ExitCode> {
-    Err(ExitCode::FAILURE)
+pub fn ensure_parent_exists(path: &PathBuf) -> Rslt<()> {
+    let parent = path.parent()
+        .ok_or_else(|| "no parent")?;
+    return create_dir_all(parent).boxed()
 }
 
-pub fn ensure_parent_exists(path: &PathBuf) {
-    let parent = path.parent().unwrap();
-    create_dir_all(parent).unwrap();
-}
-
-pub fn try_run_hook_and_exit(hook: PathBuf, cmd: String, arg: PathBuf) -> ExitCode {
+pub fn try_run_hook_and_exit(hook: PathBuf, cmd: String, arg: PathBuf) -> Rslt<()> {
     Command::new(hook).arg(cmd).arg(arg)
-        .spawn().unwrap()
-        .wait_with_output().unwrap()
-        .status
-        .exit_code()
+        .spawn()?
+        .wait_with_output()
+        .unit()
+        .boxed()
 }
 
 pub fn format_file_name(name: &String) -> String {
     Local::now().format(name).to_string()
 }
 
-pub fn interactive_select<T, F: Fn(&T, &Vec<T>) -> String>(prompt: &str, mut items: Vec<T>, label: F) -> Result<T, ExitCode> {
+pub fn interactive_select<T, F: Fn(&T, &Vec<T>) -> String>(prompt: &str, mut items: Vec<T>, label: F) -> Rslt<T> {
     let mut labels = items.iter()
         .map(|it| label(it, &items))
         .collect::<Vec<_>>();
@@ -58,13 +56,12 @@ pub fn interactive_select<T, F: Fn(&T, &Vec<T>) -> String>(prompt: &str, mut ite
         .with_prompt(prompt)
         .default(0)
         .items(&labels)
-        .interact_opt()
-        .soft_unwrap();
+        .interact_opt()?;
     let selection = match selection {
-        Some(Some(selection)) => selection,
-        Some(None) => return Err(ExitCode::SUCCESS), // cancel
-        None => return Err(ExitCode::FAILURE),
+        Some(selection) => selection,
+        None => return UserCancelled.to_rslt(),
     };
     return VecExt::try_remove(&mut items, selection)
-        .ok_or_else(|| ExitCode::SUCCESS) // cancel
+        .ok_or(UserCancelled)
+        .boxed()
 }

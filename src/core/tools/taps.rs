@@ -1,29 +1,28 @@
 use crate::core::adb_args::AdbArgs;
 use crate::core::adb_device::AdbDevice;
+use crate::core::ext::result::ResultExt;
+use crate::core::ext::Rslt;
 use crate::core::r#const::{OFF, ON, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
-use std::process::ExitCode;
 
 const GET_TOUCHES: &str = "settings get system show_touches";
 const PUT_TOUCHES: &str = "settings put system show_touches";
 
-pub fn is_taps_on(device: &AdbDevice) -> bool {
-    run_adb_for(AdbArgs::run(&[SHELL, GET_TOUCHES]), device.serial.clone()).stdout() == ON
+pub fn is_taps_on(device: &AdbDevice) -> Rslt<bool> {
+    run_adb_for(AdbArgs::run(&[SHELL, GET_TOUCHES]), device.serial.clone())
+        .map(|mut output| output.stdout() == ON)
 }
 
-pub fn turn_taps(device: &AdbDevice, on: bool) -> ExitCode {
+pub fn turn_taps(device: &AdbDevice, on: bool) -> Rslt<()> {
     let value = match on {
         true => ON,
         false => OFF,
     };
-    return run_adb_for(AdbArgs::run(&[SHELL, PUT_TOUCHES, value]), device.serial.clone())
-        .code
+    return run_adb_for(AdbArgs::run(&[SHELL, PUT_TOUCHES, value]), device.serial.clone()).unit()
 }
 
-pub fn toggle_taps() -> ExitCode {
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
-    return turn_taps(&device, !is_taps_on(&device))
+pub fn toggle_taps() -> Rslt<()> {
+    let device = resolve_device()?;
+    let now = is_taps_on(&device)?;
+    return turn_taps(&device, !now)
 }

@@ -1,4 +1,3 @@
-
 pub trait OptionExt<T> {
     fn take_some_if<F>(self, f: F) -> Option<T> where F: FnOnce(&T) -> bool;
     fn if_some<F>(self, f: F) -> Option<T> where F: FnOnce(&T);

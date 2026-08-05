@@ -18,8 +18,11 @@ use crate::core::tools::anim_scale::change_anim_scale;
 use crate::core::system::DOT_EXE;
 use self::core::tools::taps::toggle_taps;
 use crate::core::adb_args::AdbArgs;
+use crate::core::ext::error_code::ErrorCode;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::result::ResultExt;
+use crate::core::ext::user_cancelled::UserCancelled;
+use crate::core::ext::Rslt;
 use crate::core::system::history_path;
 use crate::core::updater::{deploy, update};
 use crate::core::util::{get_help, print_version, string};
@@ -35,12 +38,22 @@ mod core;
 mod tests;
 
 fn main() -> ExitCode {
+    match &main_work() {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) if e.eprintln() != () => unreachable!(),
+        Err(e) if let Some(ErrorCode(code, _)) = &e.downcast_ref::<ErrorCode>() => *code,
+        Err(e) if e.is::<UserCancelled>() => ExitCode::SUCCESS,
+        _ => ExitCode::FAILURE,
+    }
+}
+
+fn main_work() -> Rslt<()> {
     if let Ok(true) = env::var("LANG").map(|lang| lang.starts_with("ru")) {
         Language::set_language(Language::Ru);
     }
     let mut config = Config::read();
     config.resolve_sdk();
-    config.write().unwrap();
+    config.write().soft_unwrap();
     config.update_adb_path();
     let mut args = args().collect::<Vec<String>>();
     let mode = start_name(args.get(0));
@@ -49,44 +62,45 @@ fn main() -> ExitCode {
     }
     return if args.is_empty() && mode.is_adb_ext() {
         INPUT_OR_EXIT.println();
-        let mut input = CmdEditor::new().unwrap();
+        let mut input = CmdEditor::new()?;
         let success = Rc::new(RefCell::new(None));
         let helper = CmdHelper::from(SUGGESTIONS, success.clone());
         input.set_helper(Some(helper));
         let history_path = history_path();
         if history_path.exists() {
-            input.load_history(&history_path).unwrap();
+            input.load_history(&history_path)?;
         }
-        let code = looper_work(&mut input, &mut config, success);
-        input.save_history(&history_path).unwrap();
-        code
+        looper_work(&mut input, &mut config, success);
+        input.save_history(&history_path)?;
+        Ok(())
     } else {
         work(mode, args, &mut config)
     }
 }
 
-fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight) -> ExitCode {
-    let mut code: Option<ExitCode> = None;
+fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight) {
+    let mut rslt: Option<Rslt<()>> = None;
     loop {
-        let previous = code.map(|code| code == ExitCode::SUCCESS);
+        let previous = &rslt;
         let status = match previous {
             None => string(""),
-            Some(true) => string("✔ "),
-            Some(false) => string("✘ "),
+            Some(Ok(_)) => string("✔ "),
+            Some(Err(_)) => string("✘ "),
         };
         let status_range = 0..status.as_bytes().len();
-        *success.borrow_mut() = previous.map(|success| (success, status_range));
+        *success.borrow_mut() = previous.as_ref()
+            .map(|rslt| (rslt.is_ok(), status_range));
         let prompt = format!("{status}{ADB_EXT}> ");
         match input.readline(&prompt) {
             Ok(line) => {
                 let trimmed = line.trim();
                 match trimmed {
                     "" => {
-                        code = None;
+                        rslt = None;
                         continue
                     },
                     CLEAR => {
-                        code = None;
+                        rslt = None;
                         input.clear_screen().soft_unwrap();
                         continue
                     },
@@ -97,12 +111,12 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight
                     input.add_history_entry(trimmed).soft_unwrap();
                 }
                 match shell_words::split(trimmed) {
-                    Ok(args) => code = Some(work(StartMode::AdbExt, args, config)),
                     Err(e) => e.eprintln(),
+                    Ok(args) => rslt = Some(work(StartMode::AdbExt, args, config)),
                 };
             }
             Err(ReadlineError::Interrupted) => { // Ctrl-C
-                code = None;
+                rslt = None;
                 continue
             },
             Err(ReadlineError::Eof) => break, // Ctrl-D
@@ -111,11 +125,15 @@ fn looper_work(input: &mut CmdEditor, config: &mut Config, success: CmdHighlight
                 break;
             }
         }
+        match &rslt {
+            Some(Err(e)) if e.is::<UserCancelled>() => rslt = Some(Ok(())),
+            Some(Err(e)) => e.eprintln(),
+            _ => (),
+        }
     }
-    return code.unwrap_or(ExitCode::SUCCESS);
 }
 
-fn work(mode: StartMode, args: Vec<String>, config: &mut Config) -> ExitCode {
+fn work(mode: StartMode, args: Vec<String>, config: &mut Config) -> Rslt<()> {
     let first = args.get(0)
         .unwrap_or(&string(""))
         .to_ascii_lowercase();
@@ -143,9 +161,9 @@ fn work(mode: StartMode, args: Vec<String>, config: &mut Config) -> ExitCode {
         VERSION if !mode.is_adb() => print_version(),
         HELP if !mode.is_adb() => get_help(None).println(),
         "shit" => "💩".println(),
-        _ => return run_adb(AdbArgs::spawn(args.as_slice())).code,
+        _ => return run_adb(AdbArgs::spawn(args.as_slice()))?.to_rslt(),
     };
-    return ExitCode::SUCCESS
+    return Ok(())
 }
 
 fn start_name(value: Option<&String>) -> StartMode {

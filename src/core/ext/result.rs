@@ -1,14 +1,20 @@
+use crate::core::ext::print::PrintExt;
 use std::error::Error;
 use std::fmt::Display;
-use crate::core::ext::print::PrintExt;
+use crate::core::ext::Rslt;
 
 pub trait ResultExt<R, E> {
+    fn unit(self) -> Result<(), E>;
     fn string_err(self) -> Result<R, String>;
     fn soft_unwrap(self) -> Option<R>;
-    fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static;
+    fn boxed(self) -> Rslt<R> where E: Error + Send + Sync + 'static;
 }
 
 impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
+
+    fn unit(self) -> Result<(), E> {
+        self.map(|_| ())
+    }
 
     fn string_err(self) -> Result<R, String> {
         self.map_err(|e| e.to_string())
@@ -21,7 +27,7 @@ impl<R, E> ResultExt<R, E> for Result<R, E> where E: Display {
         self.ok()
     }
 
-    fn boxed(self) -> Result<R, Box<dyn Error>> where E: Error + Send + Sync + 'static {
+    fn boxed(self) -> Rslt<R> where E: Error + Send + Sync + 'static {
         self.map_err(Into::into)
     }
 }

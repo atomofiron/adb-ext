@@ -1,4 +1,5 @@
 use crate::core::ext::print::PrintExt;
+use crate::core::ext::Rslt;
 use std::fmt::{Display, Formatter};
 
 static mut LANGUAGE: Language = Language::En;
@@ -30,7 +31,7 @@ pub static LINUX_ONLY: Label = Label::new(
     "permission resolving is only applicable for Linux",
     "исправление разрешений ADB применимо только для Linux",
 );
-pub static NO_DEVICES_FOUND: Label = Label::new(
+pub static ADB_NO_DEVICES_FOUND: Label = Label::new(
     "adb: no devices/emulators found",
     "adb: устройств/эмуляторов не найдено",
 );
@@ -133,10 +134,6 @@ pub static DONE: Label = Label::new(
     "done",
     "готово",
 );
-pub static ERROR: Label = Label::new(
-    "error",
-    "ошибка",
-);
 
 pub enum Language {
     En,
@@ -168,6 +165,9 @@ impl Label<'_> {
             Language::Ru => 1,
         };
         return self.variants[index];
+    }
+    pub fn to_err<T>(&self) -> Rslt<T> {
+        Err(self.value().into())
     }
     pub fn formatted(&self, parts: &[&str]) -> String {
         let mut value = self.value().to_string();

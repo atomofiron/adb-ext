@@ -1,30 +1,28 @@
 use crate::core::adb_args::AdbArgs;
 use crate::core::adb_device::AdbDevice;
+use crate::core::ext::Rslt;
 use crate::core::r#const::{OFF, ON, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
-use std::process::ExitCode;
 
 const GET_TOUCHES: &str = "settings get system pointer_location";
 const PUT_TOUCHES: &str = "settings put system pointer_location";
 
-pub fn is_pointer_on(device: &AdbDevice) -> bool {
-    run_adb_for(AdbArgs::run(&[SHELL, GET_TOUCHES]), device.serial.clone()).stdout() == ON
+pub fn is_pointer_on(device: &AdbDevice) -> Rslt<bool> {
+    run_adb_for(AdbArgs::run(&[SHELL, GET_TOUCHES]), device.serial.clone())
+        .map(|mut output| output.stdout() == ON)
 }
 
-pub fn turn_pointer(device: AdbDevice, on: bool) -> ExitCode {
+pub fn turn_pointer(device: AdbDevice, on: bool) -> Rslt<()> {
     let value = match on {
         true => ON,
         false => OFF,
     };
-    return run_adb_for(AdbArgs::run(&[SHELL, PUT_TOUCHES, value]), device.serial)
-        .code
+    let output = run_adb_for(AdbArgs::run(&[SHELL, PUT_TOUCHES, value]), device.serial)?;
+    return output.to_rslt()
 }
 
-pub fn toggle_pointer() -> ExitCode {
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
-    let now = is_pointer_on(&device);
+pub fn toggle_pointer() -> Rslt<()> {
+    let device = resolve_device()?;
+    let now = is_pointer_on(&device)?;
     return turn_pointer(device, !now)
 }

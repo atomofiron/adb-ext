@@ -1,3 +1,4 @@
+use crate::core::ext::Rslt;
 use std::path::PathBuf;
 
 pub trait StrExt {
@@ -6,6 +7,7 @@ pub trait StrExt {
     fn last_index_of(&self, c: char) -> Option<usize>;
     fn file_name(&self) -> String;
     fn path(&self) -> PathBuf;
+    fn to_err<T>(&self) -> Rslt<T>;
 }
 
 impl StrExt for str {
@@ -32,6 +34,10 @@ impl StrExt for str {
 
     fn path(&self) -> PathBuf {
         PathBuf::from(self)
+    }
+
+    fn to_err<T>(&self) -> Rslt<T> {
+        Rslt::Err(self.into())
     }
 }
 

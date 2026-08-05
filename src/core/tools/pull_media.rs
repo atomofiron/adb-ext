@@ -1,11 +1,11 @@
 use crate::core::adb_args::AdbArgs;
 use crate::core::config::Config;
 use crate::core::destination::Destination;
-use crate::core::ext::exit_status::ExitStatusExt;
+use crate::core::ext::output::OutputExt;
 use crate::core::ext::path_buf::PathBufExt;
-use crate::core::ext::print::PrintExt;
 use crate::core::ext::str::StrExt;
 use crate::core::ext::vec::VecExt;
+use crate::core::ext::Rslt;
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
 use crate::core::strings::{ADD_INTERPRETER, MEDIAS_NOT_FOUND, SAVED};
@@ -13,7 +13,7 @@ use crate::core::util::{ensure_parent_exists, null, string};
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, ExitCode};
+use std::process::{Child, Command};
 use std::{fs, io};
 
 const TOYBOX_LS_LLCD: &str = "toybox ls -llcd";
@@ -55,12 +55,12 @@ impl Display for Params {
     }
 }
 
-pub fn pull_screenshots(params: Params, config: &Config) -> ExitCode {
+pub fn pull_screenshots(params: Params, config: &Config) -> Rslt<()> {
     let command = get_ls_command(&config.screenshots.sources);
     return pull(params, PICS, &[SHELL, command.as_str()], config.screenshot_hook(), &config.screenshots.destination)
 }
 
-pub fn pull_screencasts(params: Params, config: &Config) -> ExitCode {
+pub fn pull_screencasts(params: Params, config: &Config) -> Rslt<()> {
     let command = get_ls_command(&config.screencasts.sources);
     return pull(params, MOVS, &[SHELL, command.as_str()], config.screencast_hook(), &config.screencasts.destination)
 }
@@ -75,19 +75,16 @@ fn get_ls_command(sources: &Vec<String>) -> String {
     return command;
 }
 
-fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: &String) -> ExitCode {
+fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, default_dst: &String) -> Rslt<()> {
     let count = match params {
         Params::Count(_, count) => count,
         Params::Single(..) => 1,
     };
     if count <= 0 {
-        return ExitCode::FAILURE;
+        return Ok(())
     }
-    let device = match resolve_device() {
-        Ok(device) => device,
-        Err(code) => return code,
-    };
-    let mut output = run_adb_for(AdbArgs::run(args), device.serial.clone());
+    let device = resolve_device()?;
+    let mut output = run_adb_for(AdbArgs::run(args), device.serial.clone())?;
     let mut items = output.stdout().split('\n')
         .into_iter()
         .map(|it| splitn_by(it, PART_MIN_COUNT, ' '))
@@ -95,11 +92,9 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         .collect::<Vec<Item>>();
     return if items.is_empty() {
         if output.stderr.is_empty() {
-            MEDIAS_NOT_FOUND.println();
-            ExitCode::FAILURE
+            MEDIAS_NOT_FOUND.to_err()
         } else {
-            output.print_err();
-            output.code
+            output.to_rslt()
         }
     } else {
         items.sort();
@@ -110,17 +105,19 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         let (cmd, dst) = match params {
             Params::Count(cmd, _) => {
                 let dst = default_dst.dst();
-                fs::create_dir_all(&dst).unwrap();
+                fs::create_dir_all(&dst)?;
                 (cmd,dst)
             },
             Params::Single(cmd, path) => {
-                let name = Path::new(items.first().unwrap())
-                    .file_name().unwrap()
-                    .to_str().unwrap();
+                let name = Path::new(items.first().ok_or_else(|| "no items")?)
+                    .file_name()
+                    .ok_or_else(|| "no items")?
+                    .to_str()
+                    .ok_or_else(|| "invalid utf-8 in name")?;
                 let dst = path.unwrap_or_default()
                     .dst_with_parent(&default_dst)
                     .join(name);
-                ensure_parent_exists(&dst);
+                ensure_parent_exists(&dst)?;
                 (cmd,dst)
             },
         };
@@ -129,20 +126,19 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
         let hook = hook_or_none(hook, cmd, dst.clone(), &items);
         pull_args.args.append(&mut items);
         pull_args.args.push(dst.to_string());
-        let mut output = run_adb_for(pull_args, device.serial);
+        let mut output = run_adb_for(pull_args, device.serial)?;
         output.print_out_and_err();
         if output.success() {
             SAVED.println_formatted(&[&dst.to_string()]);
         }
-        hook.ok_or(ExitCode::SUCCESS)
-            .and_then(|mut cmd| {
-                check_exec_error(cmd.spawn()).and_then(|child| child.wait_with_output()).map_err(|e| { 
-                    e.eprintln();
-                    ExitCode::FAILURE
-                })
-            })
-            .map(|o| o.status.exit_code())
-            .unwrap_or(output.code)
+        let result = hook.map(|mut cmd| {
+            check_exec_error(cmd.spawn())
+                .and_then(|child| child.wait_with_output())
+        });
+        return match result {
+            None => Ok(()),
+            Some(r) => r?.convert().to_rslt(),
+        }
     }
 }
 
@@ -183,7 +179,7 @@ fn as_item_or_none(exts: &[&str], line: Vec<String>) -> Option<Item> {
     }
     let date = line[PART_DATE].to_string();
     let time = line[PART_TIME].to_string();
-    let root = last.chars().position(|c| c == '/').unwrap();
+    let root = last.chars().position(|c| c == '/')?;
     // ignore the part contains '+0200' if exists
     let path = last[root..].to_string();
     Some(Item { date, time, path })

@@ -1,8 +1,8 @@
 use crate::core::adb_args::AdbArgs;
+use crate::core::ext::Rslt;
 use crate::core::r#const::SHELL;
 use crate::core::selector::run_adb;
 use std::fmt::{Display, Formatter};
-use std::process::ExitCode;
 
 const ACCELEROMETER: &str = "settings put system accelerometer_rotation";
 const LOCKED: u8 = 0;
@@ -50,16 +50,12 @@ impl Display for Orientation {
     }
 }
 
-pub fn orientation(orientation: Orientation) -> ExitCode {
+pub fn orientation(orientation: Orientation) -> Rslt<()> {
     let command = match orientation {
         Orientation::Accelerometer(_) => format!("{orientation}"),
         _ => format!("{} && {orientation}", Orientation::accelerometer(false)),
     };
     let args = &[SHELL, command.as_str()];
-    let mut output = run_adb(AdbArgs::run(args));
-
-    if !output.success() {
-        output.print_err();
-    }
-    return output.code
+    let output = run_adb(AdbArgs::run(args))?;
+    return output.to_rslt()
 }

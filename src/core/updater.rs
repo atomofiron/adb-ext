@@ -1,5 +1,6 @@
 use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::path_buf::PathBufExt;
+#[cfg(unix)]
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::result::ResultExt;
 use crate::core::ext::Rslt;
@@ -11,13 +12,13 @@ use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 use crate::core::system::{bin_name, make_executable};
 #[cfg(windows)]
 use crate::core::system::{env_adb_ext_path, PATH};
+use crate::core::ext::output::OutputExt;
 #[cfg(unix)]
 use crate::core::system::{env_path, home_dir};
 use crate::core::util::get_help;
 #[cfg(unix)]
 use crate::core::util::string;
 use indicatif::{ProgressBar, ProgressStyle};
-use std::fs::remove_file;
 #[cfg(unix)]
 use std::io::Write;
 use std::path::PathBuf;
@@ -45,16 +46,10 @@ const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/downloa
 #[cfg(windows)]
 const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext.exe";
 
-pub fn update() -> ExitCode {
+pub fn update() -> Rslt<()> {
     let mut path = env::temp_dir().join(bin_name());
-    match download_with_progress(URL, &path) {
-        Ok(_) => (),
-        Err(e) => {
-            e.eprintln();
-            return ExitCode::FAILURE;
-        }
-    };
-    path = make_executable(path).unwrap();
+    download_with_progress(URL, &path)?;
+    path = make_executable(path)?;
     #[cfg(target_os = "macos")]
     Command::new("xattr")
         .arg("-d")
@@ -63,16 +58,14 @@ pub fn update() -> ExitCode {
         .stderr(Stdio::null())
         .spawn().soft_unwrap()
         .map(|mut child| child.wait());
-    let exit_code = Command::new(&path)
+    let output = Command::new(&path)
         .arg(DEPLOY)
-        .spawn().unwrap()
-        .wait_with_output().unwrap()
-        .status
-        .exit_code();
-    if exit_code == ExitCode::SUCCESS {
-        remove_file(path).soft_unwrap();
+        .spawn()?
+        .wait_with_output()?;
+    if output.status.exit_code() == ExitCode::SUCCESS {
+        fs::remove_file(path).soft_unwrap();
     }
-    return exit_code;
+    return output.convert().to_rslt();
 }
 
 fn download_with_progress(url: &str, dst: &PathBuf) -> Rslt<()> {
@@ -82,8 +75,7 @@ fn download_with_progress(url: &str, dst: &PathBuf) -> Rslt<()> {
         Some(n) => ProgressBar::new(n),
         None => ProgressBar::no_length(),
     };
-    let style = ProgressStyle::with_template("{spinner} {bytes}/{total_bytes} ({bytes_per_sec}) {bar:40} {eta}")
-        .unwrap();
+    let style = ProgressStyle::with_template("{spinner} {bytes}/{total_bytes} ({bytes_per_sec}) {bar:40} {eta}")?;
     bar.set_style(style);
 
     let mut out = File::create(dst)?;
@@ -93,10 +85,10 @@ fn download_with_progress(url: &str, dst: &PathBuf) -> Rslt<()> {
     io::copy(&mut reader, &mut out)?;
     bar.finish_with_message(DONE.value());
 
-    Ok(())
+    return Ok(())
 }
 
-pub fn deploy() -> ExitCode {
+pub fn deploy() -> Rslt<()> {
     let bin_dir = bin_dir();
     let bin_path = bin_path();
 
@@ -113,23 +105,23 @@ pub fn deploy() -> ExitCode {
         }
     }
     if fs::metadata(&bin_dir).is_err() {
-        fs::create_dir_all(&bin_dir).unwrap();
+        fs::create_dir_all(&bin_dir)?;
     }
-    let src = env::args().nth(0).unwrap();
-    fs::copy(src, &bin_path).unwrap();
-    env::set_current_dir(&bin_dir).unwrap();
+    let src = env::args().nth(0).ok_or_else(|| "no args")?;
+    fs::copy(src, &bin_path)?;
+    env::set_current_dir(&bin_dir)?;
     for link in [ADB, LSS, MSS, SHOT, LSC, MSC, REC, RECORD, BOUNDS, TAPS, POINTER, PORT, LAND, FPORT, FLAND, ACCEL, NO_ACCEL, ANI_SCALE, STEAL, RUN] {
         let _ = remove_link(link);
         make_link(link).unwrap_or_else(|e|
             println!("{SYMLINK_FAIL}{link} ({e})")
         );
     }
-    init_env(action);
-    return ExitCode::SUCCESS
+    init_env(action)?;
+    return Ok(())
 }
 
 #[cfg(unix)]
-fn init_env(action: &str) {
+fn init_env(action: &str) -> Rslt<()> {
     let bin_dir = bin_dir().to_string();
     let env = format!("
 #!/bin/sh
@@ -145,7 +137,7 @@ unalias shot 2>/dev/null
 export ADB_EXT_VERSION_CODE={ENV_VERSION}
 ");
     let env_path = env_path();
-    fs::write(&env_path, env).unwrap();
+    fs::write(&env_path, env)?;
     let current_env_version = env::var("ADB_EXT_VERSION_CODE").unwrap_or(string(""));
     let mut auto_configure = !current_env_version.is_empty();
     if !auto_configure {
@@ -155,7 +147,7 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
                 .write(true)
                 .append(true)
                 .open(home_dir().join(startup)) {
-                file.write_all(format!("\n. {}\n", env_path.to_string()).as_bytes()).unwrap();
+                file.write_all(format!("\n. {}\n", env_path.to_string()).as_bytes())?;
                 auto_configure = true;
             };
         }
@@ -166,14 +158,16 @@ export ADB_EXT_VERSION_CODE={ENV_VERSION}
         HOWEVER_CONFIGURE.println();
         println!("{BOLD}source {}{CLEAR}", env_path.to_string());
     }
+    return Ok(())
 }
 
 #[cfg(windows)]
-fn init_env(action: &str) {
+fn init_env(action: &str) -> Rslt<()> {
     println!("{action} {}", get_help(Some(", ")));
     if !path_contains(&bin_dir().to_string()) {
         HOWEVER_CONFIGURE.println_formatted(&[&env_adb_ext_path()]);
     }
+    return Ok(())
 }
 
 #[cfg(windows)]
