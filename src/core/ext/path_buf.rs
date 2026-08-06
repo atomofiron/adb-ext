@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use crate::core::utils::r#const::{HOME, NULL};
+use crate::core::utils::values::{HOME, NULL};
 
 pub trait PathBufExt {
     fn to_string(&self) -> String;

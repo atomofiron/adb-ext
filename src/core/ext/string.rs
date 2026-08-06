@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::core::utils::r#const::NULL;
+use crate::core::utils::values::NULL;
 
 pub trait StringExt {
     fn contains_ci(&self, other: &String) -> bool;

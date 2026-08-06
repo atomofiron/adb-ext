@@ -8,7 +8,7 @@ use crate::core::utils::adb_device::AdbDevice;
 use crate::core::utils::config::Config;
 use crate::core::utils::destination::Destination;
 use crate::core::utils::output::Output;
-use crate::core::utils::r#const::{INSTALL, PULL, SHELL};
+use crate::core::utils::values::{INSTALL, PULL, SHELL};
 use crate::core::utils::selector::{resolve_device, run_adb_for};
 use crate::core::utils::string;
 use crate::core::utils::strings::{NO_ACTIVITY_FOUND, NO_ACTIVITY_NAME_FOUND, NO_ANDROID_SDK, NO_BUILD_TOOLS, NO_FILE, NO_PACKAGE_FOUND, NO_PACKAGE_NAME, NO_PATH, NO_QUOTE_FOUND, SAVED};

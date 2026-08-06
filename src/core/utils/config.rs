@@ -5,7 +5,7 @@ use crate::core::ext::print::PrintExt;
 use crate::core::ext::result::ResultExt;
 use crate::core::ext::str::StrExt;
 use crate::core::utils::destination::Destination;
-use crate::core::utils::r#const::{ADB, ADB_EXT, BUILD_TOOLS, PLATFORM_TOOLS};
+use crate::core::utils::values::{ADB, ADB_EXT, BUILD_TOOLS, PLATFORM_TOOLS};
 use crate::core::utils::string;
 use crate::core::utils::strings::NO_CONFIG_PARENT;
 use crate::core::utils::system::{adb_name, config_path, default_sdk_dir, make_executable};

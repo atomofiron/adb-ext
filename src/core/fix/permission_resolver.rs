@@ -5,7 +5,7 @@ use crate::core::ext::output::OutputExt;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::Rslt;
 use crate::core::fix::usb_device::UsbDevice;
-use crate::core::utils::r#const::ADB;
+use crate::core::utils::values::ADB;
 use crate::core::utils::selector::fetch_adb_devices;
 use crate::core::utils::strings::{NO_DEVICES_FOUND, NO_PARENT, RECONNECT_DEVICES, SUDO_EXPLANATION, UNKNOWN_ERROR, WELL_DONE};
 use crate::FIX;

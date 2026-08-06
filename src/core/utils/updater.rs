@@ -4,7 +4,7 @@ use crate::core::ext::path_buf::PathBufExt;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::Rslt;
 use crate::core::ext::result::ResultExt;
-use crate::core::utils::r#const::*;
+use crate::core::utils::values::*;
 use crate::core::ext::output::OutputExt;
 use crate::core::utils::strings::{DONE, NO_ARGS};
 use crate::core::utils::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};

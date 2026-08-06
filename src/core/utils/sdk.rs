@@ -4,7 +4,7 @@ use crate::core::ext::string::StringExt;
 use crate::core::ext::{Rslt, take_if};
 use crate::core::utils::config::Config;
 use crate::core::utils::destination::Destination;
-use crate::core::utils::r#const::{HOME, NULL};
+use crate::core::utils::values::{HOME, NULL};
 use crate::core::utils::strings::{DONE, NO_SUCH_DIRECTORY};
 use crate::core::utils::system::home_dir;
 use std::env::current_dir;

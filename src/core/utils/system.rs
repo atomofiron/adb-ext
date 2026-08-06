@@ -1,5 +1,5 @@
 extern crate dirs;
-use crate::core::utils::r#const::{ADB, ADB_EXT};
+use crate::core::utils::values::{ADB, ADB_EXT};
 #[cfg(unix)]
 use crate::core::utils::string;
 #[cfg(unix)]
