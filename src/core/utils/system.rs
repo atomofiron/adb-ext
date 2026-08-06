@@ -33,8 +33,8 @@ pub fn interrupt(id: u32) {
 
 #[cfg(windows)]
 pub fn interrupt(id: u32) {
-    use windows_sys::Win32::System::Console::{CTRL_BREAK_EVENT,
-                                              GenerateConsoleCtrlEvent, SetConsoleCtrlHandler,
+    use windows_sys::Win32::System::Console::{
+        GenerateConsoleCtrlEvent, SetConsoleCtrlHandler, CTRL_BREAK_EVENT
     };
     unsafe {
         if SetConsoleCtrlHandler(None, 1) == 0 { // don't kill myself
@@ -169,7 +169,7 @@ pub fn history_path() -> PathBuf {
 pub fn env_path() -> PathBuf {
     home_dir()
         .join(DOT_LOCAL)
-        .join("../../../env")
+        .join("env")
 }
 
 pub fn home_dir() -> PathBuf {
