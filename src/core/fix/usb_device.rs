@@ -1,4 +1,4 @@
-
+#[cfg(target_os = "linux")]
 pub struct UsbDevice {
     pub vendor_id: String,
     pub product_id: String,

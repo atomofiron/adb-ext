@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use crate::core::ext::command::CommandExt;
 use crate::core::ext::output::OutputExt;
 use crate::core::ext::print::PrintExt;
@@ -117,7 +119,7 @@ fn restart_service() -> Rslt<()> {
             .success();
     match success {
         true => Ok(()),
-        false => Err(Error::new(ErrorKind::Other, UNKNOWN_ERROR.value())),
+        false => Err(Error::new(ErrorKind::Other, UNKNOWN_ERROR.value()).into()),
     }
 }
 
