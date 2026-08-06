@@ -1,13 +1,13 @@
 use crate::core::ext::Rslt;
 use crate::core::ext::path_buf::PathBufExt;
 use crate::core::ext::vec::VecExt;
-use crate::core::util::adb_args::AdbArgs;
-use crate::core::util::config::Config;
-use crate::core::util::destination::Destination;
-use crate::core::util::r#const::SHELL;
-use crate::core::util::selector::run_adb;
-use crate::core::util::strings::SAVED;
-use crate::core::util::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
+use crate::core::utils::adb_args::AdbArgs;
+use crate::core::utils::config::Config;
+use crate::core::utils::destination::Destination;
+use crate::core::utils::r#const::SHELL;
+use crate::core::utils::selector::run_adb;
+use crate::core::utils::strings::SAVED;
+use crate::core::utils::{ensure_parent_exists, format_file_name, try_run_hook_and_exit};
 use std::fs;
 
 const SCREENCAP_P: &str = "screencap -p";

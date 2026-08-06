@@ -1,6 +1,6 @@
-use crate::core::util::config::Config;
-use crate::core::util::r#const::ARG_S;
-use crate::core::util::strings::NO_ADB;
+use crate::core::utils::config::Config;
+use crate::core::utils::r#const::ARG_S;
+use crate::core::utils::strings::NO_ADB;
 use std::process::Command;
 
 #[derive(Clone)]

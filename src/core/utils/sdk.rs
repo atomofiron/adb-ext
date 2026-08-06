@@ -2,11 +2,11 @@ use crate::core::ext::path_buf::PathBufExt;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::string::StringExt;
 use crate::core::ext::{Rslt, take_if};
-use crate::core::util::config::Config;
-use crate::core::util::destination::Destination;
-use crate::core::util::r#const::{HOME, NULL};
-use crate::core::util::strings::{DONE, NO_SUCH_DIRECTORY};
-use crate::core::util::system::home_dir;
+use crate::core::utils::config::Config;
+use crate::core::utils::destination::Destination;
+use crate::core::utils::r#const::{HOME, NULL};
+use crate::core::utils::strings::{DONE, NO_SUCH_DIRECTORY};
+use crate::core::utils::system::home_dir;
 use std::env::current_dir;
 
 pub fn set_sdk(path: Option<String>, config: &mut Config) -> Rslt<()> {

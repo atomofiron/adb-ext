@@ -1,8 +1,8 @@
 use crate::core::ext::Rslt;
-use crate::core::util::adb_args::AdbArgs;
-use crate::core::util::adb_device::AdbDevice;
-use crate::core::util::r#const::{OFF, ON, SHELL};
-use crate::core::util::selector::{resolve_device, run_adb_for};
+use crate::core::utils::adb_args::AdbArgs;
+use crate::core::utils::adb_device::AdbDevice;
+use crate::core::utils::r#const::{OFF, ON, SHELL};
+use crate::core::utils::selector::{resolve_device, run_adb_for};
 
 const GET_TOUCHES: &str = "settings get system pointer_location";
 const PUT_TOUCHES: &str = "settings put system pointer_location";

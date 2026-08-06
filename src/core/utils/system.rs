@@ -1,14 +1,14 @@
 extern crate dirs;
-use crate::core::util::r#const::{ADB, ADB_EXT};
+use crate::core::utils::r#const::{ADB, ADB_EXT};
 #[cfg(unix)]
-use crate::core::util::string;
+use crate::core::utils::string;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(windows)]
 use crate::core::ext::path_buf::PathBufExt;
 #[cfg(windows)]
 use crate::core::ext::str::StrExt;
-use crate::core::util::strings::NO_HOME_DIR;
+use crate::core::utils::strings::NO_HOME_DIR;
 use std::path::PathBuf;
 use std::{fs, io};
 

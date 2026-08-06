@@ -4,19 +4,19 @@ use crate::core::ext::path_buf::PathBufExt;
 use crate::core::ext::print::PrintExt;
 use crate::core::ext::Rslt;
 use crate::core::ext::result::ResultExt;
-use crate::core::util::r#const::*;
+use crate::core::utils::r#const::*;
 use crate::core::ext::output::OutputExt;
-use crate::core::util::strings::{DONE, NO_ARGS};
-use crate::core::util::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
-use crate::core::util::system::{bin_dir, bin_path, make_link, remove_link};
-use crate::core::util::system::{bin_name, make_executable};
+use crate::core::utils::strings::{DONE, NO_ARGS};
+use crate::core::utils::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
+use crate::core::utils::system::{bin_dir, bin_path, make_link, remove_link};
+use crate::core::utils::system::{bin_name, make_executable};
 #[cfg(windows)]
-use crate::core::util::system::{PATH, env_adb_ext_path};
+use crate::core::utils::system::{PATH, env_adb_ext_path};
 #[cfg(unix)]
-use crate::core::util::system::{env_path, home_dir};
-use crate::core::util::get_help;
+use crate::core::utils::system::{env_path, home_dir};
+use crate::core::utils::get_help;
 #[cfg(unix)]
-use crate::core::util::string;
+use crate::core::utils::string;
 use indicatif::{ProgressBar, ProgressStyle};
 #[cfg(unix)]
 use std::io::Write;

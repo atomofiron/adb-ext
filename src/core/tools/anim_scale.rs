@@ -1,9 +1,9 @@
 use crate::core::ext::Rslt;
-use crate::core::util::adb_args::AdbArgs;
-use crate::core::util::r#const::SHELL;
-use crate::core::util::selector::run_adb;
-use crate::core::util::strings::SELECT_ANIM_SCALE;
-use crate::core::util::{interactive_select, string};
+use crate::core::utils::adb_args::AdbArgs;
+use crate::core::utils::r#const::SHELL;
+use crate::core::utils::selector::run_adb;
+use crate::core::utils::strings::SELECT_ANIM_SCALE;
+use crate::core::utils::{interactive_select, string};
 
 const WINDOW: &str = "settings put global window_animation_scale";
 const TRANSITION: &str = "settings put global transition_animation_scale";
