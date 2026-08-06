@@ -2,19 +2,18 @@ use crate::core::ext::exit_status::ExitStatusExt;
 use crate::core::ext::path_buf::PathBufExt;
 #[cfg(unix)]
 use crate::core::ext::print::PrintExt;
-use crate::core::ext::result::ResultExt;
 use crate::core::ext::Rslt;
-use crate::core::r#const::DEPLOY;
-use crate::core::r#const::*;
-use crate::core::strings::{DONE, NO_ARGS};
-use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
-use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
-use crate::core::system::{bin_name, make_executable};
-#[cfg(windows)]
-use crate::core::system::{env_adb_ext_path, PATH};
+use crate::core::ext::result::ResultExt;
+use crate::core::util::r#const::*;
 use crate::core::ext::output::OutputExt;
+use crate::core::util::strings::{DONE, NO_ARGS};
+use crate::core::util::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
+use crate::core::util::system::{bin_dir, bin_path, make_link, remove_link};
+use crate::core::util::system::{bin_name, make_executable};
+#[cfg(windows)]
+use crate::core::util::system::{PATH, env_adb_ext_path};
 #[cfg(unix)]
-use crate::core::system::{env_path, home_dir};
+use crate::core::util::system::{env_path, home_dir};
 use crate::core::util::get_help;
 #[cfg(unix)]
 use crate::core::util::string;
@@ -24,11 +23,11 @@ use std::io::Write;
 use std::path::PathBuf;
 #[cfg(target_os = "macos")]
 use std::process::Stdio;
+#[cfg(windows)]
+use crate::core::ext::string::StringExt;
 use std::process::{Command, ExitCode};
 use std::{env, fs};
 use std::{fs::File, io};
-#[cfg(windows)]
-use crate::core::ext::string::StringExt;
 
 #[cfg(unix)]
 const ENV_VERSION: &str = "5";

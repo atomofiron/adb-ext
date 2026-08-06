@@ -1,19 +1,19 @@
-use crate::core::destination::Destination;
+use crate::core::ext::Rslt;
 use crate::core::ext::option::OptionExt;
 use crate::core::ext::path_buf::PathBufExt;
+use crate::core::ext::print::PrintExt;
 use crate::core::ext::result::ResultExt;
 use crate::core::ext::str::StrExt;
-use crate::core::ext::Rslt;
-use crate::core::r#const::{ADB, ADB_EXT, BUILD_TOOLS, PLATFORM_TOOLS};
-use crate::core::system::{adb_name, config_path, default_sdk_dir, make_executable};
+use crate::core::util::destination::Destination;
+use crate::core::util::r#const::{ADB, ADB_EXT, BUILD_TOOLS, PLATFORM_TOOLS};
 use crate::core::util::string;
+use crate::core::util::strings::NO_CONFIG_PARENT;
+use crate::core::util::system::{adb_name, config_path, default_sdk_dir, make_executable};
 use itertools::Itertools;
 use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use crate::core::ext::print::PrintExt;
-use crate::core::strings::NO_CONFIG_PARENT;
 
 pub static mut ADB_PATH: Option<String> = None;
 

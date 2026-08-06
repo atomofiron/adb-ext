@@ -5,7 +5,7 @@ pub mod permission_resolver;
 
 use crate::core::ext::Rslt;
 #[cfg(not(target_os = "linux"))]
-use crate::core::strings::LINUX_ONLY;
+use crate::core::util::strings::LINUX_ONLY;
 
 #[cfg(not(target_os = "linux"))]
 pub fn fix_on_linux(_serial: Option<String>) -> Rslt<()> {

@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::core::destination::Destination;
     use crate::core::ext::path_buf::PathBufExt;
-    use crate::core::system::home_dir;
+    use crate::core::util::destination::Destination;
+    use crate::core::util::system::home_dir;
     use itertools::assert_equal;
 
     #[test]

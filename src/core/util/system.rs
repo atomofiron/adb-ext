@@ -1,16 +1,16 @@
 extern crate dirs;
-use crate::core::r#const::{ADB, ADB_EXT};
+use crate::core::util::r#const::{ADB, ADB_EXT};
 #[cfg(unix)]
 use crate::core::util::string;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(windows)]
-use crate::core::ext::str::StrExt;
-#[cfg(windows)]
 use crate::core::ext::path_buf::PathBufExt;
+#[cfg(windows)]
+use crate::core::ext::str::StrExt;
+use crate::core::util::strings::NO_HOME_DIR;
 use std::path::PathBuf;
 use std::{fs, io};
-use crate::core::strings::NO_HOME_DIR;
 
 const CONFIG_YAML: &str = "config.yaml";
 const HISTORY_TXT: &str = "history.txt";
@@ -33,8 +33,8 @@ pub fn interrupt(id: u32) {
 
 #[cfg(windows)]
 pub fn interrupt(id: u32) {
-    use windows_sys::Win32::System::Console::{
-        GenerateConsoleCtrlEvent, SetConsoleCtrlHandler, CTRL_BREAK_EVENT,
+    use windows_sys::Win32::System::Console::{CTRL_BREAK_EVENT,
+                                              GenerateConsoleCtrlEvent, SetConsoleCtrlHandler,
     };
     unsafe {
         if SetConsoleCtrlHandler(None, 1) == 0 { // don't kill myself
@@ -169,7 +169,7 @@ pub fn history_path() -> PathBuf {
 pub fn env_path() -> PathBuf {
     home_dir()
         .join(DOT_LOCAL)
-        .join("env")
+        .join("../../../env")
 }
 
 pub fn home_dir() -> PathBuf {

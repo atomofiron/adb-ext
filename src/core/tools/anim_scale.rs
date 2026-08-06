@@ -1,8 +1,8 @@
-use crate::core::adb_args::AdbArgs;
 use crate::core::ext::Rslt;
-use crate::core::r#const::SHELL;
-use crate::core::selector::run_adb;
-use crate::core::strings::SELECT_ANIM_SCALE;
+use crate::core::util::adb_args::AdbArgs;
+use crate::core::util::r#const::SHELL;
+use crate::core::util::selector::run_adb;
+use crate::core::util::strings::SELECT_ANIM_SCALE;
 use crate::core::util::{interactive_select, string};
 
 const WINDOW: &str = "settings put global window_animation_scale";
