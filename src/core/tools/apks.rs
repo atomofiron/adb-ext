@@ -10,7 +10,7 @@ use crate::core::ext::Rslt;
 use crate::core::output::Output;
 use crate::core::r#const::{INSTALL, PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
-use crate::core::strings::{NO_ANDROID_SDK, NO_BUILD_TOOLS, NO_FILE, NO_PACKAGE_NAME, NO_PATH, SAVED};
+use crate::core::strings::{NO_ACTIVITY_FOUND, NO_ACTIVITY_NAME_FOUND, NO_ANDROID_SDK, NO_BUILD_TOOLS, NO_FILE, NO_PACKAGE_FOUND, NO_PACKAGE_NAME, NO_PATH, NO_QUOTE_FOUND, SAVED};
 use crate::core::system::config_path;
 use crate::core::util::string;
 use regex::Regex;
@@ -92,14 +92,20 @@ fn get_package_activity(aapt: PathBuf, apk: &String) -> Rslt<(String, String)> {
         .stdout()
         .replace('\n', " ");
     let package = Regex::new(r#" A: package="[^"]+"#)?;
-    let package = package.find(&text).ok_or_else(|| "no package found")?.as_str();
-    let offset = package.index_of('"').ok_or_else(|| "no quote found")? + 1;
+    let package = package.find(&text)
+        .ok_or_else(|| NO_PACKAGE_FOUND.value())?
+        .as_str();
+    let offset = package.index_of('"')
+        .ok_or_else(|| NO_QUOTE_FOUND.value())? + 1;
     let package = package[offset..].to_string();
     let activity = Regex::new(r#" E: activity.+="android\.intent\.action\.MAIN""#)?;
-    let activity = activity.find(&text).ok_or_else(|| "no activity found")?.as_str();
+    let activity = activity.find(&text)
+        .ok_or_else(|| NO_ACTIVITY_FOUND.value())?.as_str();
     let name = Regex::new(r#" A: android:name\(0x\d{8}\)="[^"]+"#)?;
-    let activity = name.find(activity).ok_or_else(|| "no activity name found")?.as_str();
-    let offset = activity.index_of('"').ok_or_else(|| "no quote found")? + 1;
+    let activity = name.find(activity)
+        .ok_or_else(|| NO_ACTIVITY_NAME_FOUND.value())?.as_str();
+    let offset = activity.index_of('"')
+        .ok_or_else(|| NO_QUOTE_FOUND.value())? + 1;
     let activity = activity[offset..].to_string();
     return Ok((package, activity));
 }

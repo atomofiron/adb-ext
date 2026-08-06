@@ -8,7 +8,7 @@ use crate::core::ext::vec::VecExt;
 use crate::core::ext::Rslt;
 use crate::core::r#const::{PULL, SHELL};
 use crate::core::selector::{resolve_device, run_adb_for};
-use crate::core::strings::{ADD_INTERPRETER, MEDIAS_NOT_FOUND, SAVED};
+use crate::core::strings::{ADD_INTERPRETER, INVALID_ARG, MEDIAS_NOT_FOUND, SAVED, UNREACHABLE};
 use crate::core::util::{ensure_parent_exists, null, string};
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
@@ -85,7 +85,8 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
     }
     let device = resolve_device()?;
     let mut output = run_adb_for(AdbArgs::run(args), device.serial.clone())?;
-    let mut items = output.stdout().split('\n')
+    let mut items = output.stdout()
+        .split('\n')
         .into_iter()
         .map(|it| splitn_by(it, PART_MIN_COUNT, ' '))
         .filter_map(|it| as_item_or_none(exts, it))
@@ -106,19 +107,19 @@ fn pull(params: Params, exts: &[&str], args: &[&str], hook: Option<PathBuf>, def
             Params::Count(cmd, _) => {
                 let dst = default_dst.dst();
                 fs::create_dir_all(&dst)?;
-                (cmd,dst)
+                (cmd, dst)
             },
             Params::Single(cmd, path) => {
-                let name = Path::new(items.first().ok_or_else(|| "no items")?)
+                let name = Path::new(items.first().ok_or_else(|| UNREACHABLE)?)
                     .file_name()
-                    .ok_or_else(|| "no items")?
+                    .ok_or_else(|| INVALID_ARG.value())?
                     .to_str()
-                    .ok_or_else(|| "invalid utf-8 in name")?;
+                    .ok_or_else(|| UNREACHABLE)?;
                 let dst = path.unwrap_or_default()
                     .dst_with_parent(&default_dst)
                     .join(name);
                 ensure_parent_exists(&dst)?;
-                (cmd,dst)
+                (cmd, dst)
             },
         };
         let mut pull_args = AdbArgs::spawn(&[PULL]);

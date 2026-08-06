@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 static mut LANGUAGE: Language = Language::En;
 
 const PLACEHOLDER: &str = "{}";
+pub const UNREACHABLE: &str = "unreachable";
 
 #[cfg(target_os = "linux")]
 pub static NO_DEVICES_FOUND: Label = Label::new(
@@ -133,6 +134,42 @@ pub static CANCEL: Label = Label::new(
 pub static DONE: Label = Label::new(
     "done",
     "готово",
+);
+pub static NO_PARENT: Label = Label::new(
+    "no parent directory",
+    "родительской директории нет",
+);
+pub static NO_ARGS: Label = Label::new(
+    "no args",
+    "нет аргументов",
+);
+pub static INVALID_ARG: Label = Label::new(
+    "invalid args",
+    "некорректный аргумент",
+);
+pub static NO_PACKAGE_FOUND: Label = Label::new(
+    "no package found",
+    "имя пакета не найдено",
+);
+pub static NO_ACTIVITY_FOUND: Label = Label::new(
+    "no Activity found",
+    "Activity не найдено",
+);
+pub static NO_ACTIVITY_NAME_FOUND: Label = Label::new(
+    "no activity name found",
+    "имя Activity не найдено",
+);
+pub static NO_QUOTE_FOUND: Label = Label::new(
+    "no quote found",
+    "ковычки не найдены",
+);
+pub static NO_CONFIG_PARENT: Label = Label::new(
+    "no config dir parent",
+    "нет родительской директории конфигурации",
+);
+pub static NO_HOME_DIR: Label = Label::new(
+    "no home dir",
+    "нет домашней директории",
 );
 
 pub enum Language {

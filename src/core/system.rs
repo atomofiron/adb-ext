@@ -10,6 +10,7 @@ use crate::core::ext::str::StrExt;
 use crate::core::ext::path_buf::PathBufExt;
 use std::path::PathBuf;
 use std::{fs, io};
+use crate::core::strings::NO_HOME_DIR;
 
 const CONFIG_YAML: &str = "config.yaml";
 const HISTORY_TXT: &str = "history.txt";
@@ -172,7 +173,7 @@ pub fn env_path() -> PathBuf {
 }
 
 pub fn home_dir() -> PathBuf {
-    dirs::home_dir().expect("no home dir")
+    dirs::home_dir().expect(NO_HOME_DIR.value())
 }
 
 #[cfg(unix)]

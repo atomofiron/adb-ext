@@ -5,7 +5,7 @@ use crate::core::ext::Rslt;
 use crate::core::fix::usb_device::UsbDevice;
 use crate::core::r#const::ADB;
 use crate::core::selector::fetch_adb_devices;
-use crate::core::strings::{NO_DEVICES_FOUND, RECONNECT_DEVICES, SUDO_EXPLANATION, UNKNOWN_ERROR, WELL_DONE};
+use crate::core::strings::{NO_DEVICES_FOUND, NO_PARENT, RECONNECT_DEVICES, SUDO_EXPLANATION, UNKNOWN_ERROR, WELL_DONE};
 use crate::FIX;
 use itertools::Itertools;
 use nix::unistd::Uid;
@@ -123,7 +123,8 @@ fn restart_service() -> Rslt<()> {
 
 fn add_to_config(ids: &Vec<String>) -> Rslt<()> {
     let path = Path::new(TARGET_FILE);
-    let parent = path.parent().ok_or_else(|| "no parent")?;
+    let parent = path.parent()
+        .ok_or_else(|| NO_PARENT.value())?;
     fs::create_dir_all(parent)?;
     let mut file = fs::OpenOptions::new()
         .create(true)

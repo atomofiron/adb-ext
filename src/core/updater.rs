@@ -6,7 +6,7 @@ use crate::core::ext::result::ResultExt;
 use crate::core::ext::Rslt;
 use crate::core::r#const::DEPLOY;
 use crate::core::r#const::*;
-use crate::core::strings::DONE;
+use crate::core::strings::{DONE, NO_ARGS};
 use crate::core::strings::{HOWEVER_CONFIGURE, INSTALLATION_SUCCEED, SYMLINK_FAIL, UPDATE_SUCCEED};
 use crate::core::system::{bin_dir, bin_path, make_link, remove_link};
 use crate::core::system::{bin_name, make_executable};
@@ -107,7 +107,8 @@ pub fn deploy() -> Rslt<()> {
     if fs::metadata(&bin_dir).is_err() {
         fs::create_dir_all(&bin_dir)?;
     }
-    let src = env::args().nth(0).ok_or_else(|| "no args")?;
+    let src = env::args().nth(0)
+        .ok_or_else(|| NO_ARGS.value())?;
     fs::copy(src, &bin_path)?;
     env::set_current_dir(&bin_dir)?;
     for link in [ADB, LSS, MSS, SHOT, LSC, MSC, REC, RECORD, BOUNDS, TAPS, POINTER, PORT, LAND, FPORT, FLAND, ACCEL, NO_ACCEL, ANI_SCALE, STEAL, RUN] {

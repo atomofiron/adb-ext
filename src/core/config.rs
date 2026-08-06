@@ -12,6 +12,8 @@ use serde_derive::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use crate::core::ext::print::PrintExt;
+use crate::core::strings::NO_CONFIG_PARENT;
 
 pub static mut ADB_PATH: Option<String> = None;
 
@@ -108,9 +110,10 @@ impl Config {
     pub fn write(&self) -> Rslt<()> {
         let config_path = config_path();
         if !config_path.exists() {
-            let parent = config_path.parent()
-                .or_err("Config file does not have a parent directory")?;
-            fs::create_dir_all(parent)?;
+            match config_path.parent() {
+                None => NO_CONFIG_PARENT.eprintln(),
+                Some(parent) => fs::create_dir_all(parent)?,
+            }
         }
         let file = File::create(&config_path)?;
         return serde_yaml::to_writer(file, self)

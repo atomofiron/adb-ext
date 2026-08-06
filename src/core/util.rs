@@ -3,7 +3,7 @@ use crate::core::ext::user_cancelled::UserCancelled;
 use crate::core::ext::vec::VecExt;
 use crate::core::ext::Rslt;
 use crate::core::r#const::{HELP_TEXT, NULL};
-use crate::core::strings::CANCEL;
+use crate::core::strings::{CANCEL, NO_PARENT};
 use crate::core::system::bin_name;
 use chrono::Local;
 use dialoguer::FuzzySelect;
@@ -31,7 +31,7 @@ pub fn null() -> String {
 
 pub fn ensure_parent_exists(path: &PathBuf) -> Rslt<()> {
     let parent = path.parent()
-        .ok_or_else(|| "no parent")?;
+        .ok_or_else(|| NO_PARENT.value())?;
     return create_dir_all(parent).boxed()
 }
 
