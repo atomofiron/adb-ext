@@ -215,7 +215,7 @@ fn resolve_and_restart_if_many_devices(child: &mut Child, args: AdbArgs) -> Rslt
                 str if str.ends_with(MANY_TARGETS) => {
                     return Ok(Some(resolve_device_and_run(args)?))
                 },
-                _ => line.eprintln(),
+                _ => line.println(),
             }
         }
         io::copy(&mut reader, &mut io::stderr())?;
