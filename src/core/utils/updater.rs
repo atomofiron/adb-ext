@@ -42,6 +42,8 @@ const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/downloa
 const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-apple-x86_64";
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-linux-x86_64";
+#[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-linux-arm";
 #[cfg(windows)]
 const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext.exe";
 

@@ -19,6 +19,8 @@ elif [ "$system" = "Darwin x86_64" ]; then
   tryDequarantine=true
 elif [ "$system" = "Linux x86_64" ]; then
   variant="adb-ext-linux-x86_64"
+elif [ "$system" = "Linux aarch64" ]; then
+  variant="adb-ext-linux-arm"
 else
   err "Unsupported system or arch: $system"
 fi
