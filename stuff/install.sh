@@ -12,10 +12,10 @@ ensure() {
 tryDequarantine=false
 system=$(ensure uname -sm)
 if [ "$system" = "Darwin arm64" ]; then
-  variant="adb-ext-apple-arm"
+  variant="adb-ext-macos-arm"
   tryDequarantine=true
 elif [ "$system" = "Darwin x86_64" ]; then
-  variant="adb-ext-apple-x86_64"
+  variant="adb-ext-macos-x86_64"
   tryDequarantine=true
 elif [ "$system" = "Linux x86_64" ]; then
   variant="adb-ext-linux-x86_64"

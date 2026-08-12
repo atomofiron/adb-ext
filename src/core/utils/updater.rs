@@ -37,9 +37,9 @@ const BOLD: &str = "\x1b[1m";
 const CLEAR: &str = "\x1b[0m";
 
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-apple-arm";
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-macos-arm";
 #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
-const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-apple-x86_64";
+const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-macos-x86_64";
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 const URL: &str = "https://github.com/atomofiron/adb-ext/releases/latest/download/adb-ext-linux-x86_64";
 #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
