@@ -26,11 +26,11 @@ https://github.com/user-attachments/assets/3545cbfe-9c8d-4e8a-a65c-446cfb46dd00
   ![adb-ext](https://github.com/Atomofiron/green-pain/assets/14147217/aeef69e9-41d0-47ee-8744-35d170ce707a)
 </details>
 
-:white_check_mark: MacOS x86_64\
 :white_check_mark: MacOS ARM\
+:white_check_mark: MacOS x86_64\
+:white_check_mark: Linux ARM\
 :white_check_mark: Linux x86_64\
-:zzz: Linux ARM\
-:white_check_mark: Windows
+:white_check_mark: Windows x86_64
 
 # Install
 
