@@ -60,7 +60,7 @@ impl Output {
     pub fn to_rslt(mut self) -> Rslt<()> {
         match self.code {
             ExitCode::SUCCESS => Ok(()),
-            _ => Err(ErrorCode(self.code, self.stdout().to_string()).into()),
+            _ => Err(ErrorCode(self.code, self.stderr().to_string()).into()),
         }
     }
 }
